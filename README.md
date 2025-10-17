@@ -1,11 +1,12 @@
-# Lean 4 Theorem Proving - Claude Code Skill
+# Lean 4 Theorem Proving - Claude Skill
 
-A comprehensive [Claude Code](https://claude.com/claude-code) skill for systematic development of formal proofs in Lean 4.
+A comprehensive [Claude Skill](https://www.anthropic.com/news/skills) for systematic development of formal proofs in Lean 4.
 
 ## 🎯 What is This?
 
-This is a **Claude Skill** that teaches Claude Code how to work effectively with Lean 4 theorem proving. It provides:
+This is an **official Claude Skill** that teaches Claude how to work effectively with Lean 4 theorem proving. Claude Skills are custom tools that provide specialized knowledge and workflows, available across Claude.ai, API, and Code.
 
+**What this skill provides:**
 - 📚 **Systematic workflow** for proof development (structure → helpers → incremental filling)
 - 🔧 **Type class management** patterns for sub-σ-algebras and instance inference
 - 📖 **Mathlib integration** guide (finding lemmas, imports, naming conventions)
@@ -15,85 +16,71 @@ This is a **Claude Skill** that teaches Claude Code how to work effectively with
 
 ## 🚀 Installation
 
-### Prerequisites
+### Method 1: Marketplace (Recommended for Claude Code)
 
-This skill requires the **[Superpowers](https://github.com/obra/superpowers)** plugin for Claude Code. Superpowers is a skills library system created by Jesse Vincent that extends Claude Code with structured workflows and domain expertise.
+Install directly from the marketplace using Claude Code's plugin system:
 
-**Install Superpowers first:**
+```
+/plugin marketplace add cameronfreer/lean4-theorem-proving-skill
+/plugin install lean4-theorem-proving
+```
 
-1. Ensure you have **Claude Code 2.0.13 or later**
-2. In Claude Code, run:
-   ```
-   /plugin marketplace add obra/superpowers-marketplace
-   /plugin install superpowers@superpowers-marketplace
-   ```
+The skill will automatically load when Claude detects you're working on Lean files!
 
-For more details, visit: https://github.com/obra/superpowers
+### Method 2: Manual Installation
 
-### Installing This Skill
+Copy the skill to your local Claude skills directory:
 
-Once Superpowers is installed:
+```bash
+# Clone the repository
+git clone https://github.com/cameronfreer/lean4-theorem-proving-skill.git
+cd lean4-theorem-proving-skill
 
-1. **Clone this repository:**
-   ```bash
-   git clone https://github.com/cameronfreer/lean4-theorem-proving-skill.git
-   cd lean4-theorem-proving-skill
-   ```
+# Copy to Claude skills directory
+cp -r lean4-theorem-proving ~/.claude/skills/
 
-2. **Copy to your Superpowers skills directory:**
-   ```bash
-   cp -r skills/formal-verification ~/.config/superpowers/skills/skills/
-   ```
+# Verify installation
+ls ~/.claude/skills/lean4-theorem-proving/
+# Should show: SKILL.md
+```
 
-3. **Verify installation:**
-   ```bash
-   ls ~/.config/superpowers/skills/skills/formal-verification/lean4-theorem-proving/
-   # Should show: SKILL.md
-   ```
+The skill is now available in all Claude sessions (Claude.ai, API, and Code)!
 
-The skill is now available in all Claude Code sessions!
+### Method 3: Project-Specific (CLAUDE.md)
 
-### Alternative: Use Skill Files Directly
+For project-specific use without installation:
 
-If you want to use the skill content without Superpowers, you can reference the skill files directly in your prompts or project documentation:
-
-1. Clone the repository
-2. Reference the content in `skills/formal-verification/lean4-theorem-proving/SKILL.md`
-3. Copy relevant sections into your project's `CLAUDE.md` or prompt Claude Code to read the file
-
-This approach works but won't have automatic activation based on context.
+1. Clone this repository
+2. Copy relevant sections from `lean4-theorem-proving/SKILL.md` into your project's `CLAUDE.md`
+3. Or reference the skill file directly in your prompts
 
 ## 📖 Usage
 
-### Automatic (Proactive)
+### Automatic Activation
 
-Claude Code will automatically invoke this skill when you:
+Claude automatically loads this skill when you:
 - Work on `.lean` files
-- Prove theorems
-- Manage sorries or axioms
-- Ask about Lean-specific concepts
+- Mention Lean 4, theorem proving, or formal verification
+- Prove theorems or manage sorries/axioms
+- Ask about mathlib or type class issues
+
+No manual invocation needed - Claude sees the skill in its chain of thought!
 
 ### Explicit Invocation
 
-You can explicitly request the skill:
+You can explicitly request the skill if desired:
 
 ```
 Use the lean4-theorem-proving skill to help me structure this proof
 ```
 
-Or in the context of formal verification:
-
-```
-Following the Lean 4 skill, how should I manage these type class instances?
-```
-
 ### Query the Skill
 
-Ask specific questions about the guidance:
+Ask about specific guidance:
 
 ```
-What does the Lean 4 skill say about managing sorries?
-What's the recommended workflow for eliminating axioms?
+What does the Lean 4 skill recommend for managing sorries?
+How should I handle type class inference issues?
 ```
 
 ## 🎓 What the Skill Teaches
@@ -119,31 +106,25 @@ What's the recommended workflow for eliminating axioms?
 - **Conditional expectation equalities** (uniqueness via integral identity)
 - **Sigma algebra manipulations** (sub-σ-algebra relationships)
 - **Type class instance management** (explicit `haveI` declarations)
+- **Commit message patterns** from successful Lean projects
 
 ## 📚 Contents
 
-### Files in This Repository
-
 ```
-skills/
-└── formal-verification/
-    ├── ABOUT.md                      # Category overview
-    └── lean4-theorem-proving/
-        └── SKILL.md                  # Main skill (13KB, comprehensive)
+lean4-theorem-proving/
+└── SKILL.md      # Complete skill (16KB of Lean 4 expertise)
 ```
 
-### What's in SKILL.md
-
-- **The Build-First Principle** - Lean workflow fundamentals
-- **Proof Development Workflow** - 4-phase systematic approach
-- **Mathlib Integration** - Finding and using existing lemmas
-- **Managing Axioms and Sorries** - Documentation and elimination patterns
-- **Common Patterns** - Domain-specific proof strategies
-- **Tactics Reference** - Essential and specialized tactics
-- **Commit Message Patterns** - Based on successful Lean projects
-- **Red Flags** - Anti-patterns to avoid
-- **Quality Checklist** - Pre-commit verification
-- **Learning Resources** - Official docs and community links
+**What's in SKILL.md:**
+- The Build-First Principle
+- 4-Phase Proof Development Workflow
+- Mathlib Integration Guide
+- Managing Axioms and Sorries
+- Measure Theory Patterns
+- Tactics Reference
+- Commit Message Patterns
+- Quality Checklist
+- Learning Resources
 
 ## 🎯 When to Use This Skill
 
@@ -164,9 +145,9 @@ skills/
 
 ## 🔧 Requirements
 
-- [Claude Code](https://claude.com/claude-code) CLI tool (version 2.0.13 or later)
-- [Superpowers plugin](https://github.com/obra/superpowers) for Claude Code skills system
-- Unix-like system (macOS, Linux) recommended
+- **Claude Code 2.0.13+** (for marketplace installation), OR
+- **Claude.ai Pro/Max/Team/Enterprise** (for web/API), OR
+- **Just Claude** (for CLAUDE.md method)
 - (Optional) Lean 4 installed for working on Lean projects
 
 ## 🤝 Contributing
@@ -179,6 +160,8 @@ This skill was developed from real-world Lean 4 formalization work. Contribution
 - Submit examples from successful projects
 - Report issues or unclear guidance
 - Suggest improvements to the workflow
+
+Open an issue or PR at: https://github.com/cameronfreer/lean4-theorem-proving-skill
 
 ## 📄 License
 
@@ -199,57 +182,58 @@ This skill was developed from patterns observed in:
 - [Mathlib Documentation](https://leanprover-community.github.io/mathlib4_docs/)
 - [Lean Zulip Chat](https://leanprover.zulipchat.com/)
 
-**Claude Code & Superpowers:**
+**Claude Skills:**
+- [Claude Skills Announcement](https://www.anthropic.com/news/skills)
+- [Claude Skills Repository](https://github.com/anthropics/skills) - Official examples
 - [Claude Code Documentation](https://docs.claude.com/claude-code)
-- [Superpowers Plugin](https://github.com/obra/superpowers) - Skills system for Claude Code
-- [Superpowers Skills Library](https://github.com/obra/superpowers-skills) - Community skills
 
 ## 🚦 Status
 
 **Version:** 1.0.0
-**Status:** Stable and production-ready
+**Status:** Production-ready
 **Last Updated:** October 2025
 
 ## ❓ FAQ
 
-### What is Superpowers and do I need it?
+### What are Claude Skills?
 
-**Superpowers** is a plugin for Claude Code created by Jesse Vincent that provides a skills system for teaching Claude structured workflows. This Lean 4 skill is packaged for Superpowers.
+Claude Skills are custom tools announced by Anthropic in October 2025 that teach Claude specialized tasks. Skills are folders containing instructions, scripts, and resources that Claude loads dynamically when relevant. They work across Claude.ai, API, and Code.
 
-**Do you need it?**
-- **Yes, for automatic activation** - The skill will automatically load when working on Lean files
-- **No, for manual use** - You can copy the SKILL.md content into your project documentation or reference it directly
+Learn more: https://www.anthropic.com/news/skills
 
-Install Superpowers: https://github.com/obra/superpowers
+### Do I need a subscription?
 
-### Does this require Lean 4 to be installed?
+- **Claude Code (marketplace)**: Available to all Claude Code users
+- **Manual installation (~/.claude/skills)**: Available to all users
+- **Claude.ai/API**: Skills feature requires Pro, Max, Team, or Enterprise
 
-No! The skill teaches Claude Code how to work with Lean 4, but Claude Code itself doesn't need Lean installed. If you're working on Lean projects, you'll obviously need Lean 4 installed locally.
+### Does this require Lean 4?
 
-### Will this work with Claude Code updates?
-
-Yes! Skills are read from the filesystem and work with the standard Claude Code skills system.
-
-### Can I modify the skill for my specific needs?
-
-Absolutely! Clone this repo, modify `SKILL.md` to add your project-specific patterns, and use your customized version.
-
-### Does this work for Lean 3?
-
-This skill is specifically designed for Lean 4. Lean 3 has different syntax and tactics. You'd need to adapt it significantly for Lean 3.
+No! The skill teaches Claude how to work with Lean 4. You only need Lean 4 installed if you're actually working on Lean projects locally.
 
 ### How is this different from Claude's general Lean knowledge?
 
 Claude has general knowledge about Lean from training data. This skill provides:
-- Specific workflows (structure before solve, one sorry at a time)
-- Project-specific patterns (type class management, mathlib integration)
-- Quality standards (compile before commit, document sorries)
-- Real-world patterns from successful projects
+- **Specific workflows** (structure before solve, one sorry at a time)
+- **Project patterns** (type class management, mathlib integration)
+- **Quality standards** (compile before commit, document sorries)
+- **Real-world patterns** from successful projects
 
 It's like having a Lean 4 expert mentor coaching Claude on best practices.
 
+### Can I modify the skill?
+
+Absolutely! Clone this repo, modify `lean4-theorem-proving/SKILL.md` to add your project-specific patterns, and either:
+- Use your fork as a custom marketplace
+- Install locally from your modified version
+- Add custom content to your project's CLAUDE.md
+
+### Does this work with Superpowers?
+
+While this is now packaged as an official Claude Skill, you can still use it with Superpowers by copying the skill folder to `~/.config/superpowers/skills/skills/`. However, we recommend using the official Claude Skills installation for better integration.
+
 ---
 
-**Made with 🧠 by Claude Code users, for Claude Code users**
+**Made with 🧠 for the Lean formalization community**
 
-If this helps your Lean formalization work, consider starring the repo and sharing with others!
+If this helps your Lean 4 work, please ⭐ star the repo and share with others working on formal mathematics!

@@ -1,9 +1,6 @@
 ---
-name: Lean 4 Theorem Proving
+name: lean4-theorem-proving
 description: Systematic approach to developing formal proofs in Lean 4, managing sorries, using mathlib, and building verified mathematics
-when_to_use: when working on Lean 4 formalization projects, proving theorems, or developing mathematical libraries
-version: 1.0.0
-languages: lean
 ---
 
 # Lean 4 Theorem Proving

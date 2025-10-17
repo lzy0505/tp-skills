@@ -19,7 +19,7 @@ This is a **Claude Skill** that teaches Claude Code how to work effectively with
 
 1. **Clone or download this repository:**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/lean4-theorem-proving-skill.git
+   git clone https://github.com/cameronfreer/lean4-theorem-proving-skill.git
    ```
 
 2. **Copy to your skills directory:**

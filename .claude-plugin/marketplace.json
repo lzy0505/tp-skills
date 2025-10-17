@@ -1,15 +1,22 @@
 {
   "name": "lean4-theorem-proving-skills",
-  "owner": "cameronfreer",
-  "description": "Official Claude Skills for systematic Lean 4 proof development",
-  "version": "1.0.0",
-  "repository": "https://github.com/cameronfreer/lean4-theorem-proving-skill",
+  "owner": {
+    "name": "Cameron Freer",
+    "email": "freer@alum.mit.edu"
+  },
+  "metadata": {
+    "description": "Official Claude Skills for systematic Lean 4 proof development",
+    "version": "1.0.0"
+  },
   "plugins": [
     {
       "name": "lean4-theorem-proving",
-      "path": "lean4-theorem-proving",
       "description": "Systematic approach to developing formal proofs in Lean 4, managing sorries, using mathlib, and building verified mathematics",
-      "version": "1.0.0"
+      "source": ".",
+      "strict": false,
+      "skills": [
+        "lean4-theorem-proving"
+      ]
     }
   ]
 }

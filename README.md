@@ -15,17 +15,34 @@ This is a **Claude Skill** that teaches Claude Code how to work effectively with
 
 ## 🚀 Installation
 
-### For Claude Code Users
+### Prerequisites
 
-1. **Clone or download this repository:**
-   ```bash
-   git clone https://github.com/cameronfreer/lean4-theorem-proving-skill.git
+This skill requires the **[Superpowers](https://github.com/obra/superpowers)** plugin for Claude Code. Superpowers is a skills library system created by Jesse Vincent that extends Claude Code with structured workflows and domain expertise.
+
+**Install Superpowers first:**
+
+1. Ensure you have **Claude Code 2.0.13 or later**
+2. In Claude Code, run:
+   ```
+   /plugin marketplace add obra/superpowers-marketplace
+   /plugin install superpowers@superpowers-marketplace
    ```
 
-2. **Copy to your skills directory:**
+For more details, visit: https://github.com/obra/superpowers
+
+### Installing This Skill
+
+Once Superpowers is installed:
+
+1. **Clone this repository:**
    ```bash
-   cp -r lean4-theorem-proving-skill/skills/formal-verification \
-         ~/.config/superpowers/skills/skills/
+   git clone https://github.com/cameronfreer/lean4-theorem-proving-skill.git
+   cd lean4-theorem-proving-skill
+   ```
+
+2. **Copy to your Superpowers skills directory:**
+   ```bash
+   cp -r skills/formal-verification ~/.config/superpowers/skills/skills/
    ```
 
 3. **Verify installation:**
@@ -34,20 +51,17 @@ This is a **Claude Skill** that teaches Claude Code how to work effectively with
    # Should show: SKILL.md
    ```
 
-That's it! The skill is immediately available in all Claude Code sessions.
+The skill is now available in all Claude Code sessions!
 
-### Alternative: Manual Installation
+### Alternative: Use Skill Files Directly
 
-If you prefer to install manually:
+If you want to use the skill content without Superpowers, you can reference the skill files directly in your prompts or project documentation:
 
-1. Create the directory structure:
-   ```bash
-   mkdir -p ~/.config/superpowers/skills/skills/formal-verification/lean4-theorem-proving
-   ```
+1. Clone the repository
+2. Reference the content in `skills/formal-verification/lean4-theorem-proving/SKILL.md`
+3. Copy relevant sections into your project's `CLAUDE.md` or prompt Claude Code to read the file
 
-2. Copy the files:
-   - Copy `skills/formal-verification/ABOUT.md` to `~/.config/superpowers/skills/skills/formal-verification/`
-   - Copy `skills/formal-verification/lean4-theorem-proving/SKILL.md` to the appropriate directory
+This approach works but won't have automatic activation based on context.
 
 ## 📖 Usage
 
@@ -150,9 +164,10 @@ skills/
 
 ## 🔧 Requirements
 
-- [Claude Code](https://claude.com/claude-code) CLI tool
-- Unix-like system (macOS, Linux) for standard skills directory
-- (Optional) Lean 4 installed for testing the guidance
+- [Claude Code](https://claude.com/claude-code) CLI tool (version 2.0.13 or later)
+- [Superpowers plugin](https://github.com/obra/superpowers) for Claude Code skills system
+- Unix-like system (macOS, Linux) recommended
+- (Optional) Lean 4 installed for working on Lean projects
 
 ## 🤝 Contributing
 
@@ -184,9 +199,10 @@ This skill was developed from patterns observed in:
 - [Mathlib Documentation](https://leanprover-community.github.io/mathlib4_docs/)
 - [Lean Zulip Chat](https://leanprover.zulipchat.com/)
 
-**Claude Code:**
+**Claude Code & Superpowers:**
 - [Claude Code Documentation](https://docs.claude.com/claude-code)
-- [Skills Documentation](https://docs.claude.com/claude-code/skills)
+- [Superpowers Plugin](https://github.com/obra/superpowers) - Skills system for Claude Code
+- [Superpowers Skills Library](https://github.com/obra/superpowers-skills) - Community skills
 
 ## 🚦 Status
 
@@ -195,6 +211,16 @@ This skill was developed from patterns observed in:
 **Last Updated:** October 2025
 
 ## ❓ FAQ
+
+### What is Superpowers and do I need it?
+
+**Superpowers** is a plugin for Claude Code created by Jesse Vincent that provides a skills system for teaching Claude structured workflows. This Lean 4 skill is packaged for Superpowers.
+
+**Do you need it?**
+- **Yes, for automatic activation** - The skill will automatically load when working on Lean files
+- **No, for manual use** - You can copy the SKILL.md content into your project documentation or reference it directly
+
+Install Superpowers: https://github.com/obra/superpowers
 
 ### Does this require Lean 4 to be installed?
 

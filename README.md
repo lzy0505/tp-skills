@@ -118,7 +118,8 @@ lean4-theorem-proving/
 **What's in SKILL.md:**
 - The Build-First Principle
 - 4-Phase Proof Development Workflow
-- Mathlib Integration Guide
+- Mathlib Integration Guide (with comprehensive search techniques)
+- **Command-Line Search Patterns** (find/grep workflows for mathlib and local files)
 - Managing Axioms and Sorries
 - Measure Theory Patterns
 - Tactics Reference

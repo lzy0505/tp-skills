@@ -486,6 +486,102 @@ have h : P := proof     -- Forward reasoning
 suffices h : P by proof -- Backward reasoning
 ```
 
+### The `simp` Tactic - Deep Dive
+
+**Most powerful and most dangerous tactic in Lean.** Understand before using extensively.
+
+**What `simp` does:**
+- Applies a database of `@[simp]` lemmas to rewrite the goal into "normal form"
+- Works recursively (applies lemmas until no more match)
+- Can solve goals automatically when normal form is trivial
+
+**Basic usage:**
+```lean
+simp                           -- Use all simp lemmas
+simp only [lemma1, lemma2]     -- Use only these lemmas (recommended)
+simp [h]                       -- Add hypothesis h to simp set
+simp at h                      -- Simplify hypothesis h
+simp?                          -- Show which lemmas simp would use (very useful!)
+simpa using expr               -- Simplify then apply expr
+```
+
+**When to add `@[simp]` attribute:**
+```lean
+-- ✅ Good simp lemmas (make things simpler):
+@[simp] lemma f_zero : f 0 = 1 := ...           -- Evaluation lemma
+@[simp] lemma map_id : map id = id := ...        -- Identity lemma
+@[simp] lemma union_empty : s ∪ ∅ = s := ...     -- Simplification to normal form
+
+-- ❌ Bad simp lemmas (don't simplify or create loops):
+@[simp] lemma reverse_property : f (g x) = g (f x)  -- Not directional
+@[simp] lemma expand : x = x + y - y                -- Makes things more complex
+```
+
+**Simp normal forms** - Know these patterns:
+- Empty set: `s ∩ ∅ → ∅`, `s ∪ ∅ → s`
+- Identity: `map id → id`, `f ∘ id → f`
+- Logical: `P ∧ True → P`, `P ∨ False → P`
+- Numeric: `x + 0 → x`, `x * 1 → x`
+
+**Common pitfalls:**
+
+**1. Simp loops** (infinite recursion):
+```lean
+-- Bad: These create a loop if both are @[simp]
+@[simp] lemma forward : f x = g x
+@[simp] lemma backward : g x = f x
+
+-- Fix: Remove @[simp] from one
+lemma forward : f x = g x := ...
+@[simp] lemma backward : g x = f x := ...
+```
+
+**2. Simp makes things worse:**
+```lean
+-- If simp makes goal more complex, use simp only:
+simp only [specific_lemma]
+
+-- Or don't use simp at all:
+rw [specific_lemma]
+```
+
+**3. Slow simp calls:**
+```lean
+-- In tight loops or big proofs:
+set_option maxHeartbeats 200000  -- Increase timeout
+
+-- Or avoid simp, use rw:
+rw [lemma1, lemma2, lemma3]  -- Faster and more explicit
+```
+
+**Advanced simp usage:**
+```lean
+-- Simp with context
+simp (config := {contextual := true})  -- Use local hypotheses
+
+-- Show what simp does (debugging)
+simp?  -- Prints "Try this: simp only [lemma1, lemma2, ...]"
+
+-- Conditional simp
+simp only [lemma] at h  -- Simplify just hypothesis h
+```
+
+**When to use `simp` vs alternatives:**
+- **Use `simp`:** When goal is obviously true after normalization
+- **Use `simp only`:** When you know exactly which lemmas apply (recommended for readability)
+- **Use `rw`:** When applying 1-3 specific rewrites
+- **Use `simp?`:** When exploring what lemmas would help (then copy the output)
+
+**Measure theory example:**
+```lean
+-- Instead of:
+simp  -- Might apply 50+ lemmas, slow and opaque
+
+-- Prefer:
+simp only [cylinder_univ, prefixCylinder_inter, Set.mem_univ]
+-- Explicit, fast, reviewable
+```
+
 ### Domain-Specific Tactics
 
 ```lean
@@ -511,6 +607,8 @@ congr                   -- Congruence
 -- Register lemmas for automation
 attribute [measurability] measurable_prefixProj takePrefix_measurable
 attribute [simp] cylinder_univ prefixCylinder_inter
+
+-- Use sparingly - only for lemmas that genuinely simplify
 ```
 
 ## Commit Message Patterns
@@ -570,28 +668,193 @@ Add implementation notes for Lévy convergence theorems
 
 **ALL of these mean: STOP. Return to systematic approach.**
 
-## Debugging Type Errors
+## Interactive Exploration and Debugging
 
-### Common Type Error Patterns
+### Essential Commands for Understanding Code
 
-**Error: "Failed to synthesize instance"**
-- **Cause:** Missing type class instance
-- **Fix:** Add `haveI : Instance := inferInstance` or explicit proof
-
-**Error: "Type mismatch"**
-- **Cause:** Implicit coercion failed or wrong type
-- **Fix:** Use explicit coercion or check types with `#check`
-
-**Error: "Tactic 'exact' failed"**
-- **Cause:** Proof term doesn't exactly match goal
-- **Fix:** Use `apply` instead or add simplification
-
-**Debugging commands:**
+**Check types and definitions:**
 ```lean
-#check expr         -- Show type of expression
-#print theorem      -- Show proof term
-#print axioms thm   -- List axioms used
-set_option trace.Meta.synthInstance true  -- Debug instance search
+#check expr                    -- Show type of expression
+#check @theorem                -- Show full type with implicit arguments
+
+#print theorem                 -- Show definition/proof term
+#print axioms theorem          -- List all axioms used (should be minimal!)
+
+#eval expr                     -- Evaluate (only for computable terms)
+#reduce expr                   -- Reduce to normal form
+
+#where                         -- Show current namespace and section context
+```
+
+**Example workflow:**
+```lean
+-- What's the type of this lemma?
+#check measure_iUnion_finset
+-- Result: ∀ {α : Type u_1} {m : MeasurableSpace α} (μ : Measure α) ...
+
+-- Show full signature with implicits
+#check @measure_iUnion_finset
+-- Shows ALL type parameters and instance arguments
+
+-- See the actual proof/definition
+#print measure_iUnion_finset
+
+-- Check if it uses any axioms
+#print axioms measure_iUnion_finset
+-- Should show: propext, quot.sound, Classical.choice (standard mathlib axioms)
+```
+
+**Inspect current context:**
+```lean
+-- In tactic mode:
+example (n : ℕ) (h : n > 0) : n ≠ 0 := by
+  trace "Current goal: {·}"  -- Print formatted goal
+  #check h                    -- Show type of hypothesis
+  sorry
+```
+
+**Debug instance synthesis:**
+```lean
+set_option trace.Meta.synthInstance true in
+theorem my_theorem : Goal := by
+  -- Shows all instance search steps
+  apply_instance
+```
+
+**Pretty printing options:**
+```lean
+set_option pp.notation false   -- Show raw terms (no notation)
+set_option pp.universes true   -- Show universe levels
+set_option pp.implicit true    -- Show all implicit arguments
+set_option pp.proofs true      -- Show proof terms (usually large)
+```
+
+**Find lemmas by pattern (in proofs):**
+```lean
+example : goal := by
+  exact?         -- Find exact proof in mathlib
+  apply?         -- Find applicable lemmas
+  rw?            -- Find rewrite lemmas
+```
+
+### Common Compilation Errors - Expanded Guide
+
+**Error: "failed to synthesize instance"**
+```
+type mismatch
+  ...
+has type
+  Measure Ω : Type
+but is expected to have type
+  IsProbabilityMeasure μ : Prop
+```
+- **Cause:** Missing type class instance (Lean can't find `IsProbabilityMeasure μ`)
+- **Fix:** Add instance explicitly:
+  ```lean
+  haveI : IsProbabilityMeasure μ := ⟨measure_univ_eq_one⟩
+  -- or
+  letI : IsProbabilityMeasure μ := inferInstance
+  ```
+- **Debug:** `set_option trace.Meta.synthInstance true` to see search process
+
+**Error: "maximum recursion depth exceeded"**
+```
+(deterministic) timeout at 'typeclass', maximum number of heartbeats (20000) reached
+```
+- **Cause:** Type class loop or very complex instance search
+- **Common in:** Nested measure spaces, product σ-algebras
+- **Fix 1:** Provide instance manually: `letI := your_instance`
+- **Fix 2:** Break inference chain: Use `@lemma (inst := ...)` to pass explicitly
+- **Fix 3:** Increase limit: `set_option synthInstance.maxHeartbeats 40000`
+
+**Error: "type mismatch"**
+```
+application type mismatch
+  f x
+argument
+  x
+has type
+  ℕ : Type
+but is expected to have type
+  ℝ : Type
+```
+- **Cause:** Implicit coercion didn't trigger or wrong type
+- **Fix:** Use explicit coercion: `f (x : ℝ)` or `f ↑x`
+- **Debug:** `#check x` to see what Lean thinks the type is
+
+**Error: "tactic 'exact' failed, type mismatch"**
+```
+tactic 'exact' failed, type mismatch
+  term has type: P ∧ Q
+  goal: Q ∧ P
+```
+- **Cause:** Proof term has different (but equivalent) type than goal
+- **Fix:** Use `apply` to allow unification, or restructure: `⟨h.2, h.1⟩`
+- **Alternative:** Add conversion lemma: `rw [and_comm]`
+
+**Error: "unknown identifier"**
+```
+unknown identifier 'measurability'
+```
+- **Cause:** Tactic or name not in scope
+- **Fix:** Check imports: `import Mathlib.Tactic.Measurability`
+- **Common:** Missing `open Tactic` or `import Mathlib.Tactic`
+
+**Error: "equation compiler failed to prove equation lemmas"**
+```
+failed to prove recursive application is decreasing
+```
+- **Cause:** Structural recursion not obvious to Lean
+- **Fix:** Use `termination_by` clause:
+  ```lean
+  def my_rec (n : ℕ) : T :=
+    ... my_rec (n - 1) ...
+  termination_by my_rec n => n
+  ```
+- **Alternative:** Use well-founded recursion or explicit induction
+
+**Error: "unexpected bound variable"**
+```
+unexpected bound variable #0
+```
+- **Cause:** Lambda capture issue or ill-formed term
+- **Fix:** Often indicates wrong de Bruijn index - restructure the term
+- **Common when:** Building proof terms manually with `Expr` API
+
+**Error: "failed to elaborate term, type mismatch"**
+```
+failed to elaborate term, unexpected type
+```
+- **Cause:** Elaboration order issue - Lean can't infer types
+- **Fix 1:** Add explicit type annotations: `(x : Type)`
+- **Fix 2:** Use `@` to provide all arguments: `@lemma Type _ _ x`
+- **Fix 3:** Help with `by exact` or provide more context
+
+**Error: "invalid occurrence of recursive function"**
+```
+invalid occurrence of recursive function 'foo'
+```
+- **Cause:** Recursion not in structurally decreasing position
+- **Fix:** Restructure to make structural recursion obvious, or prove termination
+- **Common in:** Mutual recursion, nested recursion
+
+**Quick debugging workflow:**
+```lean
+-- Step 1: Check what you have
+#check problematic_term
+
+-- Step 2: Check what's expected
+-- (Look at error message goal type)
+
+-- Step 3: Show implicit arguments
+#check @problematic_term
+
+-- Step 4: Try to build manually
+example : goal := by
+  refine problematic_term ?_ ?_  -- See what holes remain
+
+-- Step 5: Enable tracing if still stuck
+set_option trace.Elab.term true
 ```
 
 ## Project-Specific Patterns

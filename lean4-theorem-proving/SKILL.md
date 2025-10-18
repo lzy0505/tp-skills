@@ -200,17 +200,98 @@ noncomputable section
 **DON'T:** Reprove what mathlib provides
 **DO:** Search thoroughly first
 
+#### In-Editor Search (For Human Users)
+
 ```bash
-# Search mathlib docs
-# Visit https://leanprover-community.github.io/mathlib4_docs/
-
-# Search in VS Code with Lean extension
+# VS Code with Lean extension:
 # Ctrl+T (Cmd+T on Mac) - search by name
+# Note: This is for human users in VS Code, not available to AI assistants
 
-# Use exact? tactic
+# Use exact? tactic in proofs
 example : goal := by
-  exact?  -- Suggests mathlib lemmas
+  exact?  -- Suggests mathlib lemmas that directly prove the goal
 ```
+
+#### Command-Line Search (For AI Assistants and Power Users)
+
+When working as an AI assistant, use `Bash` tool with `find` and `grep` to search mathlib:
+
+**Search mathlib by keyword:**
+```bash
+# Find files containing specific lemmas (use Read tool after finding)
+find .lake/packages/mathlib -name "*.lean" -exec grep -l "keyword1\|keyword2" {} \; | head -10
+
+# Example: Search for pi and iSup lemmas
+find .lake/packages/mathlib -name "*.lean" -exec grep -l "pi.*iSup\|iSup.*pi" {} \; | head -5
+# Returns:
+#   .lake/packages/mathlib/Mathlib/Topology/MetricSpace/HausdorffDimension.lean
+#   .lake/packages/mathlib/Mathlib/Topology/MetricSpace/Isometry.lean
+#   .lake/packages/mathlib/Mathlib/Topology/MetricSpace/UniformConvergence.lean
+```
+
+**Search for specific theorem patterns:**
+```bash
+# Find conditional expectation + tendsto lemmas
+find .lake/packages/mathlib -name "*.lean" -exec grep -l "condExp.*tend\|condExp.*iSup\|Levy\|Lévy" {} \; | head -10
+# Returns:
+#   .lake/packages/mathlib/Mathlib/Probability/BorelCantelli.lean
+#   .lake/packages/mathlib/Mathlib/Probability/Independence/ZeroOne.lean
+#   .lake/packages/mathlib/Mathlib/Probability/Martingale/BorelCantelli.lean
+
+# Then use Read tool to examine promising files
+```
+
+**Search local project files:**
+```bash
+# Find uses of specific pattern in local files
+grep -n "iSup\|condExp.*tend" Exchangeability/Probability/Martingale.lean | head -15
+# Returns line numbers and matching text:
+#   180:private lemma iSup_of_antitone_eq {𝔽 : ℕ → MeasurableSpace Ω} (h_antitone : Antitone 𝔽) (k : ℕ)
+#   184:    refine iSup₂_le fun n hn => ?_
+#   188:    exact @le_iSup₂ (MeasurableSpace Ω) ℕ (fun n => n ≤ k) _ (fun n _ => 𝔽 n) 0 h0k
+
+# Search for definitions of key concepts
+grep -n "def.*tailSigma\|def.*shiftInvariant" Exchangeability/DeFinetti/*.lean
+```
+
+**Recursive search with context:**
+```bash
+# Find and show context around matches (±3 lines)
+grep -r -A 3 -B 3 "theorem.*ergodic" .lake/packages/mathlib/Mathlib/Dynamics/
+
+# Search for lemma names starting with specific prefix
+grep -r "^lemma integral_" .lake/packages/mathlib/Mathlib/MeasureTheory/Integral/
+```
+
+**Workflow for finding relevant mathlib lemmas:**
+1. **Identify keywords** from your goal (e.g., "condExp", "martingale", "convergence")
+2. **Use `find` + `grep -l`** to locate candidate files
+3. **Use `Read` tool** to examine the most promising files
+4. **Use `grep -n`** to find exact line numbers of relevant lemmas
+5. **Import and apply** the lemmas in your proof
+
+**Example workflow:**
+```bash
+# Step 1: Find files about measure preservation
+⏺ Bash(find .lake/packages/mathlib -name "*.lean" -exec grep -l "MeasurePreserving\|measure_preserving" {} \; | head -10)
+
+# Step 2: Read the most relevant file
+⏺ Read(.lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpaceDef.lean)
+
+# Step 3: Find specific lemmas with line numbers
+⏺ Bash(grep -n "lemma.*MeasurePreserving.*comp" .lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpaceDef.lean)
+
+# Step 4: Read the specific lemma
+⏺ Read(.lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpaceDef.lean, offset=450, limit=20)
+```
+
+**Pro tips for search:**
+- Use `\|` for OR patterns in grep: `"pattern1\|pattern2"`
+- Use `head -N` to limit results to first N matches
+- Use `grep -n` to get line numbers (useful for Read tool)
+- Use `grep -l` to list files only (faster for broad searches)
+- Search for theorem statements, not proofs: `"theorem\|lemma\|def"`
+- Include alternative spellings: `"Levy\|Lévy"`, `"sigma\|σ"`
 
 **Common mathlib modules for formal math:**
 - `Mathlib.MeasureTheory.*` - Measure and integration theory
@@ -561,16 +642,12 @@ This skill works with:
 - Lean Zulip chat: https://leanprover.zulipchat.com/
 
 **Search strategies:**
-```bash
-# Find similar proofs in mathlib
-grep -r "theorem.*contractable" ~/.elan/toolchains/
+See the "Finding Existing Lemmas" section above for detailed command-line search techniques.
 
-# Search mathlib docs online
-# Use search box at https://leanprover-community.github.io/mathlib4_docs/
-
-# Ask Zulip
-# Search existing threads before posting
-```
+Additional resources:
+- Search mathlib docs online: https://leanprover-community.github.io/mathlib4_docs/
+- Ask Zulip (search existing threads first): https://leanprover.zulipchat.com/
+- Use `exact?` and `apply?` tactics for automatic suggestions
 
 ## Success Metrics
 

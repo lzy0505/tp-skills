@@ -112,7 +112,7 @@ How should I handle type class inference issues?
 
 ```
 lean4-theorem-proving/
-└── SKILL.md      # Complete skill (16KB of Lean 4 expertise)
+└── SKILL.md      # Complete skill (32KB of Lean 4 expertise)
 ```
 
 **What's in SKILL.md:**
@@ -120,6 +120,9 @@ lean4-theorem-proving/
 - 4-Phase Proof Development Workflow
 - Mathlib Integration Guide (with comprehensive search techniques)
 - **Command-Line Search Patterns** (find/grep workflows for mathlib and local files)
+- **Interactive Exploration** (#check, #print, #eval, debugging commands)
+- **The simp Tactic Deep Dive** (when to use, pitfalls, best practices)
+- **Expanded Error Messages** (10 common errors with concrete fixes)
 - Managing Axioms and Sorries
 - Measure Theory Patterns
 - Tactics Reference
@@ -190,9 +193,13 @@ This skill was developed from patterns observed in:
 
 ## 🚦 Status
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Production-ready
 **Last Updated:** October 2025
+
+**Recent updates:**
+- v1.1.0: Added simp tactic deep dive, interactive exploration commands, and 10 common error messages with fixes
+- v1.0.0: Initial release with core workflow and mathlib integration
 
 ## ❓ FAQ
 

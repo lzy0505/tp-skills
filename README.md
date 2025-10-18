@@ -4,7 +4,7 @@ A comprehensive [Claude Skill](https://www.anthropic.com/news/skills) for system
 
 ## 🎯 What is This?
 
-This is an **official Claude Skill** that teaches Claude how to work effectively with Lean 4 theorem proving. Claude Skills are custom tools that provide specialized knowledge and workflows, available across Claude.ai, API, and Code.
+This is a **Claude Skill** that teaches Claude how to work effectively with Lean 4 theorem proving. Claude Skills are custom tools that provide specialized knowledge and workflows, available across Claude.ai, API, and Code.
 
 **What this skill provides:**
 - 📚 **Systematic workflow** for proof development (structure → helpers → incremental filling)

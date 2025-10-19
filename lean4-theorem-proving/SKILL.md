@@ -11,50 +11,6 @@ Lean 4 is an interactive theorem prover. Unlike traditional code, correctness is
 
 **Core principle:** Build incrementally, structure before solving, and trust the type checker.
 
-## Powerful Tools at Your Disposal
-
-**🚀 FIRST: Check if the Lean MCP server is available** (for Claude Code users)
-
-The Lean MCP server provides the most powerful workflow:
-- `mcp__lean-lsp__lean_goal` - See proof state at any location (VERY USEFUL!)
-- `mcp__lean-lsp__lean_diagnostic_messages` - Get all errors/warnings
-- `mcp__lean-lsp__lean_leansearch` - Semantic theorem search
-- `mcp__lean-lsp__lean_loogle` - Type-based search
-- `mcp__lean-lsp__lean_local_search` - Search current workspace
-- And many more (see `references/mcp-server.md` for full details)
-
-**If MCP server available:** Use it as your primary interface. It's faster and more integrated than scripts.
-
-**If MCP server NOT available:** Use the automation scripts below.
-
-### Automation Scripts (8 Production-Ready Tools)
-
-Located in `scripts/` directory - all scripts designed for efficient subagent delegation:
-
-**Search & Discovery:**
-- `search_mathlib.sh` - Find lemmas/theorems by name or pattern
-- `smart_search.sh` - Multi-source search (LeanSearch + Loogle APIs + local)
-- `find_instances.sh` - Discover type class instances and patterns
-
-**Analysis & Metrics:**
-- `proof_complexity.sh` - Analyze proof length, identify refactoring targets
-- `dependency_graph.sh` - Visualize theorem dependencies (DOT/text)
-
-**Verification & Tracking:**
-- `check_axioms_inline.sh` - Verify axiom usage (works with namespaces) ✅ Recommended
-- `sorry_analyzer.py` - Extract sorries with context, interactive mode available
-
-**⚡ Subagent Delegation Pattern (Claude Code users):**
-
-Instead of running scripts directly, dispatch lightweight Explore agents:
-```
-"Dispatch Explore agent to run scripts/smart_search.sh 'continuous compact' and report top 3 results"
-```
-
-**Benefits:** 6x token reduction, cleaner conversation, parallel execution. See "Leveraging Subagents for Automation" section below for full patterns.
-
-**For users without Claude Code:** Run scripts directly from command line.
-
 ## When to Use This Skill
 
 This skill applies to ANY Lean 4 development across all mathematical domains:
@@ -70,6 +26,27 @@ This skill applies to ANY Lean 4 development across all mathematical domains:
 - **Axiom proliferation:** Custom axioms without documented proof plans
 - **Search challenges:** Need to find mathlib lemmas but don't know where to look
 - **Working with:** measure theory, conditional expectation, σ-algebras, integrability
+
+## Powerful Tools at Your Disposal
+
+**🚀 MCP Server (Best - if available):** Direct integration with Lean LSP
+- `mcp__lean-lsp__lean_goal` - See proof state (VERY USEFUL!)
+- `mcp__lean-lsp__lean_leansearch` - Semantic search
+- `mcp__lean-lsp__lean_loogle` - Type-based search
+- See `references/mcp-server.md` for complete documentation
+
+**⚡ Subagent Delegation (Efficient - Claude Code users):** 6x token reduction
+- Dispatch Explore agents to run automation scripts
+- Example: `"Dispatch Explore agent to run scripts/smart_search.sh..."`
+- See `references/subagent-workflows.md` for patterns and examples
+
+**🔧 Automation Scripts (8 tools - all users):** Located in `scripts/`
+- **Search:** search_mathlib.sh, smart_search.sh, find_instances.sh
+- **Analysis:** proof_complexity.sh, dependency_graph.sh
+- **Verification:** check_axioms_inline.sh, sorry_analyzer.py
+- See `scripts/README.md` for complete documentation
+
+**Priority:** Use MCP server when available → Delegate to subagents → Run scripts directly
 
 ## The Build-First Principle
 
@@ -335,141 +312,23 @@ Quick reference for the most common errors:
 
 ## Leveraging Subagents for Automation
 
-**When working in Claude Code**, delegate mechanical tasks to specialized subagents. This keeps the main conversation focused on proof strategy while automating search, analysis, and verification.
+**For Claude Code users:** Delegate mechanical tasks to subagents. This keeps main conversation focused on proof strategy.
 
-### When to Dispatch Subagents
+**Quick reference:**
+- **Dispatch for:** Search, analysis, verification, exploration tasks
+- **Keep local:** Proof development, design decisions, error debugging
+- **Use Explore agents** for most script execution (fast, cheap)
+- **6x token savings** vs running scripts directly
 
-**Dispatch subagents for:**
-- **Search tasks** - Finding mathlib lemmas, instances, or similar proofs
-- **Analysis tasks** - Complexity metrics, dependency graphs, sorry reports
-- **Verification tasks** - Checking axioms across multiple files
-- **Exploratory tasks** - Understanding codebase structure or unfamiliar patterns
-
-**Keep in main conversation:**
-- **Proof development** - Writing tactics and structuring arguments
-- **Design decisions** - Choosing proof approaches or architectures
-- **Error debugging** - Interpreting type checker feedback
-- **Strategic planning** - Breaking down theorems into subgoals
-
-### Agent Types for Lean 4 Work
-
-**Explore agent** (fast, lightweight):
+**Common patterns:**
 ```
-Use for: Quick searches, file discovery, pattern matching
-Tools: Glob, Grep, Read, Bash
-Cost: ~Haiku-level tokens
-When: "Find all files using MeasurableSpace", "Locate definition of X"
-```
-
-**General-purpose agent** (thorough, multi-step):
-```
-Use for: Complex searches, analysis requiring judgment
-Tools: Full toolset including Task
-Cost: ~Sonnet-level tokens
-When: Running scripts that need interpretation, comparing multiple approaches
-```
-
-### Automation Scripts + Subagents
-
-**Pattern: Delegate script execution to Explore agents**
-
-Instead of running scripts directly in main conversation, dispatch lightweight subagents:
-
-```
-✅ Efficient:
-"Dispatch Explore agent to run scripts/sorry_analyzer.py on src/ and report top 5 sorries to tackle"
-"Dispatch Explore agent to find all MeasurableSpace instances using scripts/find_instances.sh"
-
-❌ Inefficient:
-[Running scripts/sorry_analyzer.py directly, consuming main conversation tokens]
-```
-
-### Example Workflows
-
-**Finding mathlib lemmas:**
-```
-You: "I need lemmas about continuous functions on compact spaces"
-
-Claude (in main conversation):
-- Dispatches Explore agent: "Run scripts/smart_search.sh 'continuous compact' --source=leansearch and report top 3 results"
-- Agent reports back with specific lemmas
-- Main conversation continues with: "Let's use Continuous.image_of_compact..."
-```
-
-**Analyzing proof complexity:**
-```
-You: "Which proofs should I refactor first?"
-
-Claude (in main conversation):
-- Dispatches Explore agent: "Run scripts/proof_complexity.sh src/ --sort-by=lines and report top 10"
-- Agent reports: "proof_main (245 lines), helper_convergence (180 lines), ..."
-- Main conversation: "Let's refactor proof_main first - it has 3 natural subgoals we can extract"
-```
-
-**Checking axiom usage before commit:**
-```
-You: "Ready to commit - verify axioms"
-
-Claude (in main conversation):
-- Dispatches Explore agent: "Run scripts/check_axioms_inline.sh 'src/**/*.lean' and report any non-standard axioms"
-- Agent reports: "✓ All 150 declarations use only standard axioms"
-- Main conversation: "Great! Let's commit."
-```
-
-**Interactive sorry selection:**
-```
-You: "What should I work on next?"
-
-Claude (in main conversation):
-- Suggests: "Let's use the interactive sorry navigator"
-- You run: scripts/sorry_analyzer.py . --interactive
-- You pick sorry #3 from the TUI
-- Return to main conversation: "I'm working on the convergence proof in line 245"
-```
-
-### Subagent Dispatch Patterns
-
-**Explicit delegation:**
-```
-"I'm going to dispatch an Explore agent to search mathlib for [X]"
-[Uses Task tool with Explore agent]
-[Agent reports back]
-"The agent found [Y], let's use that..."
-```
-
-**Batch operations:**
-```
+"Dispatch Explore agent to run scripts/smart_search.sh 'continuous compact' and report top 3"
 "Dispatch Explore agent to:
-1. Run sorry_analyzer.py on entire project
-2. Run check_axioms_inline.sh on changed files
-3. Report summary statistics"
+ 1. Run sorry_analyzer.py and report count
+ 2. Run check_axioms_inline.sh and report issues"
 ```
 
-**Iterative search:**
-```
-"Dispatch general-purpose agent to:
-1. Search mathlib for continuous function lemmas
-2. If found, check which apply to compact spaces
-3. If none apply, search for compactness preservation
-4. Report most relevant 3 lemmas with import paths"
-```
-
-### Cost-Benefit Analysis
-
-**Main conversation tokens are expensive:**
-- Reading 100-line script output: ~500 tokens (wasted on boilerplate)
-- Explaining script results: ~200 tokens
-
-**Subagent delegation is cheap:**
-- Dispatch + receive summary: ~100 tokens
-- Agent uses Haiku/fast model for execution
-- **Savings: 600 tokens → 100 tokens (6x reduction)**
-
-**When NOT to use subagents:**
-- Single-file searches (use Grep directly)
-- Immediate tactical decisions (type checker feedback)
-- Small proofs (<20 lines)
-- Already have the information
+**For complete workflows, patterns, and examples, see:** `references/subagent-workflows.md`
 
 ## Quality Checklist
 
@@ -520,5 +379,6 @@ This skill includes detailed reference files for deep dives:
 - **`references/domain-patterns.md`** - Analysis, topology, algebra, measure theory, probability patterns with real examples
 - **`references/compilation-errors.md`** - Detailed error explanations, debugging workflows, type class synthesis issues
 - **`references/mcp-server.md`** - Lean MCP server tools, workflows, troubleshooting (for Claude Code users)
+- **`references/subagent-workflows.md`** - Subagent delegation patterns, workflows, examples (for Claude Code users)
 
 Claude will load these references as needed when working on specific tasks.

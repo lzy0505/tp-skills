@@ -113,6 +113,7 @@ How should I handle type class inference issues?
 ```
 lean4-theorem-proving/
 └── SKILL.md      # Complete skill (11KB, 382 lines)
+TESTING.md        # Development methodology and baseline behaviors
 ```
 
 **What's in SKILL.md:**
@@ -125,6 +126,13 @@ lean4-theorem-proving/
 - Interactive Exploration (#check, #print, debugging, lemma finders)
 - Common Compilation Errors (6 errors in compact table format)
 - Quality Signals (checklist, success metrics, red flags)
+
+**What's in TESTING.md:**
+- Empirical development approach from real formalization work
+- Baseline behaviors observed without skill (RED phase)
+- How skill addresses issues (GREEN phase)
+- Known rationalizations and counters (REFACTOR phase)
+- Real-world validation metrics from exchangeability project
 
 ## 🎯 When to Use This Skill
 
@@ -189,11 +197,12 @@ This skill was developed from patterns observed in:
 
 ## 🚦 Status
 
-**Version:** 1.3.0
+**Version:** 1.3.1
 **Status:** Production-ready
 **Last Updated:** October 2025
 
 **Recent updates:**
+- v1.3.1: Enhanced skill discoverability (Claude Search Optimization) - Added "Use when..." triggers with specific error messages and symptoms in description; added keyword density throughout (type class errors, sorry accumulation, mathlib search); added binder order guidance from real formalization experience; created TESTING.md documenting empirical development approach
 - v1.3.0: Compressed by 33% (568→382 lines) using 5 strategies: consolidated domain patterns, merged quality sections, table format for errors, condensed examples, unified axiom/sorry handling
 - v1.2.0: Optimized for balance and best practices - balanced coverage across algebra, topology, analysis, probability; compressed by 364 lines while maintaining quality
 - v1.1.0: Added simp tactic deep dive, interactive exploration commands, and 10 common error messages with fixes

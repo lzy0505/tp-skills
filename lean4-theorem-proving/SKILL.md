@@ -1,6 +1,6 @@
 ---
 name: lean4-theorem-proving
-description: Systematic approach to developing formal proofs in Lean 4, managing sorries, using mathlib, and building verified mathematics
+description: Use when writing Lean 4 proofs, managing sorries/axioms, facing "failed to synthesize instance" or type class errors, or searching mathlib - provides systematic build-first workflow, type class management patterns (haveI/letI), and domain-specific tactics for measure theory, probability, and algebra
 ---
 
 # Lean 4 Theorem Proving
@@ -19,11 +19,13 @@ Use for ANY Lean 4 development across all mathematical domains:
 - Computer science (algorithms, data structures, program verification)
 - Contributing to or extending mathlib
 
-**Especially important when:**
-- Managing multiple interrelated proofs
-- Dealing with type class inference issues
-- Converting axioms to proven lemmas
-- Working with complex mathematical structures
+**Especially important when you see:**
+- **Compilation errors:** "failed to synthesize instance", "maximum recursion depth", "type mismatch", "unknown identifier"
+- **Type class issues:** MeasurableSpace, IsProbabilityMeasure, or other instance synthesis failures
+- **Sorry accumulation:** Multiple sorries with unclear elimination strategy
+- **Axiom proliferation:** Custom axioms without documented proof plans
+- **Search challenges:** Need to find mathlib lemmas but don't know where to look
+- **Working with:** measure theory, conditional expectation, σ-algebras, integrability
 
 ## The Build-First Principle
 
@@ -89,12 +91,13 @@ theorem main : Result := by
 
 ### Phase 4: Managing Type Class Issues
 
-**Sub-structures need explicit instances:**
+**Sub-structures need explicit instances** (common with sub-σ-algebras, submeasures):
 
 ```lean
 -- ❌ Common error: Lean can't synthesize instance
 have h_le : m ≤ m0 := ...
 -- Later: "Failed to synthesize MeasurableSpace Ω"
+--        "typeclass instance problem is stuck"
 
 -- ✅ Fix: Provide instance explicitly
 haveI : MeasurableSpace Ω := m0  -- Explicit instance
@@ -103,6 +106,8 @@ haveI : Fact (m ≤ m0) := ⟨h_le⟩
 ```
 
 **When synthesis fails:** Add `haveI : Instance := ...`, use `letI` for let-bound, or `@lemma (inst := your_instance)`.
+
+**Binder order matters:** When working with sub-structures (like `m : MeasurableSpace Ω` with ambient `[MeasurableSpace Ω]`), the parameter `m` must come AFTER all instance parameters to avoid instance resolution choosing the wrong structure.
 
 ## Mathlib Integration
 

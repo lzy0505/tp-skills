@@ -124,6 +124,32 @@ import Mathlib.Topology.Compactness
 
 **For detailed search techniques, naming conventions, and import organization, see:** `references/mathlib-guide.md`
 
+**Automation available:** Use `scripts/search_mathlib.sh` for automated searching with multiple search modes (name, type, content).
+
+## Automation Scripts
+
+Three executable scripts automate common workflows:
+
+**1. search_mathlib.sh** - Find existing lemmas before proving
+```bash
+scripts/search_mathlib.sh "continuous.*compact" name
+scripts/search_mathlib.sh "integrable" content
+```
+
+**2. check_axioms.sh** - Verify theorems use only standard axioms
+```bash
+scripts/check_axioms.sh src/DeFinetti/         # Check directory
+scripts/check_axioms.sh MyFile.lean --verbose  # Detailed output
+```
+
+**3. sorry_analyzer.py** - Extract and track all sorries
+```bash
+scripts/sorry_analyzer.py src/ --format=markdown > SORRIES.md
+scripts/sorry_analyzer.py . --format=json  # For CI/CD
+```
+
+**See `scripts/README.md` for complete documentation, usage examples, and workflow integration.**
+
 ## Essential Tactics
 
 **Simplification:**
@@ -261,8 +287,8 @@ Quick reference for the most common errors:
 **Before commit:**
 - [ ] File compiles: `lake env lean <file>`
 - [ ] Full project builds: `lake build`
-- [ ] All new `sorry`s documented with strategy
-- [ ] No new axioms (or documented with elimination plan)
+- [ ] All new `sorry`s documented with strategy (check with `scripts/sorry_analyzer.py`)
+- [ ] No new axioms (or documented with elimination plan) - verify with `scripts/check_axioms.sh`
 - [ ] Imports minimal and specific
 
 **Doing it right ✅:**

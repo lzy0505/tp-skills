@@ -122,20 +122,63 @@ Search for Lean theorems and definitions using natural language.
 }
 ```
 
-### 6. `lean_loogle` - Search by Type Signature
+### 6. `lean_loogle` - Search by Type Signature (**KILLER FEATURE**)
 
 Search for definitions and theorems using type patterns.
 
 **Rate limit:** 3 requests per 30 seconds
 
+**Key insight:** Loogle excels at type-based search when you know what goes in/out but not the exact name.
+
+**IMPORTANT:** Simple name searches often fail:
+```json
+// ❌ These DON'T work
+{"query": "Measure.map"}          // No results (not a type pattern)
+{"query": "IsProbabilityMeasure"} // No results (searches by type structure)
+```
+
+**Why:** Loogle searches by *type structure*, not text. For name searches, use `lean_leansearch` or `lean_local_search`.
+
+**✅ Type pattern queries (what DOES work):**
+
+```json
+// Find map function: (?a -> ?b) -> List ?a -> List ?b
+{"query": "(?a -> ?b) -> List ?a -> List ?b", "num_results": 5}
+// Returns: List.map, List.mapIdx ✅
+
+// Find measure pushforward
+{"query": "Measure ?X -> (?X -> ?Y) -> Measure ?Y", "num_results": 5}
+// Returns: Measure.map and related ✅
+
+// Find measurable composition
+{"query": "Measurable ?f -> Measurable ?g -> Measurable (?g ∘ ?f)", "num_results": 5}
+// Returns: Measurable.comp ✅
+```
+
+**Query pattern syntax:**
+
+- **Type variables:** `?a`, `?b`, `?c` - Match any type
+- **Wildcards:** `_` - Match any term
+- **Function arrow:** `->` or `→`
+- **Conclusion:** `|-` prefix (what the theorem proves)
+
 **Query patterns:**
-- By constant: `Real.sin` - finds lemmas mentioning Real.sin
-- By lemma name: `"differ"` - finds lemmas with "differ" in name
-- By subexpression: `_ * (_ ^ _)` - finds lemmas with product and power
-- Non-linear: `Real.sqrt ?a * Real.sqrt ?a`
-- By type shape: `(?a -> ?b) -> List ?a -> List ?b`
-- By conclusion: `|- tsum _ = _ * tsum _`
-- By conclusion with hyps: `|- _ < _ → tsum _ < tsum _`
+- **By type shape:** `(?a -> ?b) -> List ?a -> List ?b` ✅ **MOST USEFUL**
+- **By constant:** `Real.sin` - finds lemmas mentioning Real.sin
+- **By lemma name:** `"differ"` - finds lemmas with "differ" in name (less reliable)
+- **By subexpression:** `_ * (_ ^ _)` - finds lemmas with product and power
+- **Non-linear:** `Real.sqrt ?a * Real.sqrt ?a`
+- **By conclusion:** `|- tsum _ = _ * tsum _`
+- **By conclusion with hyps:** `|- _ < _ → tsum _ < tsum _`
+
+**When to use loogle:**
+
+```
+Know what you need?
+├─ Know exact name? → lean_local_search
+├─ Know concept/description? → lean_leansearch
+└─ Know input/output types? → lean_loogle ✅ THIS!
+```
 
 **Example:**
 ```json
@@ -345,21 +388,50 @@ Build the Lean project and restart the LSP server.
 ```
 Need a lemma?
 ├─ Is it in your project?
-│  └─ Use lean_local_search (fast!)
-├─ Know the concept/name?
+│  └─ Use lean_local_search (fast, no rate limit!)
+│
+├─ Know the exact name?
+│  └─ Use lean_local_search or grep
+│
+├─ Know what types go in/out but not the name?
+│  └─ Use lean_loogle with type pattern ✅ POWERFUL!
+│     Example: "(?a -> ?b) -> List ?a -> List ?b" finds List.map
+│
+├─ Know the concept/description?
 │  └─ Use lean_leansearch with natural language
-├─ Know the type signature?
-│  └─ Use lean_loogle with type pattern
+│     Example: "Cauchy Schwarz inequality"
+│
 ├─ Stuck at specific goal?
-│  └─ Use lean_state_search
+│  └─ Use lean_state_search (uses current proof state)
+│
 └─ Need relevant premises?
-   └─ Use lean_hammer_premise
+   └─ Use lean_hammer_premise (suggests applicable lemmas)
 ```
 
 **Rate limit management:**
-- `lean_local_search`: No limit (fast!)
-- `lean_leansearch`, `lean_loogle`, `lean_state_search`, `lean_hammer_premise`: 3 requests per 30 seconds
-- **Strategy:** Always use `lean_local_search` first before rate-limited tools
+- **No limit:** `lean_local_search` ← Start here!
+- **3 requests per 30 seconds (shared pool):**
+  - `lean_leansearch`
+  - `lean_loogle`
+  - `lean_state_search`
+  - `lean_hammer_premise`
+
+**Strategy:**
+1. Always try `lean_local_search` first (project lemmas, no rate limit)
+2. If you know input/output types → `lean_loogle` (type patterns)
+3. If you know concept → `lean_leansearch` (natural language)
+4. If stuck at goal → `lean_state_search` or `lean_hammer_premise`
+
+**Real-world example:**
+
+```
+Problem: Need function to transform List α to List β using (α → β)
+
+❌ Don't: lean_loogle "List.map"  # Simple name search fails
+✅ Do: lean_loogle "(?a -> ?b) -> List ?a -> List ?b"  # Type pattern succeeds!
+
+Result: List.map, List.mapIdx, etc.
+```
 
 ### Debugging Compilation Errors
 

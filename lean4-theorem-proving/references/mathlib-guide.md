@@ -107,9 +107,75 @@ grep -n "map" .lake/packages/mathlib/Mathlib/Data/List/Basic.lean
 grep -n "lemma.*indicator" .lake/packages/mathlib/Mathlib/MeasureTheory/Function/Indicator.lean
 ```
 
-### Strategy 3: Name Convention-Based
+### Strategy 3: Type Signature-Based (Loogle's Killer Feature)
 
-Mathlib follows consistent naming conventions:
+**When to use:** You know what types should go in and out, but don't know the exact name.
+
+**Key insight:** Loogle's type pattern search is extremely powerful - use `?a`, `?b` as type variables to search by function signature.
+
+**Successful patterns:**
+```bash
+# Find map function on lists: (?a -> ?b) -> List ?a -> List ?b
+# Returns: List.map, List.mapIdx, etc.
+
+# Find function composition: (?a -> ?b) -> (?b -> ?c) -> ?a -> ?c
+# Returns: Function.comp and related
+
+# Find property transformers: Continuous ?f -> Measurable ?f
+# Finds lemmas about continuity implying measurability
+```
+
+**Type pattern syntax:**
+- `?a`, `?b`, `?c` - Type variables (can match any type)
+- `_` - Wildcard for any term
+- `->` - Function arrow
+- `|-` - Turnstile (for conclusions)
+
+**Examples that work well:**
+
+```bash
+# Unknown: What's the function to transform lists?
+# Known: Takes (a -> b) and List a, returns List b
+lean_loogle "(?a -> ?b) -> List ?a -> List ?b"
+# Result: List.map ✅
+
+# Unknown: How to compose measurable functions?
+# Known: Two measurable functions compose
+lean_loogle "Measurable ?f -> Measurable ?g -> Measurable (?g ∘ ?f)"
+# Result: Measurable.comp ✅
+
+# Unknown: What proves probability measures preserve properties?
+# Known: Need statement about IsProbabilityMeasure and maps
+lean_loogle "IsProbabilityMeasure ?μ -> IsProbabilityMeasure (Measure.map ?f ?μ)"
+# Result: Specific pushforward preservation lemmas ✅
+```
+
+**Important caveat - Simple name searches often fail:**
+
+```bash
+# ❌ These DON'T work well
+lean_loogle "Measure.map"          # No results (not a type pattern)
+lean_loogle "IsProbabilityMeasure" # No results (searches declarations)
+
+# ✅ Use type patterns instead
+lean_loogle "Measure ?X -> (?X -> ?Y) -> Measure ?Y"  # Finds Measure.map
+lean_loogle "IsProbabilityMeasure ?μ -> ?property"     # Finds related lemmas
+```
+
+**Why simple names fail:** Loogle searches by *type structure*, not text matching. For text/name searches, use `leansearch` instead.
+
+**Decision tree:**
+
+```
+Know what you're looking for?
+├─ Know exact name? → Use grep or lean_local_search
+├─ Know concept/description? → Use leansearch (natural language)
+└─ Know input/output types? → Use loogle (type patterns) ✅
+```
+
+### Strategy 4: Name Convention-Based (For Grep Search)
+
+Mathlib follows consistent naming conventions - useful for grep, not loogle:
 
 **Implications:** `conclusion_of_hypothesis`
 ```lean
@@ -136,7 +202,7 @@ mul_assoc                      -- Multiplication is associative
 integral_add                   -- Integral is additive
 ```
 
-**Search using these patterns:**
+**Search using these patterns (grep, not loogle):**
 ```bash
 # Looking for: "conditional expectation of sum equals sum of conditional expectations"
 # Convention: "condExp_add" or "add_condExp"
@@ -147,7 +213,7 @@ grep -n "condExp.*add\|add.*condExp" .lake/packages/mathlib/Mathlib/MeasureTheor
 grep -n "measure_union" .lake/packages/mathlib/Mathlib/MeasureTheory/**/*.lean
 ```
 
-### Strategy 4: File Organization-Based
+### Strategy 5: File Organization-Based
 
 Mathlib is organized hierarchically:
 

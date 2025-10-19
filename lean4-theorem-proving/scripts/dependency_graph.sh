@@ -94,8 +94,10 @@ case "$FORMAT" in
         echo -e "${BLUE}Dependency tree for: ${YELLOW}$FILE${NC}"
         echo
 
-        # Count dependencies for each theorem
-        declare -A DEP_COUNT
+        # Count dependencies for each theorem (Bash 3.2 compatible - no associative arrays)
+        TEMP_COUNTS=$(mktemp)
+        trap 'rm -f "$TEMP_COUNTS"' EXIT
+
         while IFS= read -r theorem; do
             BODY=$(awk "/^(theorem|lemma) $theorem /,/^(theorem|lemma|def|end) /" "$FILE" | tail -n +2)
             COUNT=0
@@ -104,13 +106,11 @@ case "$FORMAT" in
                     ((COUNT++))
                 fi
             done <<< "$THEOREMS"
-            DEP_COUNT[$theorem]=$COUNT
+            echo "$COUNT:$theorem" >> "$TEMP_COUNTS"
         done <<< "$THEOREMS"
 
         # Display theorems sorted by dependency count
-        for theorem in "${!DEP_COUNT[@]}"; do
-            echo "${DEP_COUNT[$theorem]}:$theorem"
-        done | sort -rn | while IFS=: read -r count theorem; do
+        sort -rn "$TEMP_COUNTS" | while IFS=: read -r count theorem; do
             if [[ $count -eq 0 ]]; then
                 echo -e "${GREEN}✓${NC} $theorem (leaf - no internal dependencies)"
             elif [[ $count -eq 1 ]]; then
@@ -131,7 +131,7 @@ case "$FORMAT" in
         echo
         echo -e "${BLUE}Summary:${NC}"
         TOTAL=$(echo "$THEOREMS" | wc -l)
-        LEAVES=$(for t in "${!DEP_COUNT[@]}"; do echo "${DEP_COUNT[$t]}"; done | grep -c "^0$" || true)
+        LEAVES=$(cut -d: -f1 "$TEMP_COUNTS" | grep -c "^0$" || true)
         echo "  Total theorems: $TOTAL"
         echo "  Leaf theorems (no dependencies): $LEAVES"
         echo "  Internal theorems: $((TOTAL - LEAVES))"

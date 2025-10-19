@@ -53,23 +53,23 @@ Set `MATHLIB_PATH` environment variable to override default `.lake/packages/math
 3. Import and use `#check` to verify
 4. Save hours by not reproving standard results
 
-## check_axioms.sh
+---
 
-**Purpose:** Verify that theorems use only standard mathlib axioms, identifying any custom axioms that need elimination plans.
+## check_axioms_inline.sh ✅ **Recommended**
+
+**Purpose:** Verify that theorems use only standard mathlib axioms, identifying any custom axioms that need elimination plans. Works for ALL declarations including namespaces, sections, and private declarations.
 
 **Usage:**
 ```bash
-./check_axioms.sh <file-or-directory> [--verbose]
+./check_axioms_inline.sh <file> [--verbose]
 ```
 
-**⚠️ LIMITATION:** This script only works for declarations that are part of the module's public API. Declarations in namespaces, sections, or marked `private` cannot be checked via external import.
-
-**For checking all declarations (including internal ones):**
-```lean
--- Add at the end of your Lean file:
-#print axioms my_theorem
-#print axioms my_lemma
-```
+**How it works:**
+1. Detects namespace from file
+2. Temporarily appends `#print axioms` commands
+3. Runs Lean and captures output
+4. Restores file automatically (safe even if interrupted)
+5. Filters out standard axioms
 
 **Standard Axioms (Acceptable):**
 - `propext` - Propositional extensionality
@@ -79,26 +79,43 @@ Set `MATHLIB_PATH` environment variable to override default `.lake/packages/math
 **Examples:**
 ```bash
 # Check single file
-./check_axioms.sh src/DeFinetti/ViaL2.lean
+./check_axioms_inline.sh MyFile.lean
 
-# Check entire directory
-./check_axioms.sh src/DeFinetti/
-
-# Check with verbose output (shows all axioms)
-./check_axioms.sh . --verbose
+# Verbose mode (shows all axioms, including standard ones)
+./check_axioms_inline.sh MyFile.lean --verbose
 ```
 
 **Output:**
-- ✓ Green: Declarations using only standard axioms
-- ⚠ Red: Non-standard axioms (need elimination plans)
+```
+✓ All declarations use only standard axioms
+
+# Or if non-standard axioms found:
+⚠ my_theorem uses non-standard axiom: my_custom_axiom
+```
 
 **Workflow:**
 1. Run before committing new theorems
 2. Add elimination plans for any custom axioms
 3. Use during PR review to verify axiom hygiene
-4. Track progress on axiom elimination
 
-**Note:** Requires project to build (`lake build`) for imports to resolve.
+**Note:** Requires project to build successfully (`lake build`).
+
+---
+
+## check_axioms.sh ⚠️ **Limited - Public API Only**
+
+**⚠️ LIMITATION:** This script only works for declarations that are part of the module's public API. Declarations in namespaces, sections, or marked `private` cannot be checked via external import.
+
+**Recommendation:** Use `check_axioms_inline.sh` instead for regular development files.
+
+**Usage:**
+```bash
+./check_axioms.sh <file-or-directory> [--verbose]
+```
+
+**When to use:**
+- Library files with flat (non-namespaced) structure
+- Checking public API of published libraries
 
 ## sorry_analyzer.py
 

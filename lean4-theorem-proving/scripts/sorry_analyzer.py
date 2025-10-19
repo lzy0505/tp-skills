@@ -3,7 +3,7 @@
 sorry_analyzer.py - Extract and analyze sorry statements in Lean 4 code
 
 Usage:
-    ./sorry_analyzer.py <file-or-directory> [--format=text|json|markdown]
+    ./sorry_analyzer.py <file-or-directory> [--format=text|json|markdown] [--interactive]
 
 This script finds all 'sorry' instances in Lean files and extracts:
 - Location (file, line number)
@@ -11,15 +11,21 @@ This script finds all 'sorry' instances in Lean files and extracts:
 - Documentation (TODO comments)
 - Type information (from goal state if available)
 
+Modes:
+    --interactive: Interactive mode to pick which sorry to work on
+    --format=FORMAT: Output format (text, json, markdown)
+
 Examples:
     ./sorry_analyzer.py MyFile.lean
     ./sorry_analyzer.py src/DeFinetti/ --format=markdown
     ./sorry_analyzer.py . --format=json > sorries.json
+    ./sorry_analyzer.py . --interactive
 """
 
 import re
 import sys
 import json
+import subprocess
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from typing import List, Optional
@@ -170,6 +176,119 @@ def format_json(sorries: List[Sorry]) -> str:
         'sorries': [asdict(s) for s in sorries]
     }, indent=2)
 
+def interactive_mode(sorries: List[Sorry]):
+    """Interactive mode to navigate and select sorries"""
+    if not sorries:
+        print("No sorries found!")
+        return
+
+    # Group by file
+    by_file = {}
+    for sorry in sorries:
+        by_file.setdefault(sorry.file, []).append(sorry)
+
+    print(f"\n{'='*80}")
+    print(f"Found {len(sorries)} sorry statement(s) across {len(by_file)} file(s)")
+    print(f"{'='*80}\n")
+
+    # Display files with sorry counts
+    files = sorted(by_file.items(), key=lambda x: len(x[1]), reverse=True)
+    print("Files with sorries:")
+    for i, (filepath, file_sorries) in enumerate(files, 1):
+        print(f"  [{i}] {filepath} ({len(file_sorries)} sorries)")
+
+    print("\nOptions:")
+    print("  [1-N] - View sorries in file N")
+    print("  [q]   - Quit")
+
+    while True:
+        try:
+            choice = input("\nSelect file (or 'q' to quit): ").strip()
+            if choice.lower() == 'q':
+                break
+
+            idx = int(choice) - 1
+            if 0 <= idx < len(files):
+                filepath, file_sorries = files[idx]
+                show_file_sorries(filepath, file_sorries)
+            else:
+                print("Invalid selection")
+        except (ValueError, EOFError, KeyboardInterrupt):
+            print("\nExiting...")
+            break
+
+def show_file_sorries(filepath: str, sorries: List[Sorry]):
+    """Show sorries in a specific file with navigation"""
+    print(f"\n{'='*80}")
+    print(f"File: {filepath}")
+    print(f"{'='*80}\n")
+
+    for i, sorry in enumerate(sorries, 1):
+        print(f"[{i}] Line {sorry.line}", end="")
+        if sorry.in_declaration:
+            print(f" - {sorry.in_declaration}", end="")
+        print()
+
+    print("\nOptions:")
+    print("  [1-N]  - View sorry details")
+    print("  [o N]  - Open file at sorry N in $EDITOR")
+    print("  [b]    - Back to file list")
+    print("  [q]    - Quit")
+
+    while True:
+        try:
+            choice = input("\nSelect sorry (or 'b'/'q'): ").strip()
+
+            if choice.lower() == 'q':
+                sys.exit(0)
+            elif choice.lower() == 'b':
+                return
+            elif choice.lower().startswith('o '):
+                # Open in editor
+                try:
+                    idx = int(choice.split()[1]) - 1
+                    if 0 <= idx < len(sorries):
+                        sorry = sorries[idx]
+                        editor = subprocess.os.environ.get('EDITOR', 'vim')
+                        subprocess.call([editor, f"+{sorry.line}", sorry.file])
+                    else:
+                        print("Invalid selection")
+                except (ValueError, IndexError):
+                    print("Usage: o <number>")
+            else:
+                idx = int(choice) - 1
+                if 0 <= idx < len(sorries):
+                    show_sorry_details(sorries[idx])
+                else:
+                    print("Invalid selection")
+        except (ValueError, EOFError, KeyboardInterrupt):
+            print("\nExiting...")
+            sys.exit(0)
+
+def show_sorry_details(sorry: Sorry):
+    """Show detailed information about a specific sorry"""
+    print(f"\n{'─'*80}")
+    print(f"Sorry at {sorry.file}:{sorry.line}")
+    if sorry.in_declaration:
+        print(f"Declaration: {sorry.in_declaration}")
+    print(f"{'─'*80}")
+
+    if sorry.documentation:
+        print("\nDocumentation:")
+        for doc in sorry.documentation:
+            print(f"  • {doc}")
+
+    print("\nContext:")
+    print("─" * 40)
+    for line in sorry.context_before[-5:]:
+        print(f"  {line}")
+    print(f"  >>> SORRY HERE <<<")
+    for line in sorry.context_after[:5]:
+        print(f"  {line}")
+    print("─" * 40)
+
+    input("\nPress Enter to continue...")
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -177,11 +296,14 @@ def main():
 
     target = Path(sys.argv[1])
     format_type = 'text'
+    interactive = False
 
-    if len(sys.argv) > 2:
-        arg = sys.argv[2]
+    # Parse arguments
+    for arg in sys.argv[2:]:
         if arg.startswith('--format='):
             format_type = arg.split('=')[1]
+        elif arg == '--interactive':
+            interactive = True
 
     if not target.exists():
         print(f"Error: {target} does not exist", file=sys.stderr)
@@ -189,6 +311,11 @@ def main():
 
     # Find all sorries
     sorries = find_sorries(target)
+
+    # Interactive mode takes precedence
+    if interactive:
+        interactive_mode(sorries)
+        sys.exit(0 if len(sorries) == 0 else 1)
 
     # Format output
     if format_type == 'json':

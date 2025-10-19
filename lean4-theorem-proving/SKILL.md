@@ -13,18 +13,17 @@ Lean 4 is an interactive theorem prover. Unlike traditional code, correctness is
 
 ## When to Use This Skill
 
-Use for ANY Lean 4 development:
-- Formalizing mathematical theorems
-- Proving properties of algorithms
-- Developing verified libraries
-- Contributing to mathlib
-- Building on top of mathlib
+Use for ANY Lean 4 development across all mathematical domains:
+- Pure mathematics (algebra, topology, analysis, number theory, combinatorics)
+- Applied mathematics (probability, optimization, numerical methods)
+- Computer science (algorithms, data structures, program verification)
+- Contributing to or extending mathlib
 
 **Especially important when:**
-- Working with complex mathematical structures (measure theory, probability, algebra)
 - Managing multiple interrelated proofs
 - Dealing with type class inference issues
 - Converting axioms to proven lemmas
+- Working with complex mathematical structures
 
 ## The Build-First Principle
 
@@ -37,23 +36,20 @@ ALWAYS ensure the file compiles before committing
 ### Build Commands
 
 ```bash
-# Full project build (check all files)
+# Full project build
 lake build
 
 # Check specific file
-lake env lean Exchangeability/Probability/CondExp.lean
+lake env lean MyFile.lean
 
 # Clean and rebuild
 lake clean && lake build
-
-# Update dependencies (after changing lakefile)
-lake update
 ```
 
 **Before any commit:**
 1. Run `lake build` on the full project
 2. Verify no new errors introduced
-3. Document any remaining `sorry`s with clear comments
+3. Document any remaining `sorry`s with clear strategy
 
 ## Proof Development Workflow
 
@@ -63,18 +59,14 @@ lake update
 **DO:** Understand the goal structure first
 
 ```lean
--- ❌ Bad: Jump straight to tactics
-lemma my_theorem : P → Q := by
-  intro h
-  sorry
-
 -- ✅ Good: Structure with clear subgoals
-lemma my_theorem : P → Q := by
-  intro h
+lemma main_theorem (h : Hypothesis) : Conclusion := by
   -- Strategy: Show Q by constructing witness from h
   -- Need: (1) Extract x from h
   --       (2) Show x satisfies Q
-  sorry  -- TODO: Extract witness from h.exists
+  have h_extract : Extract := sorry  -- TODO: Use helper_lemma_1
+  have h_property : Property := sorry  -- TODO: Apply known_result
+  sorry  -- TODO: Combine above
 ```
 
 **Structure first:**
@@ -83,115 +75,50 @@ lemma my_theorem : P → Q := by
 - Write proof skeleton with documented `sorry`s
 - Ensure file compiles with structure in place
 
-**Example of good structuring:**
-```lean
-lemma main_theorem (h : ComplexHypothesis) : ComplexConclusion := by
-  -- Step 1: Reduce to simpler case
-  have h_simple : SimplerCase := by
-    sorry  -- TODO: Use helper_lemma_1
-
-  -- Step 2: Apply known result
-  have h_known : KnownResult := by
-    sorry  -- TODO: Apply mathlib_lemma with h_simple
-
-  -- Step 3: Conclude
-  sorry  -- TODO: Combine h_simple and h_known
-```
-
 ### Phase 2: Helper Lemmas First
 
-Complex proofs need infrastructure. Build bottom-up.
-
-**Pattern from successful Lean work:**
-1. Identify the "hard part" of proof
-2. State it as a separate lemma
-3. Prove the lemma independently
-4. Use lemma in main proof
+Build infrastructure bottom-up. Extract reusable components:
 
 ```lean
--- Step 1: Identify hard part and state as lemma
-private lemma measure_eq_of_fin_marginals_eq_aux
-    (h : ∀ n, marginal μ n = marginal ν n) :
-    μ (cylinder r C) = ν (cylinder r C) := by
-  sorry
+-- Extract helpers that appear multiple times
+private lemma helper_step (x : X) : Property x := sorry
 
--- Step 2: Use in main theorem
-theorem measure_eq_of_fin_marginals_eq
-    (h : ∀ n, marginal μ n = marginal ν n) :
-    μ = ν := by
-  ext s hs
-  -- Now we have the helper available
-  apply measure_eq_of_fin_marginals_eq_aux h
+-- Then use in main proof
+theorem main : Result := by
+  have h1 := helper_step x
+  have h2 := helper_step y
+  -- Combine h1 and h2
 ```
-
-**Why this works:**
-- Smaller proofs are easier to debug
-- Helper lemmas are reusable
-- Compilation errors localized
-- Can mark helpers as `private` to keep API clean
 
 ### Phase 3: Incremental Filling
 
-**The golden rule:** One `sorry` at a time.
-
-```
-1. Pick ONE sorry to eliminate
-2. Work on ONLY that sorry
-3. Get file to compile with that sorry filled
-4. Commit with clear message
+**One sorry at a time:**
+1. Choose ONE sorry to fill
+2. Fill it completely (no new sorries in the proof)
+3. Compile and verify
+4. Commit with descriptive message
 5. Repeat
-```
-
-**Example commit progression:**
-```
-commit 1: "Add helper lemmas for finite_product_formula_id"
-commit 2: "Fill measure_pi_univ_pi lemma"
-commit 3: "Complete finite_product_formula_id using helpers"
-```
-
-**DON'T:** Try to fill 5 sorries simultaneously
-**DO:** Fill one, compile, commit, next
 
 ### Phase 4: Managing Type Class Issues
 
-Lean 4 uses aggressive type class inference. This causes issues with sub-structures.
+**Sub-structures need explicit instances:**
 
-**Common problem: Metavariable hell**
 ```lean
--- ❌ Problem: Lean can't infer which MeasurableSpace
-μ[f | m]  -- Error: can't synthesize instance
+-- ❌ Common error: Lean can't synthesize instance
+have h_le : m ≤ m0 := ...
+-- Later: "Failed to synthesize MeasurableSpace Ω"
+
+-- ✅ Fix: Provide instance explicitly
+have h_le : m ≤ m0 := ...
+haveI : MeasurableSpace Ω := m0  -- Explicit instance
+-- OR use Fact:
+haveI : Fact (m ≤ m0) := ⟨h_le⟩
 ```
 
-**Solution patterns:**
-
-**Pattern 1: Explicit instance management**
-```lean
--- Declare instances explicitly before use
-haveI : IsFiniteMeasure μ := inferInstance
-haveI : IsFiniteMeasure (μ.trim hm) := isFiniteMeasure_trim μ hm
-haveI : SigmaFinite (μ.trim hm) := sigmaFinite_trim μ hm
--- Now this works:
-μ[f | m]
-```
-
-**Pattern 2: Wrapper with frozen instances**
-```lean
--- Create wrapper that manages instances
-noncomputable def condExpWith
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    (m : MeasurableSpace Ω) (hm : m ≤ m₀)
-    (f : Ω → ℝ) : Ω → ℝ := by
-  haveI : IsFiniteMeasure (μ.trim hm) := isFiniteMeasure_trim μ hm
-  haveI : SigmaFinite (μ.trim hm) := sigmaFinite_trim μ hm
-  exact μ[f | m]
-```
-
-**Pattern 3: Use `classical` mode**
-```lean
--- At file level for measure theory
-noncomputable section
--- Proofs using classical logic
-```
+**When type class synthesis fails:**
+- Add `haveI : Instance := ...` before the problematic line
+- Use `letI` for `let`-bound instances
+- Use `@lemma (inst := your_instance)` to pass explicitly
 
 ## Mathlib Integration
 
@@ -214,248 +141,180 @@ example : goal := by
 
 #### Command-Line Search (For AI Assistants and Power Users)
 
-When working as an AI assistant, use `Bash` tool with `find` and `grep` to search mathlib:
+Use `Bash` tool with `find` and `grep` to search mathlib:
 
-**Search mathlib by keyword:**
 ```bash
-# Find files containing specific lemmas (use Read tool after finding)
-find .lake/packages/mathlib -name "*.lean" -exec grep -l "keyword1\|keyword2" {} \; | head -10
+# Find files containing specific patterns
+find .lake/packages/mathlib -name "*.lean" -exec grep -l "pattern1\|pattern2" {} \; | head -10
 
-# Example: Search for pi and iSup lemmas
-find .lake/packages/mathlib -name "*.lean" -exec grep -l "pi.*iSup\|iSup.*pi" {} \; | head -5
-# Returns:
-#   .lake/packages/mathlib/Mathlib/Topology/MetricSpace/HausdorffDimension.lean
-#   .lake/packages/mathlib/Mathlib/Topology/MetricSpace/Isometry.lean
-#   .lake/packages/mathlib/Mathlib/Topology/MetricSpace/UniformConvergence.lean
+# Search with line numbers (for Read tool)
+grep -n "lemma.*keyword" path/to/file.lean | head -15
+
+# Then use Read tool to examine files
 ```
 
-**Search for specific theorem patterns:**
-```bash
-# Find conditional expectation + tendsto lemmas
-find .lake/packages/mathlib -name "*.lean" -exec grep -l "condExp.*tend\|condExp.*iSup\|Levy\|Lévy" {} \; | head -10
-# Returns:
-#   .lake/packages/mathlib/Mathlib/Probability/BorelCantelli.lean
-#   .lake/packages/mathlib/Mathlib/Probability/Independence/ZeroOne.lean
-#   .lake/packages/mathlib/Mathlib/Probability/Martingale/BorelCantelli.lean
+**Workflow:**
+1. Identify keywords from goal
+2. Use `find` + `grep -l` to locate candidate files
+3. Use `Read` tool to examine promising files
+4. Use `grep -n` for exact line numbers
+5. Import and apply the lemmas
 
-# Then use Read tool to examine promising files
-```
-
-**Search local project files:**
-```bash
-# Find uses of specific pattern in local files
-grep -n "iSup\|condExp.*tend" Exchangeability/Probability/Martingale.lean | head -15
-# Returns line numbers and matching text:
-#   180:private lemma iSup_of_antitone_eq {𝔽 : ℕ → MeasurableSpace Ω} (h_antitone : Antitone 𝔽) (k : ℕ)
-#   184:    refine iSup₂_le fun n hn => ?_
-#   188:    exact @le_iSup₂ (MeasurableSpace Ω) ℕ (fun n => n ≤ k) _ (fun n _ => 𝔽 n) 0 h0k
-
-# Search for definitions of key concepts
-grep -n "def.*tailSigma\|def.*shiftInvariant" Exchangeability/DeFinetti/*.lean
-```
-
-**Recursive search with context:**
-```bash
-# Find and show context around matches (±3 lines)
-grep -r -A 3 -B 3 "theorem.*ergodic" .lake/packages/mathlib/Mathlib/Dynamics/
-
-# Search for lemma names starting with specific prefix
-grep -r "^lemma integral_" .lake/packages/mathlib/Mathlib/MeasureTheory/Integral/
-```
-
-**Workflow for finding relevant mathlib lemmas:**
-1. **Identify keywords** from your goal (e.g., "condExp", "martingale", "convergence")
-2. **Use `find` + `grep -l`** to locate candidate files
-3. **Use `Read` tool** to examine the most promising files
-4. **Use `grep -n`** to find exact line numbers of relevant lemmas
-5. **Import and apply** the lemmas in your proof
-
-**Example workflow:**
-```bash
-# Step 1: Find files about measure preservation
-⏺ Bash(find .lake/packages/mathlib -name "*.lean" -exec grep -l "MeasurePreserving\|measure_preserving" {} \; | head -10)
-
-# Step 2: Read the most relevant file
-⏺ Read(.lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpaceDef.lean)
-
-# Step 3: Find specific lemmas with line numbers
-⏺ Bash(grep -n "lemma.*MeasurePreserving.*comp" .lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpaceDef.lean)
-
-# Step 4: Read the specific lemma
-⏺ Read(.lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpaceDef.lean, offset=450, limit=20)
-```
-
-**Pro tips for search:**
-- Use `\|` for OR patterns in grep: `"pattern1\|pattern2"`
-- Use `head -N` to limit results to first N matches
-- Use `grep -n` to get line numbers (useful for Read tool)
-- Use `grep -l` to list files only (faster for broad searches)
-- Search for theorem statements, not proofs: `"theorem\|lemma\|def"`
-- Include alternative spellings: `"Levy\|Lévy"`, `"sigma\|σ"`
-
-**Common mathlib modules for formal math:**
-- `Mathlib.MeasureTheory.*` - Measure and integration theory
-- `Mathlib.Probability.*` - Probability theory
-- `Mathlib.Topology.*` - Topological spaces
-- `Mathlib.Data.*` - Data structures
-- `Mathlib.Algebra.*` - Algebraic structures
+**Pro tips:**
+- Use `\|` for OR patterns: `"pattern1\|pattern2"`
+- Use `head -N` to limit results
+- Use `grep -n` for line numbers
+- Search theorem statements: `"theorem\|lemma\|def"`
+- Include alternative spellings: `"Levy\|Lévy"`
 
 ### Importing Correctly
 
 ```lean
--- Import specific modules
-import Mathlib.Probability.Martingale.Convergence
-import Mathlib.MeasureTheory.Measure.MeasureSpace
+-- Specific imports (preferred)
+import Mathlib.Data.Real.Basic
+import Mathlib.Topology.MetricSpace.Basic
+import Mathlib.Algebra.Group.Defs
 
--- Standard opens
-open MeasureTheory Filter Set Function
-open scoped MeasureTheory ProbabilityTheory Topology
+-- Tactic imports when needed
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Ring
 ```
-
-**Import strategy:**
-- Start with specific imports (faster compile)
-- Add imports as needed
-- Don't import `Mathlib` wholesale
-- Use `open scoped` for notation
 
 ### Naming Conventions (mathlib style)
 
-Follow mathlib conventions for consistency:
-
 ```lean
--- Implications: foo_of_bar means bar → foo
-lemma integrable_of_bounded : Bounded f → Integrable f μ
+-- Implications: bar_of_foo means foo → bar
+lemma continuous_of_isOpen_preimage : (∀ U, IsOpen (f ⁻¹' U)) → Continuous f
 
 -- Equivalences: foo_iff_bar
-lemma exchangeable_iff_contractable : Exchangeable X ↔ Contractable X
+lemma injective_iff_leftInverse : Injective f ↔ ∃ g, LeftInverse g f
 
--- Application: foo_bar means "apply bar to foo"
-lemma measure_pi_univ : μ.pi univ = 1
-
--- Projection: foo_fst, foo_snd
-lemma measure_fst : (μ.map Prod.fst) s = μ (s ×ˢ univ)
+-- Projections: foo_bar means access field bar of foo
+lemma group_mul : (G : Group) → G.mul ...
 ```
 
 ## Managing Axioms and Sorries
 
 ### The Axiom Hierarchy
 
-**Acceptable (standard mathlib axioms):**
-- `propext` - Propositional extensionality
-- `quot.sound` - Quotient soundness
-- `choice` - Axiom of choice
+**Standard mathlib axioms (acceptable):**
+- `Classical.choice`
+- `propext`
+- `quot.sound`
 
-**Check with:**
+Check with: `#print axioms my_theorem`
+
+**Custom axioms (must have elimination plan):**
+
 ```lean
-#print axioms my_theorem
--- Should only show propext, quot.sound, choice
-```
+-- ❌ Bad: Axiom with no plan
+axiom my_conjecture : P
 
-**Unacceptable:**
-- Custom `axiom` declarations (except temporarily)
-- Completed proofs with `sorry`
+-- ✅ Good: Documented axiom with elimination strategy
+axiom helper_theorem : P
+-- TODO: Strategy: Prove using technique X
+--       Dependencies: Need lemmas A, B from mathlib
+--       Estimated effort: 2 days
+```
 
 ### Sorry Documentation Strategy
 
-While developing, document every `sorry`:
+**Every sorry needs:**
+1. **What** needs to be proved
+2. **How** to prove it (strategy)
+3. **Dependencies** (what's blocking)
 
 ```lean
-lemma complex_theorem : Goal := by
+-- ✅ Good documentation
+have h : Complex_Goal := by
   sorry
   -- TODO: Strategy:
-  --   1. Use tower property to reduce to simpler σ-algebra
-  --   2. Apply Lévy's upward theorem (needs mathlib import)
-  --   3. Identify limit via uniqueness of conditional expectation
-  -- Dependencies: Need to prove helper_lemma_1 first
-  -- Estimated difficulty: High - requires lattice manipulation
+  --   (1) Apply monotone convergence theorem
+  --   (2) Show f_n ≤ f_{n+1} using h_mono
+  --   (3) Show bound using h_bound
+  -- Dependencies: Need `tendsto_lintegral_of_monotone` from mathlib
+  -- Estimated effort: 2 hours
 ```
-
-**Good sorry documentation includes:**
-1. **Strategy**: How to prove it
-2. **Dependencies**: What else is needed
-3. **Difficulty**: Estimated complexity
-4. **Blockers**: What's preventing progress
 
 ### Axiom Elimination Pattern
 
-When you have axioms that should be proven:
-
-1. **Document the axiom's purpose**
 ```lean
-/-- Lévy's upward theorem: conditional expectations converge along
-    increasing filtrations.
+-- 1. Start with axiom (document plan)
+axiom key_lemma : Goal
+-- TODO: Replace with proof using mathlib's result_X
 
-    TODO: Replace with proven lemma using mathlib's
-    `MeasureTheory.tendsto_ae_condExp`. -/
-axiom condExp_tendsto_iSup : ...
+-- 2. Find mathlib infrastructure
+#check mathlib_result  -- Found relevant lemma
+
+-- 3. Replace with proven version
+theorem key_lemma : Goal := by
+  exact mathlib_result ...
 ```
 
-2. **Create implementation notes** (separate file)
-```markdown
-# AXIOM_ELIMINATION_NOTES.md
+## Common Proof Patterns
 
-## condExp_tendsto_iSup
-
-**Current status:** Axiom
-**Target:** Proven lemma using mathlib
-**Strategy:** Wrap mathlib's `tendsto_ae_condExp` with `Filtration` packaging
-**Estimated effort:** 1 hour
-```
-
-3. **Replace with proven version**
-```lean
--- Delete axiom, add proof
-theorem condExp_tendsto_iSup
-    [IsProbabilityMeasure μ]
-    {𝔽 : ℕ → MeasurableSpace Ω}
-    (h_mono : Monotone 𝔽)
-    (h_le : ∀ n, 𝔽 n ≤ m0)
-    (f : Ω → ℝ) :
-    ∀ᵐ ω ∂μ, Tendsto ... := by
-  -- Build filtration structure
-  let ℱ : Filtration ℕ m0 := { seq := 𝔽, mono := h_mono, le := h_le }
-  -- Apply mathlib
-  simpa using MeasureTheory.tendsto_ae_condExp (μ := μ) (ℱ := ℱ) f
-```
-
-## Common Patterns in Measure Theory
-
-### Pattern 1: Integrability Proofs
+### Pattern 1: Integrability (Analysis/Probability)
 
 ```lean
--- Bounded + measurable + finite measure = integrable
-lemma integrable_indicator_comp
-    {μ : Measure Ω} [IsFiniteMeasure μ]
-    {X : Ω → α} (hX : Measurable X)
-    {B : Set α} (hB : MeasurableSet B) :
-    Integrable ((Set.indicator B (fun _ => (1 : ℝ))) ∘ X) μ := by
-  have h_meas : Measurable _ := (measurable_const.indicator hB).comp hX
-  have h_bound : ∀ᵐ ω ∂μ, ‖...‖ ≤ 1 := by
-    apply ae_of_all
-    intro ω
-    by_cases hω : X ω ∈ B <;> simp [hω]
-  exact Integrable.of_bound h_meas.aestronglyMeasurable 1 h_bound
+-- Bounded + measurable + finite = integrable
+lemma integrable_of_bounded_measurable
+    [IsFiniteMeasure μ] {f : X → ℝ}
+    (h_meas : Measurable f)
+    (h_bound : ∃ C, ∀ x, ‖f x‖ ≤ C) :
+    Integrable f μ := by
+  obtain ⟨C, hC⟩ := h_bound
+  exact Integrable.of_bound h_meas.aestronglyMeasurable C (ae_of_all _ hC)
 ```
 
-### Pattern 2: Conditional Expectation Equalities
+### Pattern 2: Algebraic Structure (Algebra)
 
 ```lean
--- Use uniqueness via integral identity
-lemma condexp_eq_of_integrals_eq
-    (h : ∀ s, MeasurableSet[m] s → ∫ ω in s, f ω ∂μ = ∫ ω in s, g ω ∂μ) :
-    μ[f | m] =ᵐ[μ] μ[g | m] := by
-  apply ae_eq_condExp_of_forall_setIntegral_eq
-  -- Fill in conditions
+-- Build instances compositionally
+instance : CommRing (Polynomial R) := inferInstance
+
+-- Use structure lemmas
+lemma quotient_ring_hom (I : Ideal R) :
+    RingHom (R ⧸ I) := by
+  refine { toFun := ..., map_one' := ..., map_mul' := ... }
+  -- Fill in each field
 ```
 
-### Pattern 3: Sigma Algebra Manipulations
+### Pattern 3: Topological Properties (Topology)
 
 ```lean
--- Prove sub-σ-algebra relationships
-have hmZ_le : comap Z mβ ≤ mΩ := by
-  intro s hs
-  obtain ⟨E, hE, rfl⟩ := hs  -- s = Z⁻¹(E)
-  exact hZ hE  -- Z⁻¹(E) measurable since Z measurable
+-- Continuity from preimage criterion
+lemma continuous_of_preimage
+    (h : ∀ U, IsOpen U → IsOpen (f ⁻¹' U)) :
+    Continuous f := by
+  rw [continuous_def]
+  exact h
+
+-- Compactness via finite subcover
+lemma compact_of_finite_subcover
+    (h : ∀ 𝓤, ... → ∃ 𝓣 ⊆ 𝓤, Finite 𝓣 ∧ ...) :
+    IsCompact K := ...
+```
+
+### Pattern 4: Equality via Uniqueness (General)
+
+```lean
+-- Prove equality by showing both satisfy uniqueness criterion
+lemma foo_eq_bar
+    (h : ∀ x, property x → f x = g x) :
+    f = g := by
+  ext x
+  apply h
+  -- Show x satisfies property
+```
+
+### Pattern 5: Inductive Constructions (General)
+
+```lean
+-- Use mathlib's induction principles
+lemma property_of_list (l : List α) : P l := by
+  induction l with
+  | nil => sorry  -- Base case
+  | cons head tail ih => sorry  -- Inductive step using ih
 ```
 
 ## Tactics and Automation
@@ -464,252 +323,109 @@ have hmZ_le : comap Z mβ ≤ mΩ := by
 
 ```lean
 -- Simplification
-simp [lemma1, lemma2]  -- Simplify with specific lemmas
-simpa using expr        -- Simplify and close goal
+simp only [lem1, lem2]  -- Explicit (preferred)
+simpa using expr         -- Simplify and close
 
 -- Case analysis
-by_cases h : p          -- Split on decidable proposition
-rcases h with ⟨x, hx⟩   -- Destructure exists/and
-obtain ⟨x, hx⟩ := h     -- Alternative destructuring syntax
+by_cases h : p           -- Split on decidable
+rcases h with ⟨x, hx⟩    -- Destructure exists/and
 
 -- Rewriting
-rw [lemma]              -- Rewrite left-to-right
-rw [← lemma]            -- Rewrite right-to-left
+rw [lemma]               -- Rewrite left-to-right
+rw [← lemma]             -- Rewrite right-to-left
 
--- Apply and exact
-apply lemma             -- Apply lemma, leave subgoals
-exact expr              -- Close goal exactly
-refine pattern ?_       -- Apply with holes
-
--- Have and suffices
-have h : P := proof     -- Forward reasoning
-suffices h : P by proof -- Backward reasoning
+-- Apply
+apply lemma              -- Apply, leave subgoals
+exact expr               -- Close goal exactly
+refine pattern ?_        -- Apply with holes
 ```
 
 ### The `simp` Tactic - Deep Dive
 
-**Most powerful and most dangerous tactic in Lean.** Understand before using extensively.
-
-**What `simp` does:**
-- Applies a database of `@[simp]` lemmas to rewrite the goal into "normal form"
-- Works recursively (applies lemmas until no more match)
-- Can solve goals automatically when normal form is trivial
+**What `simp` does:** Applies `@[simp]` lemmas recursively to rewrite goal into normal form
 
 **Basic usage:**
 ```lean
 simp                           -- Use all simp lemmas
-simp only [lemma1, lemma2]     -- Use only these lemmas (recommended)
-simp [h]                       -- Add hypothesis h to simp set
-simp at h                      -- Simplify hypothesis h
-simp?                          -- Show which lemmas simp would use (very useful!)
-simpa using expr               -- Simplify then apply expr
+simp only [lem1, lem2]         -- Use only these (recommended for clarity)
+simp?                          -- Show which lemmas applied (very useful!)
 ```
 
-**When to add `@[simp]` attribute:**
+**When to add `@[simp]`:**
 ```lean
--- ✅ Good simp lemmas (make things simpler):
-@[simp] lemma f_zero : f 0 = 1 := ...           -- Evaluation lemma
-@[simp] lemma map_id : map id = id := ...        -- Identity lemma
-@[simp] lemma union_empty : s ∪ ∅ = s := ...     -- Simplification to normal form
+-- ✅ Good: Makes things simpler
+@[simp] lemma f_zero : f 0 = 1
+@[simp] lemma map_id : map id = id
+@[simp] lemma union_empty : s ∪ ∅ = s
 
--- ❌ Bad simp lemmas (don't simplify or create loops):
-@[simp] lemma reverse_property : f (g x) = g (f x)  -- Not directional
-@[simp] lemma expand : x = x + y - y                -- Makes things more complex
+-- ❌ Bad: Not directional or makes complex
+@[simp] lemma reverse : f (g x) = g (f x)  -- Creates loops
+@[simp] lemma expand : x = x + y - y       -- Makes worse
 ```
-
-**Simp normal forms** - Know these patterns:
-- Empty set: `s ∩ ∅ → ∅`, `s ∪ ∅ → s`
-- Identity: `map id → id`, `f ∘ id → f`
-- Logical: `P ∧ True → P`, `P ∨ False → P`
-- Numeric: `x + 0 → x`, `x * 1 → x`
 
 **Common pitfalls:**
+- **Simp loops:** Don't make both `f x = g x` and `g x = f x` simp lemmas
+- **Slow simp:** In big proofs, use `rw [lem1, lem2]` instead
+- **Opaque simp:** Use `simp only` or `simp?` for reviewability
 
-**1. Simp loops** (infinite recursion):
-```lean
--- Bad: These create a loop if both are @[simp]
-@[simp] lemma forward : f x = g x
-@[simp] lemma backward : g x = f x
-
--- Fix: Remove @[simp] from one
-lemma forward : f x = g x := ...
-@[simp] lemma backward : g x = f x := ...
-```
-
-**2. Simp makes things worse:**
-```lean
--- If simp makes goal more complex, use simp only:
-simp only [specific_lemma]
-
--- Or don't use simp at all:
-rw [specific_lemma]
-```
-
-**3. Slow simp calls:**
-```lean
--- In tight loops or big proofs:
-set_option maxHeartbeats 200000  -- Increase timeout
-
--- Or avoid simp, use rw:
-rw [lemma1, lemma2, lemma3]  -- Faster and more explicit
-```
-
-**Advanced simp usage:**
-```lean
--- Simp with context
-simp (config := {contextual := true})  -- Use local hypotheses
-
--- Show what simp does (debugging)
-simp?  -- Prints "Try this: simp only [lemma1, lemma2, ...]"
-
--- Conditional simp
-simp only [lemma] at h  -- Simplify just hypothesis h
-```
-
-**When to use `simp` vs alternatives:**
-- **Use `simp`:** When goal is obviously true after normalization
-- **Use `simp only`:** When you know exactly which lemmas apply (recommended for readability)
+**Decision tree:**
+- **Use `simp`:** When goal obviously true after normalization
+- **Use `simp only [...]`:** When you know which lemmas apply (preferred)
 - **Use `rw`:** When applying 1-3 specific rewrites
-- **Use `simp?`:** When exploring what lemmas would help (then copy the output)
-
-**Measure theory example:**
-```lean
--- Instead of:
-simp  -- Might apply 50+ lemmas, slow and opaque
-
--- Prefer:
-simp only [cylinder_univ, prefixCylinder_inter, Set.mem_univ]
--- Explicit, fast, reviewable
-```
+- **Use `simp?`:** When exploring (then copy the output)
 
 ### Domain-Specific Tactics
 
 ```lean
--- Measure theory
-measurability           -- Prove measurability goals
-apply_instance          -- Find type class instance
-infer_instance         -- Alternative instance search
+-- Analysis/Topology
+continuity              -- Prove continuity goals
+fun_prop                -- Prove function properties
+
+-- Algebra
+ring                    -- Solve ring equations
+field_simp              -- Simplify field expressions
+group                   -- Group theory simplification
 
 -- Real numbers
 linarith                -- Linear arithmetic
 positivity              -- Prove positivity
 norm_num                -- Normalize numerals
 
--- Structure
+-- General
 ext x                   -- Extensionality
 funext x                -- Function extensionality
 congr                   -- Congruence
 ```
 
-### Adding Automation
-
-```lean
--- Register lemmas for automation
-attribute [measurability] measurable_prefixProj takePrefix_measurable
-attribute [simp] cylinder_univ prefixCylinder_inter
-
--- Use sparingly - only for lemmas that genuinely simplify
-```
-
-## Commit Message Patterns
-
-Based on successful Lean development:
-
-**Structure commits:**
-```
-Add helper lemmas for finite_product_formula_id
-Structure lintegral→integral conversion with helper lemmas
-```
-
-**Progress commits:**
-```
-Fill measure_pi_univ_pi lemma and document bind_apply_univ_pi
-Complete π-λ extension application using ext_of_generate_finite
-```
-
-**Breakthrough commits:**
-```
-🎉 BREAKTHROUGH: Eliminate ENNReal.ofReal product sorry!
-MAJOR BREAKTHROUGH: Eliminate Measure.pi_pi sorry!
-```
-
-**Fix commits:**
-```
-Fix all compilation errors - file now compiles with only sorries
-Fix linter warning and complete hprob2 proof (modulo AEMeasurable)
-```
-
-**Documentation commits:**
-```
-Enhanced documentation for sorries 2371, 2386, and 2396
-Add implementation notes for Lévy convergence theorems
-```
-
-**Template:**
-```
-[Action]: [What] ([Detail])
-
-- Action: Add/Fill/Fix/Complete/Structure/Eliminate
-- What: Specific theorem/lemma/module
-- Detail: Optional context or strategy
-```
-
-## Red Flags - Stop and Reconsider
-
-**If you catch yourself:**
-- Adding `sorry` without documentation
-- Committing code that doesn't compile
-- Copying proof patterns without understanding
-- Fighting type class inference (add explicit instances instead)
-- Reproving something mathlib likely has (search first)
-- Making 5 changes before running `lake build`
-- Trying to fill 3 sorries simultaneously
-- Using `axiom` without documented elimination plan
-
-**ALL of these mean: STOP. Return to systematic approach.**
-
 ## Interactive Exploration and Debugging
 
-### Essential Commands for Understanding Code
+### Essential Commands
 
-**Check types and definitions:**
 ```lean
-#check expr                    -- Show type of expression
-#check @theorem                -- Show full type with implicit arguments
-
-#print theorem                 -- Show definition/proof term
-#print axioms theorem          -- List all axioms used (should be minimal!)
-
-#eval expr                     -- Evaluate (only for computable terms)
-#reduce expr                   -- Reduce to normal form
-
-#where                         -- Show current namespace and section context
+#check expr                    -- Show type
+#check @theorem                -- Show with all implicit arguments
+#print theorem                 -- Show definition/proof
+#print axioms theorem          -- List axioms used (should be minimal!)
+#eval expr                     -- Evaluate (computable only)
+#where                         -- Show namespace/context
 ```
 
-**Example workflow:**
+**Workflow example:**
 ```lean
--- What's the type of this lemma?
+-- What's the type?
 #check measure_iUnion_finset
--- Result: ∀ {α : Type u_1} {m : MeasurableSpace α} (μ : Measure α) ...
-
--- Show full signature with implicits
+-- Show all parameters
 #check @measure_iUnion_finset
--- Shows ALL type parameters and instance arguments
-
--- See the actual proof/definition
+-- See definition
 #print measure_iUnion_finset
-
--- Check if it uses any axioms
+-- Check axioms
 #print axioms measure_iUnion_finset
--- Should show: propext, quot.sound, Classical.choice (standard mathlib axioms)
 ```
 
-**Inspect current context:**
+**In tactic mode:**
 ```lean
--- In tactic mode:
 example (n : ℕ) (h : n > 0) : n ≠ 0 := by
-  trace "Current goal: {·}"  -- Print formatted goal
-  #check h                    -- Show type of hypothesis
+  trace "Current goal: {·}"
   sorry
 ```
 
@@ -717,19 +433,10 @@ example (n : ℕ) (h : n > 0) : n ≠ 0 := by
 ```lean
 set_option trace.Meta.synthInstance true in
 theorem my_theorem : Goal := by
-  -- Shows all instance search steps
-  apply_instance
+  apply_instance  -- Shows all instance search steps
 ```
 
-**Pretty printing options:**
-```lean
-set_option pp.notation false   -- Show raw terms (no notation)
-set_option pp.universes true   -- Show universe levels
-set_option pp.implicit true    -- Show all implicit arguments
-set_option pp.proofs true      -- Show proof terms (usually large)
-```
-
-**Find lemmas by pattern (in proofs):**
+**Find lemmas:**
 ```lean
 example : goal := by
   exact?         -- Find exact proof in mathlib
@@ -737,146 +444,89 @@ example : goal := by
   rw?            -- Find rewrite lemmas
 ```
 
-### Common Compilation Errors - Expanded Guide
+### Common Compilation Errors
 
-**Error: "failed to synthesize instance"**
+**"failed to synthesize instance"**
 ```
-type mismatch
-  ...
-has type
-  Measure Ω : Type
-but is expected to have type
-  IsProbabilityMeasure μ : Prop
+type mismatch: IsProbabilityMeasure μ not found
 ```
-- **Cause:** Missing type class instance (Lean can't find `IsProbabilityMeasure μ`)
-- **Fix:** Add instance explicitly:
-  ```lean
-  haveI : IsProbabilityMeasure μ := ⟨measure_univ_eq_one⟩
-  -- or
-  letI : IsProbabilityMeasure μ := inferInstance
-  ```
-- **Debug:** `set_option trace.Meta.synthInstance true` to see search process
+- **Fix:** Add `haveI : IsProbabilityMeasure μ := ⟨proof⟩`
+- **Debug:** `set_option trace.Meta.synthInstance true`
 
-**Error: "maximum recursion depth exceeded"**
+**"maximum recursion depth exceeded"**
 ```
-(deterministic) timeout at 'typeclass', maximum number of heartbeats (20000) reached
+timeout at 'typeclass'
 ```
-- **Cause:** Type class loop or very complex instance search
-- **Common in:** Nested measure spaces, product σ-algebras
-- **Fix 1:** Provide instance manually: `letI := your_instance`
-- **Fix 2:** Break inference chain: Use `@lemma (inst := ...)` to pass explicitly
-- **Fix 3:** Increase limit: `set_option synthInstance.maxHeartbeats 40000`
+- **Cause:** Type class loop or complex search
+- **Fix:** Provide instance manually with `letI := instance`
+- **Or:** Increase limit: `set_option synthInstance.maxHeartbeats 40000`
 
-**Error: "type mismatch"**
+**"type mismatch"**
 ```
-application type mismatch
-  f x
-argument
-  x
-has type
-  ℕ : Type
-but is expected to have type
-  ℝ : Type
+has type ℕ but expected ℝ
 ```
-- **Cause:** Implicit coercion didn't trigger or wrong type
-- **Fix:** Use explicit coercion: `f (x : ℝ)` or `f ↑x`
-- **Debug:** `#check x` to see what Lean thinks the type is
+- **Fix:** Use explicit coercion: `(x : ℝ)` or `↑x`
+- **Debug:** `#check x` to see actual type
 
-**Error: "tactic 'exact' failed, type mismatch"**
+**"tactic 'exact' failed"**
 ```
-tactic 'exact' failed, type mismatch
-  term has type: P ∧ Q
-  goal: Q ∧ P
+term has type P ∧ Q but goal is Q ∧ P
 ```
-- **Cause:** Proof term has different (but equivalent) type than goal
-- **Fix:** Use `apply` to allow unification, or restructure: `⟨h.2, h.1⟩`
-- **Alternative:** Add conversion lemma: `rw [and_comm]`
+- **Fix:** Use `apply` for unification, or `⟨h.2, h.1⟩`
 
-**Error: "unknown identifier"**
+**"unknown identifier"**
 ```
-unknown identifier 'measurability'
+unknown identifier 'ring'
 ```
-- **Cause:** Tactic or name not in scope
-- **Fix:** Check imports: `import Mathlib.Tactic.Measurability`
-- **Common:** Missing `open Tactic` or `import Mathlib.Tactic`
+- **Fix:** Add import: `import Mathlib.Tactic.Ring`
 
-**Error: "equation compiler failed to prove equation lemmas"**
+**"equation compiler failed"**
 ```
 failed to prove recursive application is decreasing
 ```
-- **Cause:** Structural recursion not obvious to Lean
-- **Fix:** Use `termination_by` clause:
+- **Fix:** Add `termination_by` clause:
   ```lean
   def my_rec (n : ℕ) : T :=
     ... my_rec (n - 1) ...
   termination_by my_rec n => n
   ```
-- **Alternative:** Use well-founded recursion or explicit induction
-
-**Error: "unexpected bound variable"**
-```
-unexpected bound variable #0
-```
-- **Cause:** Lambda capture issue or ill-formed term
-- **Fix:** Often indicates wrong de Bruijn index - restructure the term
-- **Common when:** Building proof terms manually with `Expr` API
-
-**Error: "failed to elaborate term, type mismatch"**
-```
-failed to elaborate term, unexpected type
-```
-- **Cause:** Elaboration order issue - Lean can't infer types
-- **Fix 1:** Add explicit type annotations: `(x : Type)`
-- **Fix 2:** Use `@` to provide all arguments: `@lemma Type _ _ x`
-- **Fix 3:** Help with `by exact` or provide more context
-
-**Error: "invalid occurrence of recursive function"**
-```
-invalid occurrence of recursive function 'foo'
-```
-- **Cause:** Recursion not in structurally decreasing position
-- **Fix:** Restructure to make structural recursion obvious, or prove termination
-- **Common in:** Mutual recursion, nested recursion
 
 **Quick debugging workflow:**
 ```lean
--- Step 1: Check what you have
+-- 1. Check what you have
 #check problematic_term
-
--- Step 2: Check what's expected
--- (Look at error message goal type)
-
--- Step 3: Show implicit arguments
+-- 2. Show implicit arguments
 #check @problematic_term
-
--- Step 4: Try to build manually
+-- 3. Try to build manually
 example : goal := by
   refine problematic_term ?_ ?_  -- See what holes remain
-
--- Step 5: Enable tracing if still stuck
-set_option trace.Elab.term true
 ```
 
-## Project-Specific Patterns
+## Domain-Specific Patterns
 
-When working on specific mathematical domains:
-
-**Measure Theory:**
-- Check file header for necessary opens
-- Use `noncomputable section` liberally
-- Manage `IsFiniteMeasure` and `SigmaFinite` instances explicitly
-- Use `ae_of_all` to convert everywhere statements to a.e.
-
-**Probability Theory:**
-- Import `Mathlib.Probability.*` modules
-- Use `IsProbabilityMeasure` when applicable
-- Filtrations need `Monotone`, `Antitone` proofs
-- Conditional independence via `ProbabilityTheory.CondIndep`
+**Analysis & Topology:**
+- Use `noncomputable section` for non-constructive proofs
+- Compactness arguments via finite subcover
+- Continuity from ε-δ or preimage criterion
+- Limits via Filter API
 
 **Algebra:**
-- Structure instances carefully (ring, field, module)
-- Use `ring` tactic for algebraic manipulation
-- Check for existing algebraic lemmas in mathlib
+- Structure instances compositionally
+- Use `ring`, `field_simp`, `group` tactics
+- Build morphisms with `refine { toFun := ..., ... }`
+- Quotients via `Quotient.sound` and universal properties
+
+**Number Theory & Combinatorics:**
+- Induction on natural numbers
+- Divisibility via `Nat.dvd_iff_mod_eq_zero`
+- Prime factorization lemmas in mathlib
+- Combinatorial counting with `Fintype.card`
+
+**Probability & Measure Theory:**
+- Manage `IsFiniteMeasure`, `IsProbabilityMeasure` instances explicitly
+- Use `ae_of_all` to convert ∀ to almost everywhere
+- Filtrations need `Monotone`/`Antitone` proofs
+- Conditional expectation uniqueness via integral identity
 
 ## Quality Checklist Before Commit
 
@@ -890,43 +540,29 @@ When working on specific mathematical domains:
 - [ ] Helper lemmas marked `private` if internal
 - [ ] Commit message describes what and why
 
-## Integration with Other Skills
+## Red Flags - Stop and Reconsider
 
-This skill works with:
-- `skills/debugging/systematic-debugging` - Debug compilation errors
-- `skills/research/tracing-knowledge-lineages` - Understand design decisions
-- `skills/problem-solving/*` - Break down complex theorems
+**You're going off track if:**
+- Multiple compilation errors accumulating
+- Sorries multiply faster than they're filled
+- Fighting with type checker for hours
+- Adding custom axioms without plan
+- Proofs are monolithic (>100 lines with no structure)
 
-## Learning Resources
-
-**Official:**
-- Theorem Proving in Lean 4: https://leanprover.github.io/theorem_proving_in_lean4/
-- Mathlib docs: https://leanprover-community.github.io/mathlib4_docs/
-- Lean Zulip chat: https://leanprover.zulipchat.com/
-
-**Search strategies:**
-See the "Finding Existing Lemmas" section above for detailed command-line search techniques.
-
-Additional resources:
-- Search mathlib docs online: https://leanprover-community.github.io/mathlib4_docs/
-- Ask Zulip (search existing threads first): https://leanprover.zulipchat.com/
-- Use `exact?` and `apply?` tactics for automatic suggestions
+**ALL of these mean: STOP. Return to systematic approach.**
 
 ## Success Metrics
 
 **You're doing it right when:**
 - File always compiles after each change
-- Each commit advances one specific lemma/theorem
+- Each commit advances one specific lemma
 - Helper lemmas accumulate and get reused
 - Axioms decrease over time
 - Compilation errors are rare and quickly fixed
-- Proofs build on mathlib rather than reinventing
+- Proofs build on mathlib
 - Project builds cleanly with `lake build`
 
 **You're doing it wrong when:**
-- Multiple compilation errors accumulate
-- Sorries multiply faster than they're filled
-- Custom axioms are added without elimination plan
-- Fighting with type checker for extended periods
-- Proofs are monolithic without structure
 - Not running `lake build` before committing
+- Reproving things mathlib has
+- Using `axiom` without elimination plan

@@ -10,6 +10,7 @@ This is a **Claude Skill** that teaches Claude how to work effectively with Lean
 - 📚 **Systematic workflow** for proof development (structure → helpers → incremental filling)
 - 🔧 **Type class management** patterns for sub-σ-algebras and instance inference
 - 📖 **Mathlib integration** guide (finding lemmas, imports, naming conventions)
+- 🤖 **Automation scripts** for mathlib search, axiom checking, and sorry tracking (NEW!)
 - 🎓 **Domain-specific patterns** for measure theory, probability, and algebra
 - ✅ **Quality standards** (compile before commit, document sorries, eliminate axioms)
 - 💡 **Real-world examples** from successful Lean formalization projects
@@ -113,6 +114,11 @@ How should I handle type class inference issues?
 ```
 lean4-theorem-proving/
 ├── SKILL.md                          # Core workflow (1,414 words)
+├── scripts/                          # Automation tools (NEW!)
+│   ├── README.md                     # Scripts documentation
+│   ├── search_mathlib.sh             # Find lemmas in mathlib
+│   ├── check_axioms.sh               # Verify axiom usage
+│   └── sorry_analyzer.py             # Extract and track sorries
 └── references/                       # Detailed references (loaded as needed)
     ├── mathlib-guide.md              # Finding lemmas, imports, naming
     ├── tactics-reference.md          # Comprehensive tactics guide
@@ -134,11 +140,18 @@ Following Anthropic's skill best practices, this skill uses a three-level loadin
 - The Build-First Principle
 - 4-Phase Proof Development Workflow (structure, helpers, incremental, type classes)
 - Quick mathlib search workflow
+- Automation Scripts section (search_mathlib, check_axioms, sorry_analyzer)
 - Essential tactics overview
 - Domain-specific pattern summaries
 - Lean MCP server tools overview
 - Managing incomplete proofs (axioms, sorries)
 - Quality checklist and red flags
+
+**What's in scripts/:**
+- **search_mathlib.sh** - Automated mathlib lemma search (by name, type, content)
+- **check_axioms.sh** - Batch axiom verification for theorems and lemmas
+- **sorry_analyzer.py** - Extract sorries with context, documentation, and analysis
+- **README.md** - Complete scripts documentation with usage examples and workflows
 
 **What's in references/:**
 - **mathlib-guide.md** - Search strategies, file organization, naming conventions, import best practices
@@ -217,11 +230,12 @@ This skill was developed from patterns observed in:
 
 ## 🚦 Status
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Status:** Production-ready
 **Last Updated:** October 2025
 
 **Recent updates:**
+- v2.1.0: **Added automation scripts** - Three executable tools (search_mathlib.sh, check_axioms.sh, sorry_analyzer.py) for common Lean 4 workflows; Updated SKILL.md to reference scripts; Fixed Anthropic compliance (third-person frontmatter); All scripts tested on real Lean 4 project; Follows Anthropic skill-creator guidance for bundled scripts
 - v2.0.0: **Major restructuring** following Anthropic's progressive disclosure model - Split into lean core workflow (SKILL.md, 1,414 words) + comprehensive references (5 detailed guides); Added complete Lean MCP server tools reference; Restored removed measure theory patterns from git history; 22% reduction in core file while expanding total coverage; Improved context efficiency with on-demand reference loading
 - v1.3.1: Enhanced skill discoverability (Claude Search Optimization) - Added "Use when..." triggers with specific error messages and symptoms in description; added keyword density throughout (type class errors, sorry accumulation, mathlib search); added binder order guidance from real formalization experience; created TESTING.md documenting empirical development approach
 - v1.3.0: Compressed by 33% (568→382 lines) using 5 strategies: consolidated domain patterns, merged quality sections, table format for errors, condensed examples, unified axiom/sorry handling

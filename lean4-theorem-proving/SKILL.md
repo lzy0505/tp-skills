@@ -40,10 +40,12 @@ This skill applies to ANY Lean 4 development across all mathematical domains:
 - Example: `"Dispatch Explore agent to run scripts/smart_search.sh..."`
 - See `references/subagent-workflows.md` for patterns and examples
 
-**🔧 Automation Scripts (8 tools - all users):** Located in `scripts/`
-- **Search:** search_mathlib.sh, smart_search.sh, find_instances.sh
-- **Analysis:** proof_complexity.sh, dependency_graph.sh
-- **Verification:** check_axioms_inline.sh, sorry_analyzer.py
+**🔧 Automation Scripts (16 tools - all users):** Located in `scripts/`
+- **Search:** search_mathlib.sh, smart_search.sh, find_instances.sh, find_usages.sh
+- **Analysis:** proof_complexity.sh, dependency_graph.sh, build_profile.sh, unused_declarations.sh
+- **Learning:** suggest_tactics.sh, proof_templates.sh
+- **Verification:** check_axioms_inline.sh, sorry_analyzer.py, simp_lemma_tester.sh, pre_commit_hook.sh
+- **Refactoring:** minimize_imports.py
 - See `scripts/README.md` for complete documentation
 
 **Priority:** Use MCP server when available → Delegate to subagents → Run scripts directly

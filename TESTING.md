@@ -5,8 +5,8 @@ This document follows the Superpowers TDD-for-documentation approach by document
 ## Development Approach
 
 This skill was developed **empirically** from real-world Lean 4 formalization work on the exchangeability/de Finetti theorem project. The patterns emerged from:
-- 6+ months of active Lean 4 development
-- ~22 Lean files across 3 proof approaches
+- Intensive Lean 4 formalization (1000+ commits across several weeks)
+- ~22 Lean files across 3 independent proof approaches
 - Managing complex measure theory and probability formalization
 - Actual compilation errors, sorry elimination, and type class issues encountered
 

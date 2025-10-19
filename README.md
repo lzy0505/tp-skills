@@ -112,23 +112,43 @@ How should I handle type class inference issues?
 
 ```
 lean4-theorem-proving/
-└── SKILL.md      # Complete skill (11KB, 382 lines)
-TESTING.md        # Development methodology and baseline behaviors
+├── SKILL.md                          # Core workflow (1,414 words)
+└── references/                       # Detailed references (loaded as needed)
+    ├── mathlib-guide.md              # Finding lemmas, imports, naming
+    ├── tactics-reference.md          # Comprehensive tactics guide
+    ├── domain-patterns.md            # Math domain-specific patterns
+    ├── compilation-errors.md         # Detailed error debugging
+    └── mcp-server.md                 # Lean MCP server tools reference
+TESTING.md                            # Development methodology
 ```
+
+**Progressive Disclosure Design:**
+
+Following Anthropic's skill best practices, this skill uses a three-level loading system:
+
+1. **Metadata (always loaded)** - Name + description (~100 words)
+2. **SKILL.md (when skill triggers)** - Core workflow (~1,400 words)
+3. **References (as needed by Claude)** - Deep dives into specific topics
 
 **What's in SKILL.md:**
 - The Build-First Principle
-- 4-Phase Proof Development Workflow
-- Mathlib Integration (search techniques, imports, naming conventions)
-- Managing Incomplete Proofs (axioms, sorries, elimination patterns)
-- Domain-Specific Patterns (analysis, topology, algebra, number theory, probability)
-- Tactics & Automation (essential tactics, simp deep dive, domain-specific tactics)
-- Interactive Exploration (#check, #print, debugging, lemma finders)
-- Common Compilation Errors (6 errors in compact table format)
-- Quality Signals (checklist, success metrics, red flags)
+- 4-Phase Proof Development Workflow (structure, helpers, incremental, type classes)
+- Quick mathlib search workflow
+- Essential tactics overview
+- Domain-specific pattern summaries
+- Lean MCP server tools overview
+- Managing incomplete proofs (axioms, sorries)
+- Quality checklist and red flags
+
+**What's in references/:**
+- **mathlib-guide.md** - Search strategies, file organization, naming conventions, import best practices
+- **tactics-reference.md** - simp deep dive, tactic decision trees, comprehensive tactics catalog
+- **domain-patterns.md** - Analysis, topology, algebra, measure theory, probability (with real examples and removed content restored)
+- **compilation-errors.md** - Detailed error explanations, type class debugging, solutions
+- **mcp-server.md** - Complete MCP tool reference, workflows, troubleshooting, rate limits
 
 **What's in TESTING.md:**
-- Empirical development approach from real formalization work
+- Empirical development approach from real formalization work (1000+ commits)
 - Baseline behaviors observed without skill (RED phase)
 - How skill addresses issues (GREEN phase)
 - Known rationalizations and counters (REFACTOR phase)
@@ -197,11 +217,12 @@ This skill was developed from patterns observed in:
 
 ## 🚦 Status
 
-**Version:** 1.3.1
+**Version:** 2.0.0
 **Status:** Production-ready
 **Last Updated:** October 2025
 
 **Recent updates:**
+- v2.0.0: **Major restructuring** following Anthropic's progressive disclosure model - Split into lean core workflow (SKILL.md, 1,414 words) + comprehensive references (5 detailed guides); Added complete Lean MCP server tools reference; Restored removed measure theory patterns from git history; 22% reduction in core file while expanding total coverage; Improved context efficiency with on-demand reference loading
 - v1.3.1: Enhanced skill discoverability (Claude Search Optimization) - Added "Use when..." triggers with specific error messages and symptoms in description; added keyword density throughout (type class errors, sorry accumulation, mathlib search); added binder order guidance from real formalization experience; created TESTING.md documenting empirical development approach
 - v1.3.0: Compressed by 33% (568→382 lines) using 5 strategies: consolidated domain patterns, merged quality sections, table format for errors, condensed examples, unified axiom/sorry handling
 - v1.2.0: Optimized for balance and best practices - balanced coverage across algebra, topology, analysis, probability; compressed by 364 lines while maintaining quality

@@ -35,17 +35,11 @@ ALWAYS ensure the file compiles before committing
 
 **Lean has no runtime tests.** The type checker IS your test suite.
 
-### Build Commands
-
+**Build commands:**
 ```bash
-# Full project build
-lake build
-
-# Check specific file
-lake env lean MyFile.lean
-
-# Clean and rebuild
-lake clean && lake build
+lake build              # Full project
+lake env lean MyFile.lean  # Single file
+lake clean && lake build   # Clean rebuild
 ```
 
 **Before any commit:**
@@ -53,7 +47,7 @@ lake clean && lake build
 2. Verify no new errors introduced
 3. Document any remaining `sorry`s with clear strategy
 
-## Proof Development Workflow
+## The 4-Phase Workflow
 
 ### Phase 1: Structure Before Solving
 
@@ -70,7 +64,7 @@ lemma main_theorem (h : Hypothesis) : Conclusion := by
   sorry  -- TODO: Combine above
 ```
 
-**Structure first:** Break into named helpers, use `have` for subgoals, write skeleton with documented sorries, ensure compilation.
+**Key insight:** Outline proof strategy before writing tactics. Break into named helpers, use `have` for subgoals, document sorries.
 
 ### Phase 2: Helper Lemmas First
 
@@ -89,6 +83,8 @@ theorem main : Result := by
 
 **One sorry at a time:** Choose ONE sorry → Fill completely → Compile → Commit → Repeat
 
+**Never:** Fill 5 sorries simultaneously, commit without compiling, or skip documentation.
+
 ### Phase 4: Managing Type Class Issues
 
 **Sub-structures need explicit instances** (common with sub-σ-algebras, submeasures):
@@ -105,64 +101,104 @@ haveI : MeasurableSpace Ω := m0  -- Explicit instance
 haveI : Fact (m ≤ m0) := ⟨h_le⟩
 ```
 
+**CRITICAL - Binder order matters:** When working with sub-structures (like `m : MeasurableSpace Ω` with ambient `[MeasurableSpace Ω]`), the parameter `m` must come AFTER all instance parameters to avoid instance resolution choosing the wrong structure.
+
 **When synthesis fails:** Add `haveI : Instance := ...`, use `letI` for let-bound, or `@lemma (inst := your_instance)`.
 
-**Binder order matters:** When working with sub-structures (like `m : MeasurableSpace Ω` with ambient `[MeasurableSpace Ω]`), the parameter `m` must come AFTER all instance parameters to avoid instance resolution choosing the wrong structure.
+## Finding and Using Mathlib Lemmas
 
-## Mathlib Integration
+**Philosophy:** Search before prove. Mathlib has 100,000+ theorems.
 
-### Finding Existing Lemmas
-
-**DON'T:** Reprove what mathlib provides
-**DO:** Search thoroughly first
-
-#### In-Editor Search (For Human Users)
-
+**Quick search workflow:**
 ```bash
-# VS Code with Lean extension:
-# Ctrl+T (Cmd+T on Mac) - search by name
-# Note: This is for human users in VS Code, not available to AI assistants
+# Step 1: Find files with keywords
+find .lake/packages/mathlib -name "*.lean" -exec grep -l "continuous.*compact" {} \; | head -10
 
-# Use exact? tactic in proofs
-example : goal := by
-  exact?  -- Suggests mathlib lemmas that directly prove the goal
+# Step 2: Read candidate file
+# Use Read tool or lean_file_contents (if using MCP server)
+
+# Step 3: Import and verify
+import Mathlib.Topology.Compactness
+#check Continuous.isCompact_preimage
 ```
 
-#### Command-Line Search (For AI Assistants and Power Users)
+**For detailed search techniques, naming conventions, and import organization, see:** `references/mathlib-guide.md`
 
-```bash
-# Find files containing specific patterns
-find .lake/packages/mathlib -name "*.lean" -exec grep -l "pattern1\|pattern2" {} \; | head -10
+## Essential Tactics
 
-# Search with line numbers (for Read tool)
-grep -n "lemma.*keyword" path/to/file.lean | head -15
-```
-
-**Workflow:** Identify keywords → `find` + `grep -l` → `Read` tool → `grep -n` for line numbers → Import and apply
-
-**Pro tips:** Use `\|` for OR patterns, `head -N` to limit, search `"theorem\|lemma\|def"`, include alternative spellings.
-
-### Importing Correctly
-
+**Simplification:**
 ```lean
--- Specific imports (preferred)
-import Mathlib.Data.Real.Basic
-import Mathlib.Topology.MetricSpace.Basic
-
--- Tactic imports when needed
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.Ring
+simp only [lem1, lem2]  -- Explicit (preferred)
+simpa using h           -- Simplify and close
 ```
 
-### Naming Conventions (mathlib style)
-
+**Case analysis:**
 ```lean
--- Implications: bar_of_foo means foo → bar
-lemma continuous_of_isOpen_preimage : (∀ U, IsOpen (f ⁻¹' U)) → Continuous f
-
--- Equivalences: foo_iff_bar
-lemma injective_iff_leftInverse : Injective f ↔ ∃ g, LeftInverse g f
+by_cases h : p          -- Split on decidable
+rcases h with ⟨x, hx⟩   -- Destructure exists/and
 ```
+
+**Rewriting:**
+```lean
+rw [lemma]              -- Left-to-right
+rw [← lemma]            -- Right-to-left
+```
+
+**Apply:**
+```lean
+apply lemma             -- Apply, leave subgoals
+exact expr              -- Close goal exactly
+refine pattern ?_       -- Apply with holes
+```
+
+**Function equality:**
+```lean
+ext x / funext x        -- Prove functions equal pointwise
+```
+
+**For comprehensive tactics guide, simp deep dive, and automation, see:** `references/tactics-reference.md`
+
+## Domain-Specific Patterns
+
+**Analysis & Topology:**
+- Integrability: bounded + measurable + finite = integrable
+- Continuity from preimage
+- Compactness via finite subcover
+- Tactics: `continuity`, `fun_prop`
+
+**Algebra:**
+- Build instances compositionally: `instance : CommRing (Polynomial R) := inferInstance`
+- Quotient constructions with `refine`
+- Tactics: `ring`, `field_simp`, `group`
+
+**Measure Theory & Probability:**
+- Conditional expectation equality via uniqueness
+- Type class instance management for sub-σ-algebras
+- Almost everywhere properties: `ae_of_all`, `filter_upwards`
+- Tactics: `measurability`, `positivity`
+
+**For detailed patterns, real-world examples, and measure theory specifics, see:** `references/domain-patterns.md`
+
+## Lean MCP Server Tools (Claude Code)
+
+If using Claude Code with the Lean MCP server, powerful interactive tools are available:
+
+**Essential tools:**
+- `lean_goal` - Check proof state at cursor (USE OFTEN!)
+- `lean_diagnostic_messages` - Get all compilation errors
+- `lean_local_search` - Find project declarations (VERY FAST!)
+- `lean_leansearch` - Search mathlib with natural language
+- `lean_loogle` - Search by type signature
+
+**Common workflow:**
+1. `lean_goal` to see what needs proving
+2. `lean_local_search` for project lemmas
+3. `lean_leansearch`/`lean_loogle` for mathlib
+4. Edit file with tactics
+5. `lean_diagnostic_messages` to verify
+6. Repeat
+
+**For complete MCP tool reference, workflows, and troubleshooting, see:** `references/mcp-server.md`
 
 ## Managing Incomplete Proofs
 
@@ -206,177 +242,37 @@ axiom key_lemma : Goal  -- TODO: Replace with mathlib's result_X
 theorem key_lemma : Goal := by exact mathlib_result ...
 ```
 
-## Domain-Specific Patterns
+## Common Compilation Errors
 
-### Analysis & Topology
+Quick reference for the most common errors:
 
-```lean
--- Integrability: bounded + measurable + finite = integrable
-lemma integrable_of_bounded_measurable [IsFiniteMeasure μ] {f : X → ℝ}
-    (h_meas : Measurable f) (h_bound : ∃ C, ∀ x, ‖f x‖ ≤ C) : Integrable f μ := by
-  obtain ⟨C, hC⟩ := h_bound
-  exact Integrable.of_bound h_meas.aestronglyMeasurable C (ae_of_all _ hC)
+| Error | Fix |
+|-------|-----|
+| "failed to synthesize instance" | Add `haveI : IsProbabilityMeasure μ := ⟨proof⟩` |
+| "maximum recursion depth" | Provide manually: `letI := instance` or increase limit |
+| "type mismatch" (has type ℕ but expected ℝ) | Use coercion: `(x : ℝ)` or `↑x` |
+| "tactic 'exact' failed" | Use `apply` or restructure term |
+| "unknown identifier 'ring'" | Add: `import Mathlib.Tactic.Ring` |
 
--- Continuity from preimage
-lemma continuous_of_preimage (h : ∀ U, IsOpen U → IsOpen (f ⁻¹' U)) :
-    Continuous f := by rw [continuous_def]; exact h
+**For detailed error explanations, debugging, and solutions, see:** `references/compilation-errors.md`
 
--- Tactics: continuity, fun_prop
--- Patterns: Compactness via finite subcover, limits via Filter API, ε-δ proofs
-```
+## Quality Checklist
 
-### Algebra
-
-```lean
--- Build instances compositionally
-instance : CommRing (Polynomial R) := inferInstance
-
--- Structure lemmas
-lemma quotient_ring_hom (I : Ideal R) : RingHom (R ⧸ I) := by
-  refine { toFun := ..., map_one' := ..., map_mul' := ... }
-
--- Tactics: ring, field_simp, group
--- Patterns: Morphisms with refine, quotients via Quotient.sound, universal properties
-```
-
-### Number Theory & Combinatorics
-
-```lean
--- Induction principles
-lemma property_of_list (l : List α) : P l := by
-  induction l with
-  | nil => sorry  -- Base case
-  | cons head tail ih => sorry  -- Use ih
-
--- Tactics: linarith, norm_num
--- Patterns: Divisibility via Nat.dvd_iff_mod_eq_zero, prime factorization, Fintype.card
-```
-
-### Probability & Measure Theory
-
-```lean
--- Manage instances explicitly
-[IsProbabilityMeasure μ] -- Declare at function level
-haveI : IsFiniteMeasure μ := ⟨measure_univ_lt_top⟩  -- Add in proof
-
--- Tactics: positivity, measurability
--- Patterns: ae_of_all for ∀ → a.e., filtrations need Monotone, uniqueness via integral identity
-```
-
-### General Patterns
-
-```lean
--- Equality via uniqueness
-lemma foo_eq_bar (h : ∀ x, property x → f x = g x) : f = g := by
-  ext x; apply h  -- Show x satisfies property
-```
-
-## Tactics and Automation
-
-### Essential Tactics
-
-```lean
--- Simplification
-simp only [lem1, lem2]  -- Explicit (preferred)
-simpa using expr         -- Simplify and close
-
--- Case analysis
-by_cases h : p           -- Split on decidable
-rcases h with ⟨x, hx⟩    -- Destructure exists/and
-
--- Rewriting
-rw [lemma]               -- Rewrite left-to-right
-rw [← lemma]             -- Rewrite right-to-left
-
--- Apply
-apply lemma              -- Apply, leave subgoals
-exact expr               -- Close goal exactly
-refine pattern ?_        -- Apply with holes
-
--- Extension & congruence
-ext x / funext x / congr
-```
-
-### The `simp` Tactic
-
-**What it does:** Applies `@[simp]` lemmas recursively to normal form
-
-**Usage:** `simp` | `simp only [lem1, lem2]` (preferred) | `simp?` (shows which lemmas)
-
-**When to add `@[simp]`:**
-```lean
--- ✅ Good: Makes simpler
-@[simp] lemma f_zero : f 0 = 1
-@[simp] lemma union_empty : s ∪ ∅ = s
-
--- ❌ Bad: Creates loops or makes complex
-@[simp] lemma reverse : f (g x) = g (f x)  -- Loop with reverse direction!
-```
-
-**Decision tree:** Use `simp` for obvious normalization, `simp only` when you know lemmas, `rw` for 1-3 rewrites, `simp?` for exploration.
-
-## Interactive Exploration
-
-### Essential Commands
-
-```lean
-#check expr                    -- Show type
-#check @theorem                -- Show with all implicit arguments
-#print theorem                 -- Show definition/proof
-#print axioms theorem          -- List axioms used
-#eval expr                     -- Evaluate (computable only)
-
--- In tactic mode
-trace "Current goal: {·}"
-
--- Debug instance synthesis
-set_option trace.Meta.synthInstance true in
-theorem my_theorem : Goal := by apply_instance
-
--- Find lemmas
-example : goal := by
-  exact?         -- Find exact proof in mathlib
-  apply?         -- Find applicable lemmas
-  rw?            -- Find rewrite lemmas
-```
-
-### Common Compilation Errors
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| **"failed to synthesize instance"** | Missing type class | Add `haveI : IsProbabilityMeasure μ := ⟨proof⟩` |
-| **"maximum recursion depth"** | Type class loop/complex search | Provide manually: `letI := instance` or increase: `set_option synthInstance.maxHeartbeats 40000` |
-| **"type mismatch"** (has type ℕ but expected ℝ) | Wrong type | Use coercion: `(x : ℝ)` or `↑x` |
-| **"tactic 'exact' failed"** | Goal/term type mismatch | Use `apply` for unification or restructure: `⟨h.2, h.1⟩` |
-| **"unknown identifier 'ring'"** | Missing import | Add: `import Mathlib.Tactic.Ring` |
-| **"equation compiler failed"** | Can't prove termination | Add `termination_by my_rec n => n` clause |
-
-**Quick debug:** `#check problematic_term` → `#check @problematic_term` → `refine problematic_term ?_ ?_`
-
-## Quality Signals
-
-### Before Commit Checklist
-
+**Before commit:**
 - [ ] File compiles: `lake env lean <file>`
 - [ ] Full project builds: `lake build`
 - [ ] All new `sorry`s documented with strategy
 - [ ] No new axioms (or documented with elimination plan)
 - [ ] Imports minimal and specific
-- [ ] Lemmas follow mathlib naming conventions
-- [ ] Public API has docstrings
-- [ ] Helper lemmas marked `private` if internal
 
-### Doing It Right ✅
-
+**Doing it right ✅:**
 - File always compiles after each change
 - Each commit advances one specific lemma
 - Helper lemmas accumulate and get reused
 - Axioms decrease over time
-- Compilation errors rare and quickly fixed
 - Proofs build on mathlib
 
-### Red Flags 🚩 - STOP and Reconsider
-
+**Red flags 🚩:**
 - Multiple compilation errors accumulating
 - Sorries multiply faster than they're filled
 - Fighting with type checker for hours
@@ -385,3 +281,15 @@ example : goal := by
 - Proofs are monolithic (>100 lines with no structure)
 
 **ALL red flags mean: Return to systematic approach.**
+
+## Reference Files
+
+This skill includes detailed reference files for deep dives:
+
+- **`references/mathlib-guide.md`** - Finding lemmas, import organization, naming conventions, search strategies
+- **`references/tactics-reference.md`** - Comprehensive tactics guide, simp deep dive, tactic selection decision trees
+- **`references/domain-patterns.md`** - Analysis, topology, algebra, measure theory, probability patterns with real examples
+- **`references/compilation-errors.md`** - Detailed error explanations, debugging workflows, type class synthesis issues
+- **`references/mcp-server.md`** - Lean MCP server tools, workflows, troubleshooting (for Claude Code users)
+
+Claude will load these references as needed when working on specific tasks.

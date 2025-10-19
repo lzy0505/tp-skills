@@ -1,6 +1,6 @@
 ---
 name: lean4-theorem-proving
-description: Use when writing Lean 4 proofs, managing sorries/axioms, facing "failed to synthesize instance" or type class errors, or searching mathlib - provides systematic build-first workflow, type class management patterns (haveI/letI), and domain-specific tactics for measure theory, probability, and algebra
+description: This skill should be used when developing Lean 4 proofs, managing sorries/axioms, facing "failed to synthesize instance" or type class errors, or searching mathlib - provides systematic build-first workflow, type class management patterns (haveI/letI), and domain-specific tactics for measure theory, probability, and algebra
 ---
 
 # Lean 4 Theorem Proving
@@ -13,7 +13,7 @@ Lean 4 is an interactive theorem prover. Unlike traditional code, correctness is
 
 ## When to Use This Skill
 
-Use for ANY Lean 4 development across all mathematical domains:
+This skill applies to ANY Lean 4 development across all mathematical domains:
 - Pure mathematics (algebra, topology, analysis, number theory, combinatorics)
 - Applied mathematics (probability, optimization, numerical methods)
 - Computer science (algorithms, data structures, program verification)

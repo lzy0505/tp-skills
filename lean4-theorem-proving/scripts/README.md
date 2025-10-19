@@ -2,13 +2,16 @@
 
 Automated tools for common Lean 4 workflows. These scripts implement the workflows described in SKILL.md with deterministic reliability.
 
+**All scripts validated on real Lean 4 formalization project (1000+ commits).** See `TESTING.md` for complete test results.
+
 ## Scripts Overview
 
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `search_mathlib.sh` | Find lemmas in mathlib | Before proving something that might exist |
-| `check_axioms.sh` | Verify axiom usage | Before committing, during PR review |
-| `sorry_analyzer.py` | Extract and report sorries | Planning work, tracking progress |
+| Script | Purpose | When to Use | Status |
+|--------|---------|-------------|--------|
+| `search_mathlib.sh` | Find lemmas in mathlib | Before proving something that might exist | ✅ Production |
+| `check_axioms_inline.sh` | Verify axiom usage (all declarations) | Before committing, during PR review | ✅ Production |
+| `check_axioms.sh` | Verify axiom usage (public API only) | Library files with flat structure | ⚠️ Limited |
+| `sorry_analyzer.py` | Extract and report sorries | Planning work, tracking progress | ✅ Production |
 
 ## search_mathlib.sh
 

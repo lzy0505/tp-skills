@@ -193,11 +193,12 @@ This skill was developed from patterns observed in:
 
 ## 🚦 Status
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Production-ready
 **Last Updated:** October 2025
 
 **Recent updates:**
+- v1.2.0: Optimized for balance and best practices - balanced coverage across algebra, topology, analysis, probability; compressed by 364 lines while maintaining quality
 - v1.1.0: Added simp tactic deep dive, interactive exploration commands, and 10 common error messages with fixes
 - v1.0.0: Initial release with core workflow and mathlib integration
 

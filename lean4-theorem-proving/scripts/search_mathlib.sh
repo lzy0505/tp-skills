@@ -22,6 +22,13 @@ MATHLIB_PATH="${MATHLIB_PATH:-.lake/packages/mathlib}"
 SEARCH_TYPE="${2:-name}"
 QUERY="$1"
 
+# Detect if ripgrep is available (faster)
+if command -v rg &> /dev/null; then
+    USE_RG=true
+else
+    USE_RG=false
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -43,31 +50,43 @@ case "$SEARCH_TYPE" in
     name)
         # Search for theorem/def/lemma names
         echo -e "${GREEN}Searching declaration names...${NC}"
-        find "$MATHLIB_PATH" -name "*.lean" -type f -exec grep -l "^\(theorem\|lemma\|def\|class\|structure\|inductive\).*$QUERY" {} \; | head -20 | while read -r file; do
-            echo -e "${BLUE}File: ${NC}$file"
-            grep -n "^\(theorem\|lemma\|def\|class\|structure\|inductive\).*$QUERY" "$file" | head -3
-            echo
-        done
+        if [[ "$USE_RG" == true ]]; then
+            rg -t lean "^(theorem|lemma|def|class|structure|inductive).*$QUERY" "$MATHLIB_PATH" -n --heading --color=always | head -60
+        else
+            find "$MATHLIB_PATH" -name "*.lean" -type f -exec grep -l "^\(theorem\|lemma\|def\|class\|structure\|inductive\).*$QUERY" {} \; | head -20 | while read -r file; do
+                echo -e "${BLUE}File: ${NC}$file"
+                grep -n "^\(theorem\|lemma\|def\|class\|structure\|inductive\).*$QUERY" "$file" | head -3
+                echo
+            done
+        fi
         ;;
 
     type)
         # Search in type signatures
         echo -e "${GREEN}Searching type signatures...${NC}"
-        find "$MATHLIB_PATH" -name "*.lean" -type f -exec grep -l ": .*$QUERY" {} \; | head -20 | while read -r file; do
-            echo -e "${BLUE}File: ${NC}$file"
-            grep -n "theorem\|lemma\|def" "$file" | grep "$QUERY" | head -3
-            echo
-        done
+        if [[ "$USE_RG" == true ]]; then
+            rg -t lean ": .*$QUERY" "$MATHLIB_PATH" -n --heading --color=always | head -60
+        else
+            find "$MATHLIB_PATH" -name "*.lean" -type f -exec grep -l ": .*$QUERY" {} \; | head -20 | while read -r file; do
+                echo -e "${BLUE}File: ${NC}$file"
+                grep -n "theorem\|lemma\|def" "$file" | grep "$QUERY" | head -3
+                echo
+            done
+        fi
         ;;
 
     content)
         # Search file contents (comprehensive but slower)
         echo -e "${GREEN}Searching file contents...${NC}"
-        find "$MATHLIB_PATH" -name "*.lean" -type f -exec grep -l "$QUERY" {} \; | head -20 | while read -r file; do
-            echo -e "${BLUE}File: ${NC}$file"
-            grep -n "$QUERY" "$file" | head -5
-            echo
-        done
+        if [[ "$USE_RG" == true ]]; then
+            rg -t lean "$QUERY" "$MATHLIB_PATH" -n --heading --color=always | head -100
+        else
+            find "$MATHLIB_PATH" -name "*.lean" -type f -exec grep -l "$QUERY" {} \; | head -20 | while read -r file; do
+                echo -e "${BLUE}File: ${NC}$file"
+                grep -n "$QUERY" "$file" | head -5
+                echo
+            done
+        fi
         ;;
 
     *)

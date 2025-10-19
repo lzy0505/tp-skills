@@ -9,6 +9,10 @@
 # that checks axioms for each one. Standard mathlib axioms (propext, quot.sound, choice)
 # are filtered out, highlighting only custom axioms or unexpected dependencies.
 #
+# LIMITATION: Only works for declarations that are part of the module's public API.
+# Declarations in namespaces, sections, or marked 'private' cannot be checked via
+# external import. For those, use #print axioms directly in your Lean files.
+#
 # Examples:
 #   ./check_axioms.sh MyFile.lean
 #   ./check_axioms.sh src/DeFinetti/ --verbose
@@ -19,7 +23,7 @@ set -euo pipefail
 # Configuration
 TARGET="${1:-.}"
 VERBOSE="${2:-}"
-TEMP_FILE=$(mktemp /tmp/check_axioms_XXXXX.lean)
+TEMP_FILE=$(mktemp)
 
 # Colors
 RED='\033[0;31m'
@@ -47,10 +51,14 @@ fi
 # Extract declarations from each file
 DECLARATIONS=()
 for file in "${FILES[@]}"; do
-    # Extract theorem and lemma names
-    while IFS= read -r decl; do
-        DECLARATIONS+=("$file:$decl")
-    done < <(grep -oP '(?<=^(theorem|lemma) )\w+' "$file" 2>/dev/null || true)
+    # Extract theorem and lemma names (using egrep for compatibility)
+    while IFS= read -r line; do
+        # Extract the declaration name from lines like "theorem name ..."
+        decl=$(echo "$line" | sed -E 's/^(theorem|lemma|def) +([^ :(]+).*/\2/')
+        if [[ -n "$decl" ]]; then
+            DECLARATIONS+=("$file:$decl")
+        fi
+    done < <(grep -E '^(theorem|lemma|def) ' "$file" 2>/dev/null || true)
 done
 
 if [[ ${#DECLARATIONS[@]} -eq 0 ]]; then
@@ -65,20 +73,26 @@ echo
 echo "-- Auto-generated axiom check file" > "$TEMP_FILE"
 echo "" >> "$TEMP_FILE"
 
-# Group by file for proper imports
-declare -A FILE_DECLS
+# Group by file for proper imports (bash 3.2 compatible)
+SEEN_FILES=()
 for entry in "${DECLARATIONS[@]}"; do
     file="${entry%%:*}"
-    decl="${entry##*:}"
-    FILE_DECLS["$file"]+="$decl "
-done
 
-# Process each file
-for file in "${!FILE_DECLS[@]}"; do
-    # Convert file path to module name
-    module=$(echo "$file" | sed 's|^./||' | sed 's|/|.|g' | sed 's|\.lean$||')
+    # Check if we've seen this file before
+    already_seen=false
+    for seen in ${SEEN_FILES[@]+"${SEEN_FILES[@]}"}; do
+        if [[ "$seen" == "$file" ]]; then
+            already_seen=true
+            break
+        fi
+    done
 
-    echo "import $module" >> "$TEMP_FILE"
+    if [[ "$already_seen" == false ]]; then
+        SEEN_FILES+=("$file")
+        # Convert file path to module name
+        module=$(echo "$file" | sed 's|^./||' | sed 's|/|.|g' | sed 's|\.lean$||')
+        echo "import $module" >> "$TEMP_FILE"
+    fi
 done
 
 echo "" >> "$TEMP_FILE"

@@ -59,6 +59,15 @@ Set `MATHLIB_PATH` environment variable to override default `.lake/packages/math
 ./check_axioms.sh <file-or-directory> [--verbose]
 ```
 
+**⚠️ LIMITATION:** This script only works for declarations that are part of the module's public API. Declarations in namespaces, sections, or marked `private` cannot be checked via external import.
+
+**For checking all declarations (including internal ones):**
+```lean
+-- Add at the end of your Lean file:
+#print axioms my_theorem
+#print axioms my_lemma
+```
+
 **Standard Axioms (Acceptable):**
 - `propext` - Propositional extensionality
 - `quot.sound` / `Quot.sound` - Quotient soundness

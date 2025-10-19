@@ -11,6 +11,50 @@ Lean 4 is an interactive theorem prover. Unlike traditional code, correctness is
 
 **Core principle:** Build incrementally, structure before solving, and trust the type checker.
 
+## Powerful Tools at Your Disposal
+
+**🚀 FIRST: Check if the Lean MCP server is available** (for Claude Code users)
+
+The Lean MCP server provides the most powerful workflow:
+- `mcp__lean-lsp__lean_goal` - See proof state at any location (VERY USEFUL!)
+- `mcp__lean-lsp__lean_diagnostic_messages` - Get all errors/warnings
+- `mcp__lean-lsp__lean_leansearch` - Semantic theorem search
+- `mcp__lean-lsp__lean_loogle` - Type-based search
+- `mcp__lean-lsp__lean_local_search` - Search current workspace
+- And many more (see `references/mcp-server.md` for full details)
+
+**If MCP server available:** Use it as your primary interface. It's faster and more integrated than scripts.
+
+**If MCP server NOT available:** Use the automation scripts below.
+
+### Automation Scripts (8 Production-Ready Tools)
+
+Located in `scripts/` directory - all scripts designed for efficient subagent delegation:
+
+**Search & Discovery:**
+- `search_mathlib.sh` - Find lemmas/theorems by name or pattern
+- `smart_search.sh` - Multi-source search (LeanSearch + Loogle APIs + local)
+- `find_instances.sh` - Discover type class instances and patterns
+
+**Analysis & Metrics:**
+- `proof_complexity.sh` - Analyze proof length, identify refactoring targets
+- `dependency_graph.sh` - Visualize theorem dependencies (DOT/text)
+
+**Verification & Tracking:**
+- `check_axioms_inline.sh` - Verify axiom usage (works with namespaces) ✅ Recommended
+- `sorry_analyzer.py` - Extract sorries with context, interactive mode available
+
+**⚡ Subagent Delegation Pattern (Claude Code users):**
+
+Instead of running scripts directly, dispatch lightweight Explore agents:
+```
+"Dispatch Explore agent to run scripts/smart_search.sh 'continuous compact' and report top 3 results"
+```
+
+**Benefits:** 6x token reduction, cleaner conversation, parallel execution. See "Leveraging Subagents for Automation" section below for full patterns.
+
+**For users without Claude Code:** Run scripts directly from command line.
+
 ## When to Use This Skill
 
 This skill applies to ANY Lean 4 development across all mathematical domains:
@@ -85,6 +129,24 @@ theorem main : Result := by
 
 **Never:** Fill 5 sorries simultaneously, commit without compiling, or skip documentation.
 
+**🚀 Track sorries with MCP server (if available):**
+```lean
+-- See proof state at sorry location
+mcp__lean-lsp__lean_goal("MyFile.lean", line_number, column_number)
+```
+
+**⚡ Use interactive navigator (Claude Code users):**
+```bash
+scripts/sorry_analyzer.py . --interactive
+# Browse sorries, open in $EDITOR, navigate by file
+```
+
+**🔧 Generate sorry reports:**
+```bash
+# Dispatch Explore agent to run:
+scripts/sorry_analyzer.py src/ --format=markdown > SORRIES.md
+```
+
 ### Phase 4: Managing Type Class Issues
 
 **Sub-structures need explicit instances** (common with sub-σ-algebras, submeasures):
@@ -109,46 +171,35 @@ haveI : Fact (m ≤ m0) := ⟨h_le⟩
 
 **Philosophy:** Search before prove. Mathlib has 100,000+ theorems.
 
-**Quick search workflow:**
-```bash
-# Step 1: Find files with keywords
-find .lake/packages/mathlib -name "*.lean" -exec grep -l "continuous.*compact" {} \; | head -10
+**🚀 BEST: Use MCP server tools (if available)**
+```lean
+-- Find theorems by semantic search
+mcp__lean-lsp__lean_leansearch("continuous functions on compact spaces")
 
-# Step 2: Read candidate file
-# Use Read tool or lean_file_contents (if using MCP server)
+-- Find theorems by type pattern
+mcp__lean-lsp__lean_loogle("(?a -> ?b) -> List ?a -> List ?b")
 
-# Step 3: Import and verify
-import Mathlib.Topology.Compactness
-#check Continuous.isCompact_preimage
+-- Search current workspace
+mcp__lean-lsp__lean_local_search("continuous")
 ```
+
+**⚡ EFFICIENT: Dispatch Explore agent (Claude Code users)**
+```
+"Dispatch Explore agent to run scripts/smart_search.sh 'continuous compact' --source=all and report top 3 results"
+```
+
+**🔧 MANUAL: Direct search (without MCP/Claude Code)**
+```bash
+scripts/smart_search.sh "continuous compact" --source=leansearch
+scripts/search_mathlib.sh "continuous.*compact" name
+```
+
+**Workflow:**
+1. Search using MCP tools (preferred) or scripts
+2. Read candidate file
+3. Import and verify: `#check Continuous.isCompact_preimage`
 
 **For detailed search techniques, naming conventions, and import organization, see:** `references/mathlib-guide.md`
-
-**Automation available:** Use `scripts/search_mathlib.sh` for automated searching with multiple search modes (name, type, content).
-
-## Automation Scripts
-
-Three executable scripts automate common workflows:
-
-**1. search_mathlib.sh** - Find existing lemmas before proving
-```bash
-scripts/search_mathlib.sh "continuous.*compact" name
-scripts/search_mathlib.sh "integrable" content
-```
-
-**2. check_axioms.sh** - Verify theorems use only standard axioms
-```bash
-scripts/check_axioms.sh src/DeFinetti/         # Check directory
-scripts/check_axioms.sh MyFile.lean --verbose  # Detailed output
-```
-
-**3. sorry_analyzer.py** - Extract and track all sorries
-```bash
-scripts/sorry_analyzer.py src/ --format=markdown > SORRIES.md
-scripts/sorry_analyzer.py . --format=json  # For CI/CD
-```
-
-**See `scripts/README.md` for complete documentation, usage examples, and workflow integration.**
 
 ## Essential Tactics
 
@@ -425,9 +476,22 @@ Claude (in main conversation):
 **Before commit:**
 - [ ] File compiles: `lake env lean <file>`
 - [ ] Full project builds: `lake build`
-- [ ] All new `sorry`s documented with strategy (check with `scripts/sorry_analyzer.py`)
-- [ ] No new axioms (or documented with elimination plan) - verify with `scripts/check_axioms.sh`
+- [ ] All new `sorry`s documented with strategy
+  - 🚀 MCP: Use `mcp__lean-lsp__lean_diagnostic_messages`
+  - ⚡ Script: Dispatch agent with `scripts/sorry_analyzer.py`
+- [ ] No new axioms (or documented with elimination plan)
+  - 🚀 Best: N/A (MCP doesn't have axiom checker)
+  - ⚡ Efficient: Dispatch agent with `scripts/check_axioms_inline.sh "src/**/*.lean"`
+  - 🔧 Manual: Run `scripts/check_axioms_inline.sh` directly
 - [ ] Imports minimal and specific
+
+**Efficient workflow (Claude Code users):**
+```
+"Dispatch Explore agent to:
+1. Run scripts/sorry_analyzer.py src/ and report count
+2. Run scripts/check_axioms_inline.sh 'src/**/*.lean' and report any issues
+3. Summarize: Ready to commit?"
+```
 
 **Doing it right ✅:**
 - File always compiles after each change
@@ -435,6 +499,7 @@ Claude (in main conversation):
 - Helper lemmas accumulate and get reused
 - Axioms decrease over time
 - Proofs build on mathlib
+- **Using MCP server or delegating to subagents for mechanical tasks**
 
 **Red flags 🚩:**
 - Multiple compilation errors accumulating

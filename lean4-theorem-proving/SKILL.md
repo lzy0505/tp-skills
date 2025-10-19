@@ -282,6 +282,144 @@ Quick reference for the most common errors:
 
 **For detailed error explanations, debugging, and solutions, see:** `references/compilation-errors.md`
 
+## Leveraging Subagents for Automation
+
+**When working in Claude Code**, delegate mechanical tasks to specialized subagents. This keeps the main conversation focused on proof strategy while automating search, analysis, and verification.
+
+### When to Dispatch Subagents
+
+**Dispatch subagents for:**
+- **Search tasks** - Finding mathlib lemmas, instances, or similar proofs
+- **Analysis tasks** - Complexity metrics, dependency graphs, sorry reports
+- **Verification tasks** - Checking axioms across multiple files
+- **Exploratory tasks** - Understanding codebase structure or unfamiliar patterns
+
+**Keep in main conversation:**
+- **Proof development** - Writing tactics and structuring arguments
+- **Design decisions** - Choosing proof approaches or architectures
+- **Error debugging** - Interpreting type checker feedback
+- **Strategic planning** - Breaking down theorems into subgoals
+
+### Agent Types for Lean 4 Work
+
+**Explore agent** (fast, lightweight):
+```
+Use for: Quick searches, file discovery, pattern matching
+Tools: Glob, Grep, Read, Bash
+Cost: ~Haiku-level tokens
+When: "Find all files using MeasurableSpace", "Locate definition of X"
+```
+
+**General-purpose agent** (thorough, multi-step):
+```
+Use for: Complex searches, analysis requiring judgment
+Tools: Full toolset including Task
+Cost: ~Sonnet-level tokens
+When: Running scripts that need interpretation, comparing multiple approaches
+```
+
+### Automation Scripts + Subagents
+
+**Pattern: Delegate script execution to Explore agents**
+
+Instead of running scripts directly in main conversation, dispatch lightweight subagents:
+
+```
+✅ Efficient:
+"Dispatch Explore agent to run scripts/sorry_analyzer.py on src/ and report top 5 sorries to tackle"
+"Dispatch Explore agent to find all MeasurableSpace instances using scripts/find_instances.sh"
+
+❌ Inefficient:
+[Running scripts/sorry_analyzer.py directly, consuming main conversation tokens]
+```
+
+### Example Workflows
+
+**Finding mathlib lemmas:**
+```
+You: "I need lemmas about continuous functions on compact spaces"
+
+Claude (in main conversation):
+- Dispatches Explore agent: "Run scripts/smart_search.sh 'continuous compact' --source=leansearch and report top 3 results"
+- Agent reports back with specific lemmas
+- Main conversation continues with: "Let's use Continuous.image_of_compact..."
+```
+
+**Analyzing proof complexity:**
+```
+You: "Which proofs should I refactor first?"
+
+Claude (in main conversation):
+- Dispatches Explore agent: "Run scripts/proof_complexity.sh src/ --sort-by=lines and report top 10"
+- Agent reports: "proof_main (245 lines), helper_convergence (180 lines), ..."
+- Main conversation: "Let's refactor proof_main first - it has 3 natural subgoals we can extract"
+```
+
+**Checking axiom usage before commit:**
+```
+You: "Ready to commit - verify axioms"
+
+Claude (in main conversation):
+- Dispatches Explore agent: "Run scripts/check_axioms_inline.sh 'src/**/*.lean' and report any non-standard axioms"
+- Agent reports: "✓ All 150 declarations use only standard axioms"
+- Main conversation: "Great! Let's commit."
+```
+
+**Interactive sorry selection:**
+```
+You: "What should I work on next?"
+
+Claude (in main conversation):
+- Suggests: "Let's use the interactive sorry navigator"
+- You run: scripts/sorry_analyzer.py . --interactive
+- You pick sorry #3 from the TUI
+- Return to main conversation: "I'm working on the convergence proof in line 245"
+```
+
+### Subagent Dispatch Patterns
+
+**Explicit delegation:**
+```
+"I'm going to dispatch an Explore agent to search mathlib for [X]"
+[Uses Task tool with Explore agent]
+[Agent reports back]
+"The agent found [Y], let's use that..."
+```
+
+**Batch operations:**
+```
+"Dispatch Explore agent to:
+1. Run sorry_analyzer.py on entire project
+2. Run check_axioms_inline.sh on changed files
+3. Report summary statistics"
+```
+
+**Iterative search:**
+```
+"Dispatch general-purpose agent to:
+1. Search mathlib for continuous function lemmas
+2. If found, check which apply to compact spaces
+3. If none apply, search for compactness preservation
+4. Report most relevant 3 lemmas with import paths"
+```
+
+### Cost-Benefit Analysis
+
+**Main conversation tokens are expensive:**
+- Reading 100-line script output: ~500 tokens (wasted on boilerplate)
+- Explaining script results: ~200 tokens
+
+**Subagent delegation is cheap:**
+- Dispatch + receive summary: ~100 tokens
+- Agent uses Haiku/fast model for execution
+- **Savings: 600 tokens → 100 tokens (6x reduction)**
+
+**When NOT to use subagents:**
+- Single-file searches (use Grep directly)
+- Immediate tactical decisions (type checker feedback)
+- Small proofs (<20 lines)
+- Already have the information
+
 ## Quality Checklist
 
 **Before commit:**

@@ -112,23 +112,19 @@ How should I handle type class inference issues?
 
 ```
 lean4-theorem-proving/
-└── SKILL.md      # Complete skill (32KB of Lean 4 expertise)
+└── SKILL.md      # Complete skill (11KB, 382 lines)
 ```
 
 **What's in SKILL.md:**
 - The Build-First Principle
 - 4-Phase Proof Development Workflow
-- Mathlib Integration Guide (with comprehensive search techniques)
-- **Command-Line Search Patterns** (find/grep workflows for mathlib and local files)
-- **Interactive Exploration** (#check, #print, #eval, debugging commands)
-- **The simp Tactic Deep Dive** (when to use, pitfalls, best practices)
-- **Expanded Error Messages** (10 common errors with concrete fixes)
-- Managing Axioms and Sorries
-- Measure Theory Patterns
-- Tactics Reference
-- Commit Message Patterns
-- Quality Checklist
-- Learning Resources
+- Mathlib Integration (search techniques, imports, naming conventions)
+- Managing Incomplete Proofs (axioms, sorries, elimination patterns)
+- Domain-Specific Patterns (analysis, topology, algebra, number theory, probability)
+- Tactics & Automation (essential tactics, simp deep dive, domain-specific tactics)
+- Interactive Exploration (#check, #print, debugging, lemma finders)
+- Common Compilation Errors (6 errors in compact table format)
+- Quality Signals (checklist, success metrics, red flags)
 
 ## 🎯 When to Use This Skill
 
@@ -193,11 +189,12 @@ This skill was developed from patterns observed in:
 
 ## 🚦 Status
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Production-ready
 **Last Updated:** October 2025
 
 **Recent updates:**
+- v1.3.0: Compressed by 33% (568→382 lines) using 5 strategies: consolidated domain patterns, merged quality sections, table format for errors, condensed examples, unified axiom/sorry handling
 - v1.2.0: Optimized for balance and best practices - balanced coverage across algebra, topology, analysis, probability; compressed by 364 lines while maintaining quality
 - v1.1.0: Added simp tactic deep dive, interactive exploration commands, and 10 common error messages with fixes
 - v1.0.0: Initial release with core workflow and mathlib integration

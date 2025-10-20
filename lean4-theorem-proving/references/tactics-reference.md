@@ -282,9 +282,26 @@ group        -- Solve group equations
 **Arithmetic:**
 ```lean
 linarith     -- Linear arithmetic over ordered rings
+             -- Example: have : x ≤ y := by linarith
 nlinarith    -- Non-linear arithmetic
 norm_num     -- Normalize numerical expressions
 omega        -- Integer linear arithmetic (Lean 4.13+)
+             -- Example: have : n < m := by omega
+```
+
+**When to use arithmetic tactics:**
+```lean
+-- ✅ DO: Use omega for integer inequalities
+lemma nat_ineq (n m : ℕ) (h1 : n < m) (h2 : m < n + 5) : n + 1 < n + 5 := by
+  omega
+
+-- ✅ DO: Use linarith for real/rational linear arithmetic
+lemma real_ineq (x y : ℝ) (h1 : x ≤ y) (h2 : y < x + 1) : x < x + 1 := by
+  linarith
+
+-- ⚠️ AVOID: Manual inequality chains when tactics work
+-- Instead of: apply add_lt_add; exact h1; exact h2
+-- Just use: omega (or linarith for reals)
 ```
 
 **Analysis:**

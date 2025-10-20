@@ -412,6 +412,44 @@ If tactics fail, try:
 4. Unfold custom definitions first, then automate
 5. For complex set operations, write direct structured proofs
 
+**Automation Philosophy - Balancing Power with Readability:**
+
+Automation tactics are powerful but should serve clarity, not obscure it:
+
+✅ **Good automation:** Eliminates tedious boilerplate while keeping proof structure clear
+```lean
+-- Pi-type measurability: automation is perfect here
+lemma measurable_proj : Measurable (fun x : ℕ → α => fun i : Fin n => x i) := by
+  measurability  -- Clear intent, no important reasoning hidden
+
+-- Arithmetic side conditions: automation prevents distraction
+lemma main_result (n : ℕ) (h : n > 0) : n + 1 < 2 * n := by
+  omega  -- Trivial arithmetic, would distract from real proof
+```
+
+⚠️ **Overly aggressive automation:** Hides important mathematical reasoning
+```lean
+-- ❌ BAD: Key proof step hidden by automation
+lemma important_theorem : complicated_property := by
+  mega_tactic_that_does_everything
+  -- What's the actual argument? Unclear!
+
+-- ✅ GOOD: Important reasoning explicit, automation for steps
+lemma important_theorem : complicated_property := by
+  -- Key insight: reduce to simpler property via this lemma
+  suffices simpler_property by exact key_lemma this
+  -- Now use automation for routine verification
+  constructor
+  · measurability
+  · omega
+```
+
+**Guidelines:**
+- Use automation for: boilerplate (measurability), trivial arithmetic (omega/linarith), type class inference
+- Keep explicit: key mathematical insights, proof architecture, non-obvious lemma applications
+- Document with comments when automation does something non-trivial
+- If a tactic call raises "how does this work?", consider making it more explicit
+
 ### Real-World Example: Finite Marginals Uniqueness
 
 From exchangeability project - shows typical measure theory proof structure:

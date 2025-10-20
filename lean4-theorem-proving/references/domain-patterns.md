@@ -352,12 +352,65 @@ From the exchangeability project, automation with `measurability` and `@[measura
 - Eliminated ~90 lines of boilerplate
 - Made proofs more maintainable and easier to understand
 
-**When `measurability` doesn't work:**
+**When automation works well:**
 
-If the tactic fails, you may need to:
+✅ **Direct measurability goals:** Simple product types and compositions
+```lean
+lemma measurable_proj : Measurable (fun x : ℕ → α => fun i : Fin n => x i) := by
+  measurability  -- Works great
+```
+
+✅ **Function property goals with measurability subgoals:**
+```lean
+have h : Measurable (fun ω => fun i => X (k i) ω) := by
+  fun_prop (disch := measurability)  -- Handles composition + measurability
+```
+
+✅ **After adding attributes:** Making custom lemmas discoverable boosts power
+```lean
+@[measurability]
+lemma measurable_myCustomMap : Measurable myCustomMap := by ...
+-- Now measurability can use this automatically
+```
+
+**When automation doesn't work (pitfalls to avoid):**
+
+⚠️ **Complex set operations can timeout:**
+```lean
+-- ❌ Can hang or timeout
+lemma complicated_set : MeasurableSet ((f ⁻¹' A) ∩ (g ⁻¹' B) ∪ (h ⁻¹' C)) := by
+  measurability  -- May timeout on complex set algebra
+
+-- ✅ Use direct proof instead
+lemma complicated_set : MeasurableSet ((f ⁻¹' A) ∩ (g ⁻¹' B) ∪ (h ⁻¹' C)) := by
+  apply MeasurableSet.union
+  · apply MeasurableSet.inter <;> exact Measurable.measurableSet_preimage ‹_› ‹_›
+  · exact Measurable.measurableSet_preimage ‹_› ‹_›
+```
+
+⚠️ **Custom definitions unknown to `fun_prop`:**
+```lean
+-- If you have: def path (X : ℕ → Ω → α) : Ω → (ℕ → α) := fun ω n => X n ω
+
+-- ❌ fun_prop doesn't know about path
+lemma measurable_path_composed : Measurable (path X) := by
+  fun_prop  -- Fails: doesn't recognize 'path'
+
+-- ✅ Use measurability directly or add intermediate steps
+lemma measurable_path_composed : Measurable (path X) := by
+  measurability  -- Works if path unfolds to measurable_pi_lambda pattern
+  -- OR unfold manually:
+  -- unfold path; measurability
+```
+
+**General troubleshooting:**
+
+If tactics fail, try:
 1. Add `@[measurability]` to a key helper lemma
-2. Provide intermediate steps manually
-3. Use `fun_prop (disch := measurability)` instead
+2. Break into smaller intermediate steps
+3. Use `fun_prop (disch := measurability)` for function compositions
+4. Unfold custom definitions first, then automate
+5. For complex set operations, write direct structured proofs
 
 ### Real-World Example: Finite Marginals Uniqueness
 

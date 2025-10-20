@@ -206,6 +206,57 @@ lemma independent_of_product :
   sorry
 ```
 
+#### Pattern 7: Managing Section Variables with `omit`
+
+When organizing files with `section` and `variable`, you may need to exclude certain section variables from specific lemmas:
+
+```lean
+section IntegrationHelpers
+
+variable [MeasurableSpace Ω] {μ : Measure Ω}
+
+-- Most lemmas use the section variables
+lemma uses_measure [IsFiniteMeasure μ] : ... := by
+  -- Uses μ and MeasurableSpace Ω from section
+  sorry
+
+-- This lemma doesn't need MeasurableSpace Ω at all
+omit [MeasurableSpace Ω] in
+/-- **Cauchy-Schwarz inequality for L² real-valued functions.**
+
+    For integrable functions f, g in L²(μ): |∫ f·g| ≤ (∫ f²)^(1/2) · (∫ g²)^(1/2) -/
+lemma abs_integral_mul_le_L2 [IsFiniteMeasure μ] {f g : Ω → ℝ}
+    (hf : MemLp f 2 μ) (hg : MemLp g 2 μ) :
+    |∫ x, f x * g x ∂μ| ≤ (∫ x, f x ^ 2 ∂μ) ^ (1 / 2 : ℝ) * (∫ x, g x ^ 2 ∂μ) ^ (1 / 2 : ℝ) := by
+  sorry
+
+end IntegrationHelpers
+```
+
+**Critical ordering:**
+- `omit [...] in` must appear **before** the docstring
+- Placing it after the docstring will cause a compilation error
+
+**When to use:**
+- Lemma doesn't actually use a section variable but Lean includes it anyway
+- Section variable causes unwanted type class instance requirements
+- Want to make lemma signature cleaner and more general
+
+**Common pattern in probability theory:**
+```lean
+section ProbabilityResults
+variable [MeasurableSpace Ω] [MeasurableSpace Ω'] {μ : Measure Ω}
+
+-- Some lemmas need both spaces
+lemma needs_both_spaces : ... := sorry
+
+-- Some lemmas only need one
+omit [MeasurableSpace Ω'] in
+lemma needs_only_Omega : ... := sorry
+
+end ProbabilityResults
+```
+
 ### Common Tactics for Measure Theory
 
 ```lean

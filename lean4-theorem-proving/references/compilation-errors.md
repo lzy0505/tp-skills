@@ -50,6 +50,18 @@ haveI : Fact (m ≤ m₀) := ⟨h_le⟩
 @condExp Ω ℝ m₀ m (by exact inst) μ (by exact hm) f
 ```
 
+**Pattern 4: Exclude unwanted section variables**
+```lean
+-- When section has `variable [MeasurableSpace Ω]` but lemma doesn't need it
+omit [MeasurableSpace Ω] in
+/-- Docstring for the lemma -/
+lemma my_lemma : Statement := by
+  proof
+```
+- **Must appear before the docstring** (not after)
+- Common when section variables cause unwanted instance requirements
+- Can omit multiple: `omit [inst1] [inst2] in`
+
 **Debug with:**
 ```lean
 set_option trace.Meta.synthInstance true in

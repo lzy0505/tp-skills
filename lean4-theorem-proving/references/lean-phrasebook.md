@@ -609,7 +609,7 @@ intro x hx
 
 **"To prove X = Y: show X ⊆ Y and Y ⊆ X"**
 ```lean
-apply Subset.antisymm
+apply Set.Subset.antisymm
 ```
 
 ### Set Operations

@@ -6,7 +6,25 @@ This guide translates common mathematical proof phrases into their Lean 4 equiva
 
 **Validation:** Patterns in this guide are based on Tao's phrasebook (which was created for Lean 4) and follow current Lean 4 syntax. While most patterns should work with modern mathlib, specific lemma names may evolve. When in doubt, use `exact?` or `apply?` to find current mathlib lemmas.
 
-**Companion document:** See [tactics-reference.md](tactics-reference.md) for comprehensive tactic documentation.
+---
+
+## Quick Reference by Situation
+
+### You want to...
+
+- **Introduce assumptions**: `intro`, `rintro`, `by_cases`
+- **Use hypothesis**: `exact`, `apply`, `rw`, `simp [h]`
+- **Split goal**: `constructor`, `refine ⟨?_, ?_⟩`, `left`/`right`
+- **Split hypothesis**: `rcases`, `obtain`, `cases`
+- **Add intermediate fact**: `have`, `obtain`
+- **Change perspective**: `suffices`, `convert`, `change`
+- **Prove by contradiction**: `by_contra`, `contrapose!`
+- **Chain equalities**: `calc`, `rw [h₁, h₂]`
+- **Simplify**: `simp`, `ring`, `field_simp`, `norm_num`
+- **Explore options**: `exact?`, `apply?`, `simp?`
+- **Manage goals**: `swap`, `rotate`, `all_goals`
+
+**See also:** [tactics-reference.md](tactics-reference.md) for comprehensive tactic documentation.
 
 ---
 
@@ -824,24 +842,6 @@ have hP (n : ℕ) : ?P := by
   -- (arguments using n)
   exact hP
 ```
-
----
-
-## Quick Reference by Situation
-
-### You want to...
-
-**Introduce assumptions**: `intro`, `rintro`, `by_cases`
-**Use hypothesis**: `exact`, `apply`, `rw`, `simp [h]`
-**Split goal**: `constructor`, `refine ⟨?_, ?_⟩`, `left`/`right`
-**Split hypothesis**: `rcases`, `obtain`, `cases`
-**Add intermediate fact**: `have`, `obtain`
-**Change perspective**: `suffices`, `convert`, `change`
-**Prove by contradiction**: `by_contra`, `contrapose!`
-**Chain equalities**: `calc`, `rw [h₁, h₂]`
-**Simplify**: `simp`, `ring`, `field_simp`, `norm_num`
-**Explore options**: `exact?`, `apply?`, `simp?`
-**Manage goals**: `swap`, `rotate`, `all_goals`
 
 ---
 

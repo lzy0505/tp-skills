@@ -2,6 +2,8 @@
 
 This reference provides comprehensive guidance on essential Lean 4 tactics, when to use them, and common patterns.
 
+**For natural language translations:** See [lean-phrasebook.md](lean-phrasebook.md) for "Mathematical English to Lean" patterns organized by proof situation.
+
 ## Essential Tactics
 
 ### Simplification Tactics

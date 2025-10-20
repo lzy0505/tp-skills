@@ -376,6 +376,7 @@ Quick reference for the most common errors:
 
 This skill includes detailed reference files for deep dives:
 
+- **`references/lean-phrasebook.md`** - Mathematical English to Lean translations ("observe that...", "it suffices to show...", etc.)
 - **`references/mathlib-guide.md`** - Finding lemmas, import organization, naming conventions, search strategies
 - **`references/tactics-reference.md`** - Comprehensive tactics guide, simp deep dive, tactic selection decision trees
 - **`references/domain-patterns.md`** - Analysis, topology, algebra, measure theory, probability patterns with real examples

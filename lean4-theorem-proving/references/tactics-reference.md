@@ -296,7 +296,17 @@ fun_prop        -- General function properties (Lean 4.13+)
 **Measure Theory:**
 ```lean
 measurability   -- Prove measurability automatically
+                -- Replaces manual measurable_pi_lambda patterns
+                -- Use @[measurability] attribute to make lemmas discoverable
+                -- See domain-patterns.md Pattern 8 for detailed examples
 positivity      -- Prove positivity of measures/integrals
+```
+
+**Using `fun_prop` with domain-specific dischargers:**
+```lean
+-- When function property goals have domain-specific subgoals
+fun_prop (disch := measurability)  -- Use measurability for subgoals
+fun_prop (disch := continuity)     -- Use continuity for subgoals
 ```
 
 ## Tactic Combinations

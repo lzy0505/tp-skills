@@ -278,6 +278,87 @@ have h_bound : ∃ C, ∀ x, ‖f x‖ ≤ C := ⟨1, fun x => ...⟩
 exact integrable_of_bounded_measurable h_meas h_bound
 ```
 
+### Pattern 8: Automating Measurability Proofs
+
+The `measurability` tactic can replace manual proofs involving `measurable_pi_lambda`, `measurable_pi_apply`, and similar boilerplate patterns. This is especially useful for product spaces and complex compositions.
+
+**Manual vs Automated:**
+
+```lean
+-- ❌ Manual: verbose and repetitive
+lemma measurable_projection {n : ℕ} :
+    Measurable (fun (x : ℕ → α) => fun (i : Fin n) => x i.val) := by
+  refine measurable_pi_lambda _ (fun i => ?_)
+  exact measurable_pi_apply i.val
+
+-- ✅ Automated: clean and maintainable
+lemma measurable_projection {n : ℕ} :
+    Measurable (fun (x : ℕ → α) => fun (i : Fin n) => x i.val) := by
+  measurability
+```
+
+**Using `fun_prop` with `measurability` discharger:**
+
+For goals involving function properties where measurability appears as a subgoal:
+
+```lean
+-- When proving Measurable for complex function compositions
+have h_meas : Measurable (fun ω => fun i : Fin k => X (m + 1 + i.val) ω) := by
+  fun_prop (disch := measurability)
+```
+
+**Making lemmas discoverable with `@[measurability]` attribute:**
+
+Add the attribute to make your measurability lemmas available to the `measurability` tactic:
+
+```lean
+@[measurability]
+lemma measurable_shiftSeq {d : ℕ} :
+    Measurable (shiftSeq (β:=β) d) := by
+  measurability
+
+@[measurability]
+lemma measurable_firstRMap (X : ℕ → Ω → α) (r : ℕ) (hX : ∀ i, Measurable (X i)) :
+    Measurable (firstRMap X r) := by
+  measurability
+```
+
+Now when you call `measurability` elsewhere, it can automatically use these lemmas.
+
+**Common patterns that `measurability` handles:**
+
+```lean
+-- Product space projections
+measurable_pi_lambda _ (fun i => measurable_pi_apply (f i))  -- ✗ Manual
+measurability                                                 -- ✓ Auto
+
+-- Coordinate permutations
+refine measurable_pi_lambda _ (fun i => measurable_pi_apply (σ i))  -- ✗ Manual
+measurability                                                        -- ✓ Auto
+
+-- Function restrictions/extensions
+refine measurable_pi_lambda _ (fun i => measurable_pi_apply (Fin.castLE hmn i))  -- ✗ Manual
+measurability                                                                     -- ✓ Auto
+
+-- Composed maps with measurable components
+have h_proj_meas : Measurable (fun g => fun i => g (Fin.castLE hkℓ i)) := by
+  measurability  -- Much cleaner than manual proof
+```
+
+**Real-world automation results:**
+
+From the exchangeability project, automation with `measurability` and `@[measurability]` attributes:
+- Simplified 33 proofs across 9 files
+- Eliminated ~90 lines of boilerplate
+- Made proofs more maintainable and easier to understand
+
+**When `measurability` doesn't work:**
+
+If the tactic fails, you may need to:
+1. Add `@[measurability]` to a key helper lemma
+2. Provide intermediate steps manually
+3. Use `fun_prop (disch := measurability)` instead
+
 ### Real-World Example: Finite Marginals Uniqueness
 
 From exchangeability project - shows typical measure theory proof structure:

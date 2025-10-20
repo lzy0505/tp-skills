@@ -1,12 +1,12 @@
 {
-  "name": "lean4-theorem-proving-skills",
+  "name": "lean4-skills",
   "owner": {
     "name": "Cameron Freer",
     "email": "cameronfreer@gmail.com"
   },
   "metadata": {
-    "description": "Official Claude Skills for systematic Lean 4 proof development",
-    "version": "1.0.0"
+    "description": "Claude Skills for systematic Lean 4 proof development and persistent learning",
+    "version": "3.0.0"
   },
   "plugins": [
     {
@@ -16,6 +16,15 @@
       "strict": false,
       "skills": [
         "./lean4-theorem-proving"
+      ]
+    },
+    {
+      "name": "lean4-memories",
+      "description": "Persistent memory integration for Lean 4 formalization - remembers successful proof patterns, avoids known dead-ends, and adapts to project-specific conventions across sessions",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./lean4-memories"
       ]
     }
   ]

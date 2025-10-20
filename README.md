@@ -1,289 +1,128 @@
-# Lean 4 Theorem Proving - Claude Skill
+# Lean 4 Skills for Claude
 
-A comprehensive [Claude Skill](https://www.anthropic.com/news/skills) for systematic development of formal proofs in Lean 4.
+Claude Skills for systematic development of formal proofs in Lean 4.
 
-## 🎯 What is This?
+## Skills in This Repository
 
-This is a **Claude Skill** that teaches Claude how to work effectively with Lean 4 theorem proving. Claude Skills are custom tools that provide specialized knowledge and workflows, available across Claude.ai, API, and Code.
+| Skill | Description | Standalone | Requirements |
+|-------|-------------|------------|--------------|
+| **[lean4-theorem-proving](lean4-theorem-proving/)** | Core workflows, 16 automation tools, best practices | ✅ Yes | None |
+| **[lean4-memories](lean4-memories/)** | Persistent learning across sessions | ❌ No | MCP memory server |
 
-**What this skill provides:**
-- 📚 **Systematic workflow** for proof development (structure → helpers → incremental filling)
-- 🔧 **Type class management** patterns for sub-σ-algebras and instance inference
-- 📖 **Mathlib integration** guide (finding lemmas, imports, naming conventions)
-- 🤖 **Automation scripts** for mathlib search, axiom checking, and sorry tracking (NEW!)
-- 🎓 **Domain-specific patterns** for measure theory, probability, and algebra
-- ✅ **Quality standards** (compile before commit, document sorries, eliminate axioms)
-- 💡 **Real-world examples** from successful Lean formalization projects
+## Quick Start
 
-## 🚀 Installation
+### Installation
 
-### Method 1: Marketplace (Recommended for Claude Code)
-
-Install directly from the marketplace using Claude Code's plugin system:
-
-```
-/plugin marketplace add cameronfreer/lean4-theorem-proving-skill
-/plugin install lean4-theorem-proving
-```
-
-The skill will automatically load when Claude detects you're working on Lean files!
-
-### Method 2: Manual Installation
-
-Copy the skill to your local Claude skills directory:
-
+**Via Marketplace (Recommended):**
 ```bash
-# Clone the repository
-git clone https://github.com/cameronfreer/lean4-theorem-proving-skill.git
-cd lean4-theorem-proving-skill
+/plugin marketplace add cameronfreer/lean4-skills
+/plugin install lean4-theorem-proving    # Core skill
+/plugin install lean4-memories           # Optional memory skill
+```
 
-# Copy to Claude skills directory
+**Manual Installation:**
+```bash
+git clone https://github.com/cameronfreer/lean4-skills.git
+cd lean4-skills
+
+# Install core skill (required)
 cp -r lean4-theorem-proving ~/.claude/skills/
 
-# Verify installation
-ls ~/.claude/skills/lean4-theorem-proving/
-# Should show: SKILL.md
+# Install memory skill (optional)
+cp -r lean4-memories ~/.claude/skills/
 ```
 
-The skill is now available in all Claude sessions (Claude.ai, API, and Code)!
+### Usage
 
-### Method 3: Project-Specific (CLAUDE.md)
+Skills activate automatically when you work on Lean 4 files. No manual invocation needed!
 
-For project-specific use without installation:
-
-1. Clone this repository
-2. Copy relevant sections from `lean4-theorem-proving/SKILL.md` into your project's `CLAUDE.md`
-3. Or reference the skill file directly in your prompts
-
-## 📖 Usage
-
-### Automatic Activation
-
-Claude automatically loads this skill when you:
-- Work on `.lean` files
-- Mention Lean 4, theorem proving, or formal verification
-- Prove theorems or manage sorries/axioms
-- Ask about mathlib or type class issues
-
-No manual invocation needed - Claude sees the skill in its chain of thought!
-
-### Explicit Invocation
-
-You can explicitly request the skill if desired:
-
-```
-Use the lean4-theorem-proving skill to help me structure this proof
+**Toggle skills on/off:**
+```bash
+/plugin disable lean4-memories    # Disable memory skill
+/plugin enable lean4-memories     # Re-enable memory skill
 ```
 
-### Query the Skill
+## lean4-theorem-proving
 
-Ask about specific guidance:
+Systematic workflows for Lean 4 proof development.
 
-```
-What does the Lean 4 skill recommend for managing sorries?
-How should I handle type class inference issues?
-```
-
-## 🎓 What the Skill Teaches
-
-### Core Workflow
-
-1. **Structure Before Solving** - Outline proof strategy before writing tactics
-2. **Helper Lemmas First** - Build infrastructure bottom-up
-3. **Incremental Filling** - One `sorry` at a time, compile, commit, repeat
-4. **Type Class Management** - Explicit instance handling for sub-structures
-
-### Key Principles
-
-- ✅ **Always compile before commit** (`lake build` is your test suite)
-- ✅ **Document every sorry** with strategy and dependencies
-- ✅ **Search mathlib first** before reproving standard results
-- ✅ **Eliminate axioms systematically** with documented plans
-- ✅ **One change at a time** - fill one sorry, compile, commit
-
-### Common Patterns Included
-
-- **Integrability proofs** (bounded + measurable + finite measure)
-- **Conditional expectation equalities** (uniqueness via integral identity)
-- **Sigma algebra manipulations** (sub-σ-algebra relationships)
-- **Type class instance management** (explicit `haveI` declarations)
-- **Commit message patterns** from successful Lean projects
-
-## 📚 Contents
-
-```
-lean4-theorem-proving/
-├── SKILL.md                          # Core workflow (1,414 words)
-├── scripts/                          # Automation tools (NEW!)
-│   ├── README.md                     # Scripts documentation
-│   ├── search_mathlib.sh             # Find lemmas in mathlib
-│   ├── check_axioms.sh               # Verify axiom usage
-│   └── sorry_analyzer.py             # Extract and track sorries
-└── references/                       # Detailed references (loaded as needed)
-    ├── mathlib-guide.md              # Finding lemmas, imports, naming
-    ├── tactics-reference.md          # Comprehensive tactics guide
-    ├── domain-patterns.md            # Math domain-specific patterns
-    ├── compilation-errors.md         # Detailed error debugging
-    └── mcp-server.md                 # Lean MCP server tools reference
-TESTING.md                            # Development methodology
-```
-
-**Progressive Disclosure Design:**
-
-Following Anthropic's skill best practices, this skill uses a three-level loading system:
-
-1. **Metadata (always loaded)** - Name + description (~100 words)
-2. **SKILL.md (when skill triggers)** - Core workflow (~1,400 words)
-3. **References (as needed by Claude)** - Deep dives into specific topics
-
-**What's in SKILL.md:**
-- The Build-First Principle
-- 4-Phase Proof Development Workflow (structure, helpers, incremental, type classes)
-- Quick mathlib search workflow
-- Automation Scripts section (search_mathlib, check_axioms, sorry_analyzer)
-- Essential tactics overview
-- Domain-specific pattern summaries
-- Lean MCP server tools overview
-- Managing incomplete proofs (axioms, sorries)
-- Quality checklist and red flags
-
-**What's in scripts/:**
-- **search_mathlib.sh** - Automated mathlib lemma search (by name, type, content)
-- **check_axioms.sh** - Batch axiom verification for theorems and lemmas
-- **sorry_analyzer.py** - Extract sorries with context, documentation, and analysis
-- **README.md** - Complete scripts documentation with usage examples and workflows
-
-**What's in references/:**
-- **mathlib-guide.md** - Search strategies, file organization, naming conventions, import best practices
-- **tactics-reference.md** - simp deep dive, tactic decision trees, comprehensive tactics catalog
-- **domain-patterns.md** - Analysis, topology, algebra, measure theory, probability (with real examples and removed content restored)
-- **compilation-errors.md** - Detailed error explanations, type class debugging, solutions
-- **mcp-server.md** - Complete MCP tool reference, workflows, troubleshooting, rate limits
-
-**What's in TESTING.md:**
-- Empirical development approach from real formalization work (1000+ commits)
-- Baseline behaviors observed without skill (RED phase)
-- How skill addresses issues (GREEN phase)
-- Known rationalizations and counters (REFACTOR phase)
-- Real-world validation metrics from exchangeability project
-
-## 🎯 When to Use This Skill
+**What you get:**
+- 4-Phase proof development workflow (structure → helpers → incremental → type classes)
+- 16 automation scripts (search, analysis, verification, refactoring)
+- Type class management patterns
+- mathlib integration guide
+- Domain-specific tactics (measure theory, probability, algebra)
 
 **Perfect for:**
-- Formalizing mathematical theorems (analysis, algebra, topology)
-- Working with measure theory and probability
+- Any Lean 4 formalization project
+- Learning Lean 4 from other proof assistants
+- Managing sorries, axioms, and type class issues
 - Contributing to mathlib
-- Managing complex proof development
-- Converting axioms to proven lemmas
-- Dealing with type class inference issues
 
-**Especially helpful when:**
-- Starting a new Lean formalization project
-- Learning Lean 4 from Lean 3 or other proof assistants
-- Stuck with type class synthesis errors
-- Managing multiple interrelated proofs
-- Working on real analysis, probability, or abstract algebra
+➡️ **[Full Documentation](lean4-theorem-proving/README.md)**
 
-## 🔧 Requirements
+## lean4-memories
 
-- **Claude Code 2.0.13+** (for marketplace installation), OR
-- **Claude.ai Pro/Max/Team/Enterprise** (for web/API), OR
-- **Just Claude** (for CLAUDE.md method)
-- (Optional) Lean 4 installed for working on Lean projects
+Optional persistent learning across Lean 4 sessions.
 
-## 🤝 Contributing
+**What you get:**
+- Remember successful proof patterns
+- Avoid repeating failed approaches (infinite loops, timeouts)
+- Learn project-specific conventions
+- Track theorem dependencies
 
-This skill was developed from real-world Lean 4 formalization work. Contributions welcome!
+**Perfect for:**
+- Multi-session projects (days/weeks/months)
+- Repeated proof patterns
+- Team projects with shared knowledge
 
-**Ways to contribute:**
-- Share additional proof patterns
-- Add domain-specific tactics and strategies
-- Submit examples from successful projects
-- Report issues or unclear guidance
-- Suggest improvements to the workflow
+**Requires:** MCP memory server configuration
 
-Open an issue or PR at: https://github.com/cameronfreer/lean4-theorem-proving-skill
+➡️ **[Full Documentation](lean4-memories/README.md)**
 
-## 📄 License
+## How They Work Together
 
-MIT License - feel free to use, modify, and share.
+**Example: Proving `condExp μ m X =ᵐ[μ] condExp μ m Y`**
 
-## 🙏 Acknowledgments
+**lean4-theorem-proving says:** "Try `condExp_unique` from mathlib"
 
-This skill was developed from patterns observed in:
-- Real-world Lean 4 formalization projects (de Finetti theorem, exchangeability)
-- Mathlib contribution experience
-- Common pitfalls and solutions from the Lean community
-- Successful proof development workflows
+**lean4-memories adds:** "Similar goals in this project used `condExp_unique` + `ae_eq` pattern (success rate: 3/3)"
 
-## 📚 Related Resources
+Result: Faster proofs with project-specific context!
 
-**Official Lean 4:**
-- [Theorem Proving in Lean 4](https://leanprover.github.io/theorem_proving_in_lean4/)
-- [Mathlib Documentation](https://leanprover-community.github.io/mathlib4_docs/)
-- [Lean Zulip Chat](https://leanprover.zulipchat.com/)
+## Requirements
 
-**Claude Skills:**
-- [Claude Skills Announcement](https://www.anthropic.com/news/skills)
-- [Claude Skills Repository](https://github.com/anthropics/skills) - Official examples
-- [Claude Code Documentation](https://docs.claude.com/claude-code)
+**For lean4-theorem-proving:**
+- Claude Code 2.0.13+ (marketplace) OR
+- Claude.ai Pro/Max/Team/Enterprise OR
+- Any Claude (CLAUDE.md method)
 
-## 🚦 Status
+**For lean4-memories (additional):**
+- MCP memory server (simple config file edit - [setup guide](lean4-memories/README.md#installation))
+- Claude Desktop or Claude Code with MCP support
 
-**Version:** 2.1.0
+## Documentation
+
+- **[lean4-theorem-proving/README.md](lean4-theorem-proving/README.md)** - Core skill guide
+- **[lean4-memories/README.md](lean4-memories/README.md)** - Memory skill guide
+- **[lean4-theorem-proving/scripts/](lean4-theorem-proving/scripts/)** - 16 automation tools
+- **[lean4-theorem-proving/references/](lean4-theorem-proving/references/)** - Detailed guides
+
+## Status
+
+**Version:** 3.0.0
 **Status:** Production-ready
 **Last Updated:** October 2025
 
-**Recent updates:**
-- v2.1.0: **Added automation scripts** - Three executable tools (search_mathlib.sh, check_axioms.sh, sorry_analyzer.py) for common Lean 4 workflows; Updated SKILL.md to reference scripts; Fixed Anthropic compliance (third-person frontmatter); All scripts tested on real Lean 4 project; Follows Anthropic skill-creator guidance for bundled scripts
-- v2.0.0: **Major restructuring** following Anthropic's progressive disclosure model - Split into lean core workflow (SKILL.md, 1,414 words) + comprehensive references (5 detailed guides); Added complete Lean MCP server tools reference; Restored removed measure theory patterns from git history; 22% reduction in core file while expanding total coverage; Improved context efficiency with on-demand reference loading
-- v1.3.1: Enhanced skill discoverability (Claude Search Optimization) - Added "Use when..." triggers with specific error messages and symptoms in description; added keyword density throughout (type class errors, sorry accumulation, mathlib search); added binder order guidance from real formalization experience; created TESTING.md documenting empirical development approach
-- v1.3.0: Compressed by 33% (568→382 lines) using 5 strategies: consolidated domain patterns, merged quality sections, table format for errors, condensed examples, unified axiom/sorry handling
-- v1.2.0: Optimized for balance and best practices - balanced coverage across algebra, topology, analysis, probability; compressed by 364 lines while maintaining quality
-- v1.1.0: Added simp tactic deep dive, interactive exploration commands, and 10 common error messages with fixes
-- v1.0.0: Initial release with core workflow and mathlib integration
+Recent updates:
+- v3.0.0: Added lean4-memories skill (optional MCP memory integration)
+- v2.1.0: Added 16 automation scripts (search, analysis, verification)
+- v2.0.0: Progressive disclosure restructuring
 
-## ❓ FAQ
+## Contributing
 
-### What are Claude Skills?
+Contributions welcome! Open an issue or PR at https://github.com/cameronfreer/lean4-skills
 
-Claude Skills are custom tools announced by Anthropic in October 2025 that teach Claude specialized tasks. Skills are folders containing instructions, scripts, and resources that Claude loads dynamically when relevant. They work across Claude.ai, API, and Code.
+## License
 
-Learn more: https://www.anthropic.com/news/skills
-
-### Do I need a subscription?
-
-- **Claude Code (marketplace)**: Available to all Claude Code users
-- **Manual installation (~/.claude/skills)**: Available to all users
-- **Claude.ai/API**: Skills feature requires Pro, Max, Team, or Enterprise
-
-### Does this require Lean 4?
-
-No! The skill teaches Claude how to work with Lean 4. You only need Lean 4 installed if you're actually working on Lean projects locally.
-
-### How is this different from Claude's general Lean knowledge?
-
-Claude has general knowledge about Lean from training data. This skill provides:
-- **Specific workflows** (structure before solve, one sorry at a time)
-- **Project patterns** (type class management, mathlib integration)
-- **Quality standards** (compile before commit, document sorries)
-- **Real-world patterns** from successful projects
-
-It's like having a Lean 4 expert mentor coaching Claude on best practices.
-
-### Can I modify the skill?
-
-Absolutely! Clone this repo, modify `lean4-theorem-proving/SKILL.md` to add your project-specific patterns, and either:
-- Use your fork as a custom marketplace
-- Install locally from your modified version
-- Add custom content to your project's CLAUDE.md
-
-### Does this work with Superpowers?
-
-While this is now packaged as an official Claude Skill, you can still use it with Superpowers by copying the skill folder to `~/.config/superpowers/skills/skills/`. However, we recommend using the official Claude Skills installation for better integration.
-
----
-
-**Made with 🧠 for the Lean formalization community**
-
-If this helps your Lean 4 work, please ⭐ star the repo and share with others working on formal mathematics!
+MIT License - see [LICENSE](LICENSE)

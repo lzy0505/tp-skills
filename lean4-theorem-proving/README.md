@@ -1,0 +1,245 @@
+# lean4-theorem-proving
+
+Systematic workflows for Lean 4 proof development.
+
+## Overview
+
+This skill teaches Claude how to develop formal proofs in Lean 4 using battle-tested workflows from real formalization projects. It provides systematic approaches, automation tools, and domain-specific patterns for measure theory, probability, and algebra.
+
+## What You Get
+
+### 4-Phase Proof Development Workflow
+
+1. **Structure Before Solving** - Outline proof strategy before writing tactics
+2. **Helper Lemmas First** - Build infrastructure bottom-up
+3. **Incremental Filling** - One `sorry` at a time, compile, commit, repeat
+4. **Type Class Management** - Explicit instance handling for sub-structures
+
+### 16 Automation Scripts
+
+**Search (4 scripts):**
+- `search_mathlib.sh` - Find lemmas in mathlib by name, type, or content
+- `smart_search.sh` - Multi-source search (mathlib + APIs)
+- `find_instances.sh` - Locate type class instances
+- `find_usages.sh` - Track theorem usage across project
+
+**Analysis (4 scripts):**
+- `proof_complexity.sh` - Analyze proof metrics (lines, tactics, tokens)
+- `dependency_graph.sh` - Visualize theorem dependencies
+- `build_profile.sh` - Profile build performance and bottlenecks
+- `suggest_tactics.sh` - Get tactic suggestions for goals
+
+**Verification (4 scripts):**
+- `sorry_analyzer.py` - Extract and track sorries with context
+- `check_axioms.sh` - Verify axiom usage (external import method)
+- `check_axioms_inline.sh` - Verify axiom usage (inline method)
+- `simp_lemma_tester.sh` - Test `@[simp]` lemmas for issues
+
+**Quality & Refactoring (4 scripts):**
+- `pre_commit_hook.sh` - Comprehensive quality gates
+- `unused_declarations.sh` - Find dead code
+- `minimize_imports.py` - Remove unused imports
+- `proof_templates.sh` - Generate proof skeletons
+
+➡️ **[Scripts Documentation](scripts/README.md)** | **[Testing Report](scripts/TESTING.md)**
+
+### Comprehensive Guides
+
+**Core Workflow:**
+- [SKILL.md](SKILL.md) - Main skill document (loaded automatically)
+
+**References (loaded as needed):**
+- [mathlib-guide.md](references/mathlib-guide.md) - Search strategies, imports, naming
+- [tactics-reference.md](references/tactics-reference.md) - Comprehensive tactics catalog
+- [domain-patterns.md](references/domain-patterns.md) - Math domain-specific patterns
+- [compilation-errors.md](references/compilation-errors.md) - Error debugging
+- [mcp-server.md](references/mcp-server.md) - Lean MCP server tools reference
+
+## Installation
+
+See [main README](../README.md#installation) for installation instructions.
+
+## Usage
+
+### Automatic Activation
+
+Claude automatically uses this skill when you:
+- Work on `.lean` files
+- Mention Lean 4, theorem proving, or formal verification
+- Prove theorems or manage sorries/axioms
+- Ask about mathlib or type class issues
+
+No manual invocation needed!
+
+### Key Principles
+
+- ✅ **Always compile before commit** (`lake build` is your test suite)
+- ✅ **Document every sorry** with strategy and dependencies
+- ✅ **Search mathlib first** before reproving standard results
+- ✅ **Eliminate axioms systematically** with documented plans
+- ✅ **One change at a time** - fill one sorry, compile, commit
+
+### Common Patterns
+
+**Integrability proofs:**
+```lean
+have h_integrable : Integrable X μ := by
+  refine ⟨h_measurable, ?_⟩
+  calc ∫⁻ a, ‖X a‖₊ ∂μ
+    ≤ ∫⁻ a, M ∂μ := by apply lintegral_mono; intro; apply h_bound
+    _ = M * μ univ := lintegral_const M
+    _ < ∞ := by simp [h_prob, ENNReal.mul_lt_top]
+```
+
+**Conditional expectation equalities:**
+```lean
+theorem condExp_unique (hX : Measurable X) (hY : Measurable Y)
+    (h_eq : ∀ s, MeasurableSet[m] s → ∫ x in s, X x ∂μ = ∫ x in s, Y x ∂μ) :
+    condExp μ m X =ᵐ[μ] Y := by
+  apply ae_eq_condExp_of_forall_setIntegral_eq hX hY
+  exact h_eq
+```
+
+**Type class instance management:**
+```lean
+-- Explicit instance when Lean can't infer
+haveI : MeasurableSpace Ω := inferInstance
+haveI : IsProbabilityMeasure μ := h_prob
+
+-- Now use dependent results
+apply measure_eq_on_generateFrom
+```
+
+## When to Use
+
+**Perfect for:**
+- Formalizing mathematical theorems (analysis, algebra, topology)
+- Working with measure theory and probability
+- Contributing to mathlib
+- Managing complex proof development
+- Converting axioms to proven lemmas
+- Dealing with type class inference issues
+
+**Especially helpful when:**
+- Starting a new Lean formalization project
+- Learning Lean 4 from Lean 3 or other proof assistants
+- Stuck with type class synthesis errors
+- Managing multiple interrelated proofs
+- Working on real analysis, probability, or abstract algebra
+
+## Contents
+
+```
+lean4-theorem-proving/
+├── README.md                      # This file
+├── SKILL.md                       # Core workflow (loaded by Claude)
+├── scripts/                       # 16 automation tools
+│   ├── README.md                  # Scripts documentation
+│   ├── TESTING.md                 # Comprehensive validation report
+│   ├── search_mathlib.sh          # Find mathlib lemmas
+│   ├── smart_search.sh            # Multi-source search
+│   ├── find_instances.sh          # Type class instances
+│   ├── find_usages.sh             # Usage tracking
+│   ├── sorry_analyzer.py          # Sorry extraction
+│   ├── check_axioms.sh            # Axiom verification (external)
+│   ├── check_axioms_inline.sh     # Axiom verification (inline)
+│   ├── proof_complexity.sh        # Proof metrics
+│   ├── dependency_graph.sh        # Dependency visualization
+│   ├── build_profile.sh           # Build profiling
+│   ├── suggest_tactics.sh         # Tactic suggestions
+│   ├── proof_templates.sh         # Proof scaffolding
+│   ├── unused_declarations.sh     # Dead code detection
+│   ├── simp_lemma_tester.sh       # Simp hygiene
+│   ├── pre_commit_hook.sh         # Quality gates
+│   └── minimize_imports.py        # Import minimization
+└── references/                    # Detailed guides
+    ├── mathlib-guide.md           # mathlib integration
+    ├── tactics-reference.md       # Tactics catalog
+    ├── domain-patterns.md         # Math patterns
+    ├── compilation-errors.md      # Error solutions
+    └── mcp-server.md              # MCP tools
+```
+
+## Examples from Real Projects
+
+This skill was developed from real-world Lean 4 formalization work:
+
+**Project:** de Finetti theorem formalization (1000+ commits, 22 files)
+
+**Patterns extracted:**
+- π-system uniqueness for measure equality
+- Conditional expectation via integral identity
+- Type class instance management for sub-σ-algebras
+- Systematic axiom elimination (75 axioms → 6 sorries → 0)
+
+**Scripts validated on:**
+- Exchangeability formalization
+- All 16 scripts tested on real codebase
+- See [scripts/TESTING.md](scripts/TESTING.md) for validation report
+
+## Requirements
+
+- **Claude Code 2.0.13+** (for marketplace installation), OR
+- **Claude.ai Pro/Max/Team/Enterprise** (for web/API), OR
+- **Just Claude** (for CLAUDE.md method)
+- (Optional) Lean 4 installed for working on Lean projects
+
+## FAQ
+
+### How does this work with the lean4-memories skill?
+
+lean4-memories is optional and adds persistent learning across sessions. This skill (lean4-theorem-proving) works standalone and provides all core functionality.
+
+**Use together:** lean4-theorem-proving provides general workflows, lean4-memories adds project-specific context.
+
+See [lean4-memories/README.md](../lean4-memories/README.md) for details.
+
+### Do I need all 16 scripts?
+
+No! Scripts are organized by use case:
+- **Daily use:** search_mathlib.sh, sorry_analyzer.py, suggest_tactics.sh
+- **Quality gates:** pre_commit_hook.sh, check_axioms_inline.sh
+- **Specific tasks:** All others (use as needed)
+
+### Can I use just the SKILL.md without scripts?
+
+Yes! The SKILL.md provides the core workflow. Scripts are optional automation tools.
+
+### How is this different from Claude's general Lean knowledge?
+
+Claude has general Lean knowledge from training. This skill provides:
+- **Specific workflows** (structure before solve, one sorry at a time)
+- **Project patterns** (type class management, mathlib integration)
+- **Quality standards** (compile before commit, document sorries)
+- **Automation tools** (16 scripts for common tasks)
+
+It's like having a Lean 4 expert mentor coaching Claude.
+
+## Contributing
+
+Contributions welcome! See [main README](../README.md#contributing) for guidelines.
+
+**Ways to contribute:**
+- Share additional proof patterns
+- Add domain-specific tactics
+- Submit examples from successful projects
+- Report issues or unclear guidance
+
+## License
+
+MIT License - see [../LICENSE](../LICENSE)
+
+## Related Resources
+
+**Official Lean 4:**
+- [Theorem Proving in Lean 4](https://leanprover.github.io/theorem_proving_in_lean4/)
+- [Mathlib Documentation](https://leanprover-community.github.io/mathlib4_docs/)
+- [Lean Zulip Chat](https://leanprover.zulipchat.com/)
+
+**Claude Skills:**
+- [Claude Skills Documentation](https://www.anthropic.com/news/skills)
+- [Main Repository](../README.md)
+
+---
+
+Part of [lean4-skills](../README.md) - Lean 4 Skills for Claude

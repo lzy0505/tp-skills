@@ -49,6 +49,7 @@ This skill teaches Claude how to develop formal proofs in Lean 4 using battle-te
 - [SKILL.md](SKILL.md) - Main skill document (loaded automatically)
 
 **References (loaded as needed):**
+- [lean-phrasebook.md](references/lean-phrasebook.md) - Mathematical English to Lean translations
 - [mathlib-guide.md](references/mathlib-guide.md) - Search strategies, imports, naming
 - [tactics-reference.md](references/tactics-reference.md) - Comprehensive tactics catalog
 - [domain-patterns.md](references/domain-patterns.md) - Math domain-specific patterns
@@ -153,6 +154,7 @@ lean4-theorem-proving/
 │   ├── pre_commit_hook.sh         # Quality gates
 │   └── minimize_imports.py        # Import minimization
 └── references/                    # Detailed guides
+    ├── lean-phrasebook.md         # Math English to Lean
     ├── mathlib-guide.md           # mathlib integration
     ├── tactics-reference.md       # Tactics catalog
     ├── domain-patterns.md         # Math patterns

@@ -782,6 +782,26 @@ set X := Y
 - Track equality: `set X := Y with h` gives `h : X = Y`
 - Make X independent variable: `generalize : Y = X` or `generalize h : Y = X`
 
+### Managing Section Variables
+
+**"For this lemma, exclude the implicit parameter [MeasurableSpace Ω]"**
+```lean
+omit [MeasurableSpace Ω] in
+/-- Docstring for the lemma -/
+lemma my_lemma : Statement := by
+  proof
+```
+- `omit ... in` excludes section variables from a single declaration
+- **Must appear before the docstring** (not after)
+- Common when section has `variable [MeasurableSpace Ω]` but specific lemmas don't need it
+- Can omit multiple: `omit [inst1] [inst2] in`
+
+**"Include section variable explicitly for this lemma"**
+```lean
+include var_name in
+lemma my_lemma : Statement := proof
+```
+
 ### Automation Tactics
 
 **"One is tempted to try..."**

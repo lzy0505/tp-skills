@@ -159,7 +159,7 @@ lean4-theorem-proving/
     ├── tactics-reference.md       # Tactics catalog
     ├── domain-patterns.md         # Math patterns
     ├── compilation-errors.md      # Error solutions
-    └── lean-lsp-server.md              # MCP tools
+    └── lean-lsp-server.md         # LSP tools (via MCP server)
 ```
 
 ## Examples from Real Projects

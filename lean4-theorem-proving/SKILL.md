@@ -34,7 +34,7 @@ This skill applies to ANY Lean 4 development across all mathematical domains:
 - **Parallel tactic testing** - Test 4 tactics at once with `lean_multi_attempt`
 - **Integrated search** - `lean_local_search` unlimited, `lean_loogle` type patterns
 - **No more guessing** - Verify before editing, not after slow builds
-- **Setup:** See [INSTALLATION.md](INSTALLATION.md#lean-lsp-server) (5 minute one-time config)
+- **Setup:** See [INSTALLATION.md](../INSTALLATION.md#lean-lsp-server) (5 minute one-time config)
 - **Full guide:** `references/lean-lsp-server.md` with battle-tested workflows
 
 **⚡ Subagent Delegation (Efficient - Claude Code users):** 6x token reduction

@@ -237,31 +237,6 @@ ext x / funext x        -- Prove functions equal pointwise
 
 **For detailed patterns, real-world examples, and measure theory specifics, see:** `references/domain-patterns.md`
 
-## Lean LSP Server: The Proof Development Multiplier
-
-**If you're not using the LSP server, you're writing proofs blind.**
-
-**The transformation:**
-- **Build-only:** Edit → wait 30s → see error → repeat
-- **With LSP:** Check goal (< 1s) → test tactics in parallel → verify instantly → done
-
-**Measured gains from field testing:**
-- **30x faster** feedback loop (< 1 second vs 30+ seconds)
-- **4x fewer** iterations (parallel tactic testing with `lean_multi_attempt`)
-- **10x faster** lemma discovery (`lean_local_search` unlimited + instant)
-
-**Core workflow (all unlimited, instant):**
-1. `lean_goal` - See what you need to prove
-2. `lean_local_search` - Find relevant lemmas (fast!)
-3. `lean_multi_attempt` - Test 3-5 tactics in parallel
-4. Edit file with winner
-5. `lean_diagnostic_messages` - Verify (< 1s)
-6. `lean_goal` - Confirm "no goals"
-
-**Setup:** [INSTALLATION.md](../INSTALLATION.md#lean-lsp-server) (5 minute one-time config)
-
-**Complete guide:** `references/lean-lsp-server.md` - battle-tested workflows, examples, troubleshooting
-
 ## Managing Incomplete Proofs
 
 ### Standard vs Custom Axioms

@@ -71,17 +71,19 @@ This reference documents the battle-tested workflow and tools for Lean 4 proof d
 
 ### Priority Tiers
 
-**Core workflow (unlimited, instant):**
-1. `lean_goal` - ALWAYS check first
-2. `lean_local_search` - Find what exists
-3. `lean_multi_attempt` - Test multiple tactics in parallel
-4. `lean_diagnostic_messages` - Verify after edits
-5. `lean_hover_info` - Check syntax/types
+**Core workflow (unlimited, local/instant):**
+1. `lean_goal` - ALWAYS check first (direct LSP query)
+2. `lean_local_search` - Find what exists (local ripgrep, unlimited)
+3. `lean_multi_attempt` - Test multiple tactics in parallel (direct LSP)
+4. `lean_diagnostic_messages` - Verify after edits (direct LSP)
+5. `lean_hover_info` - Check syntax/types (direct LSP)
 
-**When stuck (rate-limited, 3 req/30s each):**
-- `lean_loogle` - Type-based pattern search
-- `lean_leansearch` - Natural language search
-- `lean_state_search` - Proof state search
+**When stuck (external tools - LSP server rate-limits to 3 req/30s):**
+- `lean_loogle` - Type-based pattern search (external API)
+- `lean_leansearch` - Natural language search (external API)
+- `lean_state_search` - Proof state search (external API)
+
+**Note on rate limiting:** The LSP server manages rate limiting for external search tools that call remote APIs. Local tools (goal inspection, diagnostics, local search) have no rate limits since they work directly with your project files.
 
 ### 1. `lean_goal` - Check Proof State (USE CONSTANTLY!)
 
@@ -252,11 +254,13 @@ lean_hover_info(file, line=20, column=30)
 
 **Pro tip:** Use hover on error locations for detailed information about what went wrong.
 
-## Rate-Limited Search Tools
+## External Search Tools (Rate-Limited)
 
 **Use these when `lean_local_search` doesn't find what you need.**
 
-All limited to **3 requests per 30 seconds** - use sparingly!
+These tools call external APIs (loogle.lean-lang.org, leansearch.net). The **LSP server rate-limits all external tools to 3 requests per 30 seconds** to avoid overwhelming the services.
+
+**Why rate-limited:** These tools make HTTP requests to external services, not your local Lean project. The LSP server manages the rate limiting automatically.
 
 ### `lean_loogle` - Type Pattern Search
 
@@ -454,16 +458,18 @@ no goals
 
 ## Tool Summary
 
-| Tool | Priority | Rate Limit | Speed | Use For |
-|------|----------|------------|-------|---------|
-| `lean_goal` | **Core** | None | Instant | See goals (always!) |
-| `lean_local_search` | **Core** | None | Instant | Find lemmas (use first!) |
-| `lean_multi_attempt` | **Core** | None | Instant | Test tactics in parallel |
-| `lean_diagnostic_messages` | **Core** | None | Instant | Check errors |
-| `lean_hover_info` | Core | None | Instant | Check syntax/types |
-| `lean_loogle` | When stuck | 3/30s | Fast | Type patterns |
-| `lean_leansearch` | When stuck | 3/30s | Slower | Natural language |
-| `lean_state_search` | When stuck | 3/30s | Fast | Proof state |
+| Tool | Type | Rate Limit | Speed | Use For |
+|------|------|------------|-------|---------|
+| `lean_goal` | **Local** | None | Instant | See goals (always!) |
+| `lean_local_search` | **Local** | None | Instant | Find lemmas (use first!) |
+| `lean_multi_attempt` | **Local** | None | Instant | Test tactics in parallel |
+| `lean_diagnostic_messages` | **Local** | None | Instant | Check errors |
+| `lean_hover_info` | **Local** | None | Instant | Check syntax/types |
+| `lean_loogle` | **External** | 3/30s (LSP managed) | Fast | Type patterns |
+| `lean_leansearch` | **External** | 3/30s (LSP managed) | Slower | Natural language |
+| `lean_state_search` | **External** | 3/30s (LSP managed) | Fast | Proof state |
+
+**Rate limit note:** External tools call remote APIs (loogle.lean-lang.org, leansearch.net). The LSP server automatically manages rate limiting to 3 requests per 30 seconds for all external tools combined.
 
 ## Why This Matters
 

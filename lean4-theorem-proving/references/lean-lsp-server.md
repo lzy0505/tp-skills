@@ -67,6 +67,35 @@ This reference documents the battle-tested workflow and tools for Lean 4 proof d
 5. **Use `lean_multi_attempt` liberally** - test multiple tactics at once
 6. **Respect rate limits** - `lean_local_search` is unlimited, others are 3 req/30s
 
+## Quick Reference
+
+**Standard workflow:**
+```
+1. lean_goal(file, line)                    # What to prove?
+2. lean_local_search("keyword", limit=10)   # Does it exist?
+3. lean_multi_attempt(file, line, [         # Test tactics
+     "  simp", "  omega", "  apply lemma"
+   ])
+4. [Edit file with winner]
+5. lean_diagnostic_messages(file)           # Verify
+6. lean_goal(file, line)                    # Confirm "no goals"
+```
+
+**When stuck:**
+```
+1. lean_goal(file, line)              # See exact state
+2. lean_loogle("pattern")             # Type search
+3. lean_leansearch("description")     # Natural language
+4. lean_state_search(file, line, col) # Proof state
+```
+
+**Emergency debugging:**
+```
+1. lean_diagnostic_messages(file)     # What errors?
+2. lean_hover_info(file, line, col)   # What's the type?
+3. lean_goal(file, line)              # What are goals?
+```
+
 ## Essential Tools
 
 ### Priority Tiers
@@ -461,35 +490,6 @@ no goals
 **Solution:** Check `lean_goal` - if goals remain, need more tactics
 
 **Key insight:** Empty diagnostics = no errors, but proof may be incomplete. Always verify goals.
-
-## Quick Reference
-
-**Standard workflow:**
-```
-1. lean_goal(file, line)                    # What to prove?
-2. lean_local_search("keyword", limit=10)   # Does it exist?
-3. lean_multi_attempt(file, line, [         # Test tactics
-     "  simp", "  omega", "  apply lemma"
-   ])
-4. [Edit file with winner]
-5. lean_diagnostic_messages(file)           # Verify
-6. lean_goal(file, line)                    # Confirm "no goals"
-```
-
-**When stuck:**
-```
-1. lean_goal(file, line)              # See exact state
-2. lean_loogle("pattern")             # Type search
-3. lean_leansearch("description")     # Natural language
-4. lean_state_search(file, line, col) # Proof state
-```
-
-**Emergency debugging:**
-```
-1. lean_diagnostic_messages(file)     # What errors?
-2. lean_hover_info(file, line, col)   # What's the type?
-3. lean_goal(file, line)              # What are goals?
-```
 
 ## Why This Matters
 

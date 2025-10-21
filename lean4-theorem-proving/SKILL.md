@@ -13,7 +13,7 @@ Lean 4 is an interactive theorem prover. Unlike traditional code, correctness is
 
 ## When to Use This Skill
 
-This skill applies to ANY Lean 4 development across all mathematical domains:
+Use these workflows for ANY Lean 4 development across all mathematical domains:
 - Pure mathematics (algebra, topology, analysis, number theory, combinatorics)
 - Applied mathematics (probability, optimization, numerical methods)
 - Computer science (algorithms, data structures, program verification)
@@ -380,7 +380,7 @@ Quick reference for the most common errors:
 
 ## Reference Files
 
-This skill includes detailed reference files for deep dives:
+Detailed reference files for deep dives:
 
 - **`references/lean-phrasebook.md`** - Mathematical English to Lean translations ("observe that...", "it suffices to show...", etc.)
 - **`references/mathlib-guide.md`** - Finding lemmas, import organization, naming conventions, search strategies
@@ -390,4 +390,4 @@ This skill includes detailed reference files for deep dives:
 - **`references/lean-lsp-server.md`** - Lean LSP server tools, workflows, troubleshooting (for Claude Code users)
 - **`references/subagent-workflows.md`** - Subagent delegation patterns, workflows, examples (for Claude Code users)
 
-Claude will load these references as needed when working on specific tasks.
+Load these references as needed when working on specific tasks.

@@ -2,6 +2,17 @@
 
 The Lean MCP (Model Context Protocol) server provides powerful tools for interactive theorem development in Lean 4. This reference documents the most important tools and common workflows.
 
+## Why Use MCP Tools?
+
+**General advantages of MCP tools over script-based alternatives:**
+- **Structured data:** Returns typed data structures, not text to parse
+- **Integrated:** Single server for all Lean interactions
+- **Reliable:** Consistent error handling, no shell/network failures
+- **Fast:** Direct API calls, no subprocess overhead
+- **Context-aware:** Server maintains file state and handles rate limits
+
+**Priority:** Always prefer MCP tools when available → Fall back to scripts if MCP unavailable
+
 ## Essential Tools
 
 ### 1. `lean_goal` - Check Proof State (VERY USEFUL!)
@@ -127,6 +138,19 @@ Search for Lean theorems and definitions using natural language.
 Search for definitions and theorems using type patterns.
 
 **Rate limit:** 3 requests per 30 seconds
+
+**Why use MCP `lean_loogle` over `smart_search.sh --source=loogle`:**
+
+✅ **Structured output:** Returns `List[dict]` with name/kind/file, not text that needs parsing
+✅ **Integrated:** Same server providing `lean_goal`, `lean_diagnostic_messages`, etc.
+✅ **Reliable:** No curl/network failures, consistent error handling
+✅ **Fast:** Direct API call, no shell subprocess overhead
+✅ **Rate limiting:** Transparently managed by the MCP server
+
+**When to use `smart_search.sh` instead:**
+- MCP server unavailable (fallback)
+- Need to search multiple sources in one script (`--source=all`)
+- Custom filtering/formatting requirements
 
 **Key insight:** Loogle excels at type-based search when you know what goes in/out but not the exact name.
 

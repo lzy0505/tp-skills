@@ -413,7 +413,8 @@ Detailed reference files for deep dives:
 - **`references/lean-phrasebook.md`** - Mathematical English to Lean translations ("observe that...", "it suffices to show...", etc.)
 - **`references/mathlib-guide.md`** - Finding lemmas, import organization, naming conventions, search strategies
 - **`references/tactics-reference.md`** - Comprehensive tactics guide, simp deep dive, tactic selection decision trees
-- **`references/domain-patterns.md`** - Analysis, topology, algebra, measure theory, probability patterns with real examples
+- **`references/domain-patterns.md`** - Analysis, topology, algebra patterns with real examples
+- **`references/measure-theory.md`** - Sub-σ-algebras, conditional expectation, type class management, trimmed measures
 - **`references/compilation-errors.md`** - Detailed error explanations, debugging workflows, type class synthesis issues
 - **`references/lean-lsp-server.md`** - Lean LSP server tools, workflows, troubleshooting (for Claude Code users)
 - **`references/subagent-workflows.md`** - Subagent delegation patterns, workflows, examples (for Claude Code users)

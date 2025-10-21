@@ -72,97 +72,27 @@ lemma condExp_indicator_eq (hA : MeasurableSet[m₀] A) :
   sorry
 ```
 
-#### Pattern 3: Type Class Instance Management for Sub-σ-Algebras
+#### Pattern 3: Sub-σ-Algebras and Type Class Management
 
-**CRITICAL: Binder Order Matters**
+**Critical issues when working with sub-σ-algebras:**
+- Binder order matters: instance parameters must come before plain parameters
+- Never use `‹_›` for the ambient space (resolves incorrectly)
+- Provide trimmed measure instances explicitly with `haveI`
+- Follow the condExpWith pattern for conditional expectation
 
-When working with a sub-σ-algebra `m ≤ m₀`, the parameter order in function signatures is crucial:
-
+**Quick example:**
 ```lean
--- ❌ WRONG: m before instance parameters causes instance resolution issues
-lemma my_lemma
-    {Ω : Type*} [MeasurableSpace Ω]  -- Instance
-    (m : MeasurableSpace Ω)            -- Plain parameter BEFORE instance params
-    {μ : Measure Ω} [IsProbabilityMeasure μ]  -- More instances
-    (hm : m ≤ ‹MeasurableSpace Ω›) :
-    Result := by
-  -- Lean chooses m instead of ambient instance!
-  sorry
-
--- ✅ CORRECT: ALL instance parameters first, THEN plain parameters
-lemma my_lemma
-    {Ω : Type*} [inst : MeasurableSpace Ω]  -- Named instance
-    {μ : Measure Ω} [IsProbabilityMeasure μ]  -- All instances first
-    (m : MeasurableSpace Ω)  -- Plain parameter AFTER all instances
-    (hm : m ≤ inst) :        -- Reference named instance
-    Result := by
-  -- Now instance resolution works correctly
-  sorry
-```
-
-**Why this matters:**
-- When `m` appears before instance parameters, `‹MeasurableSpace Ω›` resolves to `m` instead of the ambient instance
-- This causes type class synthesis to choose the wrong structure
-- Results in errors like "has type @MeasurableSet Ω m B but expected @MeasurableSet Ω inst B"
-
-**PITFALL: Anonymous Instance Notation `‹_›` with Sub-σ-Algebras**
-
-When working with sub-σ-algebras, **never use `‹_›` for the ambient space**—it resolves incorrectly:
-
-```lean
--- ❌ WRONG: Anonymous instance resolves to m instead of ambient space!
-lemma bad_example [IsFiniteMeasure μ]
-    {m : MeasurableSpace Ω} (hm : m ≤ ‹_›)  -- ‹_› becomes m, so hm : m ≤ m
+-- ✅ Correct pattern
+lemma my_condexp_lemma {Ω : Type*} {m₀ : MeasurableSpace Ω}
+    {μ : Measure Ω} [IsFiniteMeasure μ]
+    {m : MeasurableSpace Ω} (hm : m ≤ m₀)  -- Explicit ambient space
     : Result := by
-  sorry  -- Type class errors: "failed to synthesize instance"
-
--- ✅ CORRECT: Make ambient space explicit
-lemma good_example {Ω : Type*} {m₀ : MeasurableSpace Ω} {μ : Measure Ω}
-    [IsFiniteMeasure μ]
-    {m : MeasurableSpace Ω} (hm : m ≤ m₀)  -- Now hm : m ≤ m₀ is meaningful
-    : Result := by
-  -- Provide instances explicitly before calling mathlib
-  haveI : IsFiniteMeasure μ := inferInstance
   haveI : IsFiniteMeasure (μ.trim hm) := isFiniteMeasure_trim μ hm
   haveI : SigmaFinite (μ.trim hm) := sigmaFinite_trim μ hm
-  sorry
+  -- Now call mathlib lemmas
 ```
 
-**The bug:** `hm : m ≤ ‹_›` gave you `hm : m ≤ m` because Lean picked the most recent `MeasurableSpace Ω` in scope (which was `m` itself).
-
-**The fix:** Explicit `m₀` parameter gives meaningful `hm : m ≤ m₀` and avoids instance resolution failures.
-
-**Pattern 1: Explicit instance declarations**
-
-```lean
-haveI : IsFiniteMeasure μ := inferInstance
-haveI : IsFiniteMeasure (μ.trim hm) := isFiniteMeasure_trim μ hm
-haveI : SigmaFinite (μ.trim hm) := sigmaFinite_trim μ hm
--- Now conditional expectation works:
-μ[f | m]
-```
-
-**Pattern 2: Measure restriction wrapper**
-
-From removed git history - useful when repeatedly working with restricted measures:
-
-```lean
-noncomputable def condExpWith
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    (m : MeasurableSpace Ω) (hm : m ≤ m₀)
-    (f : Ω → ℝ) : Ω → ℝ := by
-  haveI : IsFiniteMeasure (μ.trim hm) := isFiniteMeasure_trim μ hm
-  haveI : SigmaFinite (μ.trim hm) := sigmaFinite_trim μ hm
-  exact μ[f | m]
-```
-
-**Pattern 3: Measurability lifting between structures**
-
-```lean
--- When you have s measurable in m, lift to ambient m₀
-have hs_m : MeasurableSet[m] s := ...
-have hs_m₀ : MeasurableSet[m₀] s := hm _ hs_m  -- hm : m ≤ m₀
-```
+**For complete coverage of sub-σ-algebra patterns, conditional expectation, and debugging type class synthesis errors, see:** `references/measure-theory.md`
 
 #### Pattern 4: Almost Everywhere Properties
 

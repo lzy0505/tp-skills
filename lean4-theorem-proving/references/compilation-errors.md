@@ -62,6 +62,8 @@ lemma my_lemma : Statement := by
 - Common when section variables cause unwanted instance requirements
 - Can omit multiple: `omit [inst1] [inst2] in`
 
+**For deep patterns with sub-σ-algebras, conditional expectation, and measure theory type class issues, see:** `measure-theory.md`
+
 **Debug with:**
 ```lean
 set_option trace.Meta.synthInstance true in

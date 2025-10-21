@@ -337,7 +337,6 @@ lemma real_ineq (x y : ℝ) (h1 : x ≤ y) (h2 : y < x + 1) : x < x + 1 := by
 **Analysis:**
 ```lean
 continuity      -- Prove continuity automatically
-fun_prop        -- General function properties (Lean 4.13+)
 ```
 
 **Measure Theory:**
@@ -349,11 +348,55 @@ measurability   -- Prove measurability automatically
 positivity      -- Prove positivity of measures/integrals
 ```
 
-**Using `fun_prop` with domain-specific dischargers:**
+**Compositional Function Properties (`fun_prop`):**
+
+`fun_prop` proves function properties compositionally by decomposing functions into simpler parts. Available in Lean 4.13+.
+
+**Basic usage:**
 ```lean
--- When function property goals have domain-specific subgoals
-fun_prop (disch := measurability)  -- Use measurability for subgoals
-fun_prop (disch := continuity)     -- Use continuity for subgoals
+-- Let fun_prop handle subgoals automatically
+fun_prop
+```
+
+**With discharge tactic (`disch`):**
+
+The `disch` parameter (short for "discharge") specifies which tactic to use for solving subgoals that `fun_prop` generates.
+
+**Common patterns:**
+```lean
+-- Measurability (for compositional measurable functions)
+fun_prop (disch := measurability)
+
+-- Continuity (for compositional continuous functions)
+fun_prop (disch := continuity)
+
+-- From context (when subgoals are hypotheses)
+fun_prop (disch := assumption)
+
+-- Algebraic properties
+fun_prop (disch := simp)
+```
+
+**Example - Measurability:**
+```lean
+-- Goal: Measurable (fun ω => fun j : Fin n => X (k j) ω)
+-- Without disch: fun_prop generates subgoals you must solve manually
+-- With disch: automation solves them
+have h : Measurable (fun ω => fun j : Fin n => X (k j) ω) := by
+  fun_prop (disch := measurability)
+```
+
+**Choosing the right `disch` tactic:**
+- Proving `Measurable`? → `disch := measurability`
+- Proving `Continuous`? → `disch := continuity`
+- Subgoals in context? → `disch := assumption`
+- Needs simplification? → `disch := simp`
+- Not sure? → Try `fun_prop` alone to see subgoals first
+
+**Advanced - Tactic sequences:**
+```lean
+-- Try measurability, then simplify any remaining goals
+fun_prop (disch := (measurability <;> simp))
 ```
 
 ## Tactic Combinations

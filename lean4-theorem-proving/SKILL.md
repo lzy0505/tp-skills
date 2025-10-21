@@ -7,7 +7,15 @@ description: This skill should be used when developing Lean 4 proofs, managing s
 
 ## Overview
 
-Lean 4 is an interactive theorem prover. Unlike traditional code, correctness is verified by the type checker—there are no "unit tests." Success means eliminating all `sorry`s and building with clean proofs that use only standard axioms.
+Lean 4 is an interactive theorem prover. Unlike traditional code, correctness is verified by the type checker—there are no "unit tests."
+
+**What "success" means in Lean 4:**
+- ✅ File compiles (`lake build` succeeds)
+- ✅ **Zero sorries** (or only documented active work-in-progress)
+- ✅ **Zero custom axioms** (or only with explicit user approval and elimination plan)
+- ✅ Only standard mathlib axioms (`Classical.choice`, `propext`, `quot.sound`)
+
+**A theorem is NOT proved if it contains sorries or custom axioms.** Those are scaffolding, not results.
 
 **Core principle:** Build incrementally, structure before solving, and trust the type checker.
 
@@ -60,6 +68,29 @@ ALWAYS ensure the file compiles before committing
 
 **Lean has no runtime tests.** The type checker IS your test suite.
 
+**CRITICAL: "Compiles" ≠ "Complete"**
+
+A file can compile with sorries/axioms, but that doesn't mean the work is done:
+
+```lean
+-- ✅ Compiles, ❌ NOT complete
+theorem my_result : Important_Property := by
+  sorry
+
+-- ✅ Compiles, ❌ NOT complete
+axiom helper_lemma : Key_Fact
+
+-- ✅ Compiles, ❌ NOT complete (trivial placeholder)
+theorem placeholder : True := trivial
+```
+
+**What "complete" actually means:**
+- ✅ File compiles with `lake build`
+- ✅ NO sorries (except documented work-in-progress)
+- ✅ NO custom axioms (except with explicit user approval and elimination plan)
+- ✅ NO trivial placeholders (`by True := trivial`, etc.)
+- ✅ Only standard mathlib axioms (`Classical.choice`, `propext`, `quot.sound`)
+
 **Build commands:**
 ```bash
 lake build              # Full project
@@ -70,7 +101,7 @@ lake clean && lake build   # Clean rebuild
 **Before any commit:**
 1. Run `lake build` on the full project
 2. Verify no new errors introduced
-3. Document any remaining `sorry`s with clear strategy
+3. Document any remaining `sorry`s with clear strategy (or eliminate them)
 
 ## The 4-Phase Workflow
 
@@ -268,7 +299,11 @@ have h : Complex_Goal := by
 
 ### The "Not in Mathlib" Antipattern
 
-**❌ WRONG - Treating missing mathlib lemmas as endpoints:**
+**CRITICAL: Sorries/Axioms Are NOT "Complete" Work**
+
+Even if a theorem compiles and "works" with sorries, **the work is not done**.
+
+**❌ WRONG - Treating sorries/axioms as acceptable endpoints:**
 ```lean
 lemma helper : Key_Property := by
   sorry
@@ -277,12 +312,22 @@ lemma helper : Key_Property := by
 lemma infrastructure : Basic_Fact := by
   sorry
   -- Infrastructure - not blocking main proof
+
+axiom utility_lemma : Common_Pattern
+-- We can use this for now, will prove later
+
+theorem main_result : Big_Theorem := by
+  apply helper
+  exact infrastructure ...
+-- ✅ Compiles! ❌ But NOT complete - has 2 sorries + 1 axiom
 ```
 
 **Why this is wrong:**
+- Sorries are placeholders, not proofs
 - "Should be in mathlib" is not a justification to leave sorries
 - "Infrastructure" sorries are still sorries - they need proofs
 - The goal is a **complete, verified proof**, not "proof modulo missing lemmas"
+- **You cannot claim a theorem is proved if it depends on sorries/axioms**
 
 **✅ CORRECT - Prove it yourself:**
 ```lean
@@ -389,22 +434,29 @@ Quick reference for the most common errors:
 
 **Doing it right ✅:**
 - File always compiles after each change
-- Each commit advances one specific lemma
+- Each commit advances one specific lemma **to completion** (no new sorries)
 - Helper lemmas accumulate and get reused
-- Axioms decrease over time
-- Proofs build on mathlib
-- **Using LSP server or delegating to subagents for mechanical tasks**
+- **Sorries decrease over time** (trend toward zero)
+- **Axioms decrease over time** (or stay at zero)
+- Proofs build on mathlib, not custom axioms
+- Using LSP server or delegating to subagents for mechanical tasks
+- **Claiming "done" only when sorries/axioms are eliminated**
 
 **Red flags 🚩:**
 - Multiple compilation errors accumulating
-- Sorries multiply faster than they're filled
+- **Sorries multiply faster than they're filled**
+- **Claiming work is "complete" when sorries/axioms remain**
+- **Treating sorries as "good enough" for infrastructure**
 - Fighting with type checker for hours
-- Adding custom axioms without plan
+- Adding custom axioms without concrete elimination plan
 - Reproving things mathlib has
 - Proofs are monolithic (>100 lines with no structure)
-- **Sorries justified with "should be in mathlib" or "infrastructure only"**
+- Sorries justified with "should be in mathlib" or "not blocking"
+- **Using `by True := trivial` or similar placeholders**
 
 **ALL red flags mean: Return to systematic approach.**
+
+**Remember:** A theorem that compiles with sorries is **not proved**. It's scaffolding, not a result.
 
 ## Reference Files
 

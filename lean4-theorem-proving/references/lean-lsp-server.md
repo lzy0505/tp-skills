@@ -6,6 +6,20 @@ This reference documents the battle-tested workflow and tools for Lean 4 proof d
 
 **Key insight from field testing:** LSP tools provide instant feedback (< 1 second) versus build cycles (10-30+ seconds). This **30x speedup** transforms proof development from frustrating trial-and-error into smooth, interactive problem-solving.
 
+## Prerequisites
+
+**Before using LSP tools:**
+
+1. **Run `lake build` first** - The LSP server runs `lake serve` which can timeout during initial project build. Run `lake build` manually in your project directory before starting the MCP server to ensure fast startup and avoid timeouts.
+
+2. **Install ripgrep** - Required for `lean_local_search` (the most-used search tool):
+   - macOS: `brew install ripgrep`
+   - Linux: `apt install ripgrep` or https://github.com/BurntSushi/ripgrep#installation
+   - Windows: https://github.com/BurntSushi/ripgrep#installation
+   - Verify: `rg --version` should work
+
+**Without these:** You may experience server timeouts or missing search functionality.
+
 ## Why Use LSP Tools?
 
 **Versus build-only workflow:**
@@ -163,7 +177,12 @@ lean_local_search("add_zero", limit=5)
 
 **Pro tip:** Start with partial matches. Search "add" to see all addition-related lemmas.
 
-**Requires:** ripgrep installed (`brew install ripgrep`)
+**Requires:** ripgrep installed and in PATH
+- macOS: `brew install ripgrep`
+- Linux: `apt install ripgrep` or see https://github.com/BurntSushi/ripgrep#installation
+- Windows: See https://github.com/BurntSushi/ripgrep#installation
+
+**If not installed:** The tool will fail with an error. Install ripgrep to enable fast local search.
 
 ### 4. `lean_multi_attempt` - Parallel Tactic Testing (GAME CHANGER!)
 

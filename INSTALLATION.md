@@ -59,11 +59,17 @@ If you're using Claude Code or Claude Desktop, you can install the Lean LSP MCP 
 **Full instructions:** https://github.com/oOo0oOo/lean-lsp-mcp
 
 **Quick summary:**
-1. Install the Lean LSP MCP server
-2. Configure Claude Code/Desktop to use it
-3. Restart Claude
+1. Install the Lean LSP MCP server (follow repo instructions)
+2. Install ripgrep: `brew install ripgrep` (macOS) or see https://github.com/BurntSushi/ripgrep#installation
+3. Configure Claude Code/Desktop to use the server
+4. **Before first use:** Run `lake build` in your Lean project to avoid timeouts
+5. Restart Claude
 
 **One-time setup:** ~5 minutes
+
+**Important prerequisites:**
+- **ripgrep (rg):** Required for `lean_local_search` tool. Install and ensure it's in your PATH.
+- **lake build:** Run this in your project before starting the LSP server to avoid client timeouts during initial setup.
 
 ### What You Get
 

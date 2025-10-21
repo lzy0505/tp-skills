@@ -325,6 +325,29 @@ lemma measurable_firstRMap (X : ℕ → Ω → α) (r : ℕ) (hX : ∀ i, Measur
 
 Now when you call `measurability` elsewhere, it can automatically use these lemmas.
 
+**Combining with `@[fun_prop]` for compositional proofs:**
+
+For custom measurability lemmas, use both attributes to enable both `measurability` and `fun_prop` tactics:
+
+```lean
+-- Best practice: make lemma discoverable by both tactics
+@[measurability, fun_prop]
+lemma measurable_shiftℤ : Measurable (shiftℤ (α := α)) := by
+  measurability
+
+-- Now both tactics can find it automatically
+example : Measurable (fun ω => shiftℤ (α := α) ω) := by
+  measurability  -- Works!
+
+example : Measurable (fun ω => shiftℤ (α := α) (ω 0)) := by
+  fun_prop (disch := measurability)  -- Also works!
+```
+
+**When to add `@[fun_prop]`:**
+- Custom function measurability lemmas (like `measurable_shiftℤ`)
+- Enables `fun_prop (disch := measurability)` to use them in compositional proofs
+- Allows cleaner automation for complex function compositions
+
 **Common patterns that `measurability` handles:**
 
 ```lean

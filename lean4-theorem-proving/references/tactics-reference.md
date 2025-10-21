@@ -399,6 +399,37 @@ have h : Measurable (fun ω => fun j : Fin n => X (k j) ω) := by
 fun_prop (disch := (measurability <;> simp))
 ```
 
+**Making custom lemmas discoverable to `fun_prop`:**
+
+Use the `@[fun_prop]` attribute to make your custom lemmas available to `fun_prop`:
+
+```lean
+-- Make lemma discoverable by both tactics
+@[measurability, fun_prop]
+lemma measurable_shiftℤ : Measurable (shiftℤ (α := α)) := by
+  measurability
+
+-- Now fun_prop can automatically use this when it encounters shiftℤ
+example : Measurable (fun ω => shiftℤ ω) := by
+  fun_prop  -- Automatically finds and applies measurable_shiftℤ
+```
+
+**When to use both attributes:**
+- `@[measurability]` - Makes lemma discoverable by `measurability` tactic
+- `@[fun_prop]` - Makes lemma discoverable by `fun_prop` tactic
+- `@[measurability, fun_prop]` - Makes lemma discoverable by both (recommended for custom function property lemmas)
+
+**Real example from practice:**
+```lean
+-- Without @[fun_prop]: manual proof needed
+have h : Measurable (fun ω => f (ω (-1))) := by
+  exact hf_meas.comp (measurable_pi_apply (-1))
+
+-- With @[fun_prop] on component lemmas: automated
+have h : Measurable (fun ω => f (ω (-1))) := by
+  fun_prop (disch := measurability)
+```
+
 ## Tactic Combinations
 
 ### Common Patterns

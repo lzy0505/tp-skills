@@ -38,26 +38,6 @@ This reference documents the battle-tested workflow and tools for Lean 4 proof d
 
 **Priority:** Always use LSP tools → Fall back to scripts only if LSP unavailable
 
-## The Core Workflow
-
-**Every proof follows this pattern:**
-
-```
-1. lean_goal          → See what you need to prove
-2. lean_local_search  → Find relevant lemmas (fast, unlimited!)
-3. lean_multi_attempt → Test multiple tactics in parallel
-4. [Edit file]        → Apply the winning tactic
-5. lean_diagnostic_messages → Verify (instant!)
-6. lean_goal          → Confirm "no goals"
-```
-
-**Total time:** < 10 seconds (LSP) vs 30+ seconds per iteration (build-only)
-
-**Measured improvements:**
-- Feedback: **30x faster** (< 1s vs 30s)
-- Tactic exploration: **4x fewer iterations** (parallel testing)
-- Lemma discovery: **10x faster** (integrated search)
-
 ## Critical Rules
 
 1. **NEVER edit without checking goal state first** (`lean_goal`)
@@ -69,7 +49,8 @@ This reference documents the battle-tested workflow and tools for Lean 4 proof d
 
 ## Quick Reference
 
-**Standard workflow:**
+**Every proof follows this pattern:**
+
 ```
 1. lean_goal(file, line)                    # What to prove?
 2. lean_local_search("keyword", limit=10)   # Does it exist?
@@ -80,6 +61,13 @@ This reference documents the battle-tested workflow and tools for Lean 4 proof d
 5. lean_diagnostic_messages(file)           # Verify
 6. lean_goal(file, line)                    # Confirm "no goals"
 ```
+
+**Total time:** < 10 seconds (LSP) vs 30+ seconds per iteration (build-only)
+
+**Measured improvements:**
+- Feedback: **30x faster** (< 1s vs 30s)
+- Tactic exploration: **4x fewer iterations** (parallel testing)
+- Lemma discovery: **10x faster** (integrated search)
 
 **When stuck:**
 ```
@@ -98,21 +86,19 @@ This reference documents the battle-tested workflow and tools for Lean 4 proof d
 
 ## Essential Tools
 
-### Priority Tiers
+### Tool Categories
 
-**Core workflow (unlimited, local/instant):**
-1. `lean_goal` - ALWAYS check first (direct LSP query)
-2. `lean_local_search` - Find what exists (local ripgrep, unlimited)
-3. `lean_multi_attempt` - Test multiple tactics in parallel (direct LSP)
-4. `lean_diagnostic_messages` - Verify after edits (direct LSP)
-5. `lean_hover_info` - Check syntax/types (direct LSP)
+**Local tools (unlimited, instant):**
+- Direct LSP queries against your project files
+- No rate limits, < 1 second response time
+- Tools: `lean_goal`, `lean_local_search`, `lean_multi_attempt`, `lean_diagnostic_messages`, `lean_hover_info`
 
-**When stuck (external tools - LSP server rate-limits to 3 req/30s):**
-- `lean_loogle` - Type-based pattern search (external API)
-- `lean_leansearch` - Natural language search (external API)
-- `lean_state_search` - Proof state search (external API)
+**External tools (rate-limited to 3 req/30s):**
+- Remote API calls to loogle.lean-lang.org, leansearch.net
+- Managed by LSP server to avoid overwhelming services
+- Tools: `lean_loogle`, `lean_leansearch`, `lean_state_search`
 
-**Note on rate limiting:** The LSP server manages rate limiting for external search tools that call remote APIs. Local tools (goal inspection, diagnostics, local search) have no rate limits since they work directly with your project files.
+**Best practice:** Always use local tools first (especially `lean_local_search`), then external tools only when local search doesn't find what you need.
 
 ### Tool Summary
 

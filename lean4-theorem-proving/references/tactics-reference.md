@@ -180,6 +180,36 @@ example (h : x = y) : x + 1 = y + 1 := by
   rw [h]  -- Rewrites x to y in goal
 ```
 
+#### `simp_rw` - Simplifying Rewrites
+
+**When to use:** Multiple sequential rewrites or rewrite chains
+
+```lean
+-- Sequential rewrites (less efficient)
+rw [h₁]
+rw [h₂]
+rw [h₃]
+
+-- Better: chain with simp_rw
+simp_rw [h₁, h₂, h₃]
+```
+
+**Advantages over `rw`:**
+- Applies rewrites left-to-right repeatedly
+- More powerful for chains: can use intermediate results
+- Single tactic call = clearer proof structure
+
+**When to prefer `simp_rw`:**
+- Multiple related rewrites in sequence
+- Rewrite chains where later steps use earlier results
+- Measure theory: integral/expectation identity chains
+
+**Example:**
+```lean
+-- Measure theory rewrite chain
+simp_rw [hf_eq, integral_indicator (hY hB), Measure.restrict_restrict (hY hB)]
+```
+
 #### `rfl` - Reflexivity of Equality
 
 ```lean

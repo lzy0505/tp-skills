@@ -105,6 +105,33 @@ lemma my_lemma
 - This causes type class synthesis to choose the wrong structure
 - Results in errors like "has type @MeasurableSet Ω m B but expected @MeasurableSet Ω inst B"
 
+**PITFALL: Anonymous Instance Notation `‹_›` with Sub-σ-Algebras**
+
+When working with sub-σ-algebras, **never use `‹_›` for the ambient space**—it resolves incorrectly:
+
+```lean
+-- ❌ WRONG: Anonymous instance resolves to m instead of ambient space!
+lemma bad_example [IsFiniteMeasure μ]
+    {m : MeasurableSpace Ω} (hm : m ≤ ‹_›)  -- ‹_› becomes m, so hm : m ≤ m
+    : Result := by
+  sorry  -- Type class errors: "failed to synthesize instance"
+
+-- ✅ CORRECT: Make ambient space explicit
+lemma good_example {Ω : Type*} {m₀ : MeasurableSpace Ω} {μ : Measure Ω}
+    [IsFiniteMeasure μ]
+    {m : MeasurableSpace Ω} (hm : m ≤ m₀)  -- Now hm : m ≤ m₀ is meaningful
+    : Result := by
+  -- Provide instances explicitly before calling mathlib
+  haveI : IsFiniteMeasure μ := inferInstance
+  haveI : IsFiniteMeasure (μ.trim hm) := isFiniteMeasure_trim μ hm
+  haveI : SigmaFinite (μ.trim hm) := sigmaFinite_trim μ hm
+  sorry
+```
+
+**The bug:** `hm : m ≤ ‹_›` gave you `hm : m ≤ m` because Lean picked the most recent `MeasurableSpace Ω` in scope (which was `m` itself).
+
+**The fix:** Explicit `m₀` parameter gives meaningful `hm : m ≤ m₀` and avoids instance resolution failures.
+
 **Pattern 1: Explicit instance declarations**
 
 ```lean

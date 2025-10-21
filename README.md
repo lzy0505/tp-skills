@@ -11,8 +11,6 @@ Claude Skills for systematic development of formal proofs in Lean 4.
 
 ## Quick Start
 
-### Installation
-
 **Via Marketplace (Recommended):**
 ```bash
 /plugin marketplace add cameronfreer/lean4-skills
@@ -24,28 +22,11 @@ Claude Skills for systematic development of formal proofs in Lean 4.
 ```bash
 git clone https://github.com/cameronfreer/lean4-skills.git
 cd lean4-skills
-
-# Install core skill (required)
 cp -r lean4-theorem-proving ~/.claude/skills/
-
-# Install memory skill (optional)
-cp -r lean4-memories ~/.claude/skills/
+cp -r lean4-memories ~/.claude/skills/  # Optional
 ```
 
-**Windows 11 Users:**
-
-Claude Code requires Bash, which isn't installed by default on Windows 11.
-
-**Option 1: Use Git Bash (simplest)**
-1. Install [Git for Windows](https://git-scm.com/download/win) (includes Git Bash)
-2. Open Git Bash
-3. Start Claude Code: `claude`
-4. Run installation commands above
-
-**Option 2: VSCode Extension**
-- Install [Claude Code for VS Code](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code)
-- No Bash required
-- Full documentation: https://docs.claude.com/en/docs/claude-code/vs-code
+➡️ **Platform-specific setup (Windows, LSP server, etc.):** [INSTALLATION.md](INSTALLATION.md)
 
 ### Usage
 
@@ -62,6 +43,7 @@ Skills activate automatically when you work on Lean 4 files. No manual invocatio
 Systematic workflows for Lean 4 proof development.
 
 **What you get:**
+- **Lean LSP server integration** - 30x faster feedback (< 1s vs 30s builds)
 - 4-Phase proof development workflow (structure → helpers → incremental → type classes)
 - 16 automation scripts (search, analysis, verification, refactoring)
 - Type class management patterns
@@ -115,6 +97,11 @@ Result: Faster proofs with project-specific context!
 **For lean4-memories (additional):**
 - MCP memory server (simple config file edit - [setup guide](lean4-memories/README.md#installation))
 - Claude Desktop or Claude Code with MCP support
+
+**For Lean LSP server (optional but highly recommended):**
+- Setup guide: [INSTALLATION.md](INSTALLATION.md#lean-lsp-server)
+- Source: https://github.com/oOo0oOo/lean-lsp-mcp
+- Benefit: 30x faster proof development
 
 ## Documentation
 

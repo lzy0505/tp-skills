@@ -136,6 +136,8 @@ n m : ℕ
 - Goal: `⊢ n + m = m + n` (what you need to prove)
 - Now you know exactly what tactic to search for!
 
+**Pro tip:** Call `lean_goal` on a line WITH a tactic to see before/after states - shows exactly what that tactic accomplishes.
+
 **Success signal:**
 ```
 After:
@@ -203,36 +205,52 @@ lean_local_search("add_zero", limit=5)
 
 ### 4. `lean_multi_attempt` - Parallel Tactic Testing (GAME CHANGER!)
 
-**This is the most powerful workflow tool.** Test multiple tactics at once:
+**This is the most powerful workflow tool.** Test multiple tactics at once and see EXACTLY why each succeeds or fails:
 
-**Example:**
+**Example 1: Choosing between working tactics**
 ```
 lean_multi_attempt(file, line=13, snippets=[
   "  simp [Nat.add_comm]",
   "  omega",
-  "  rfl",
   "  apply Nat.add_comm"
 ])
 
 → Output:
 ["  simp [Nat.add_comm]:\n no goals\n\n",
  "  omega:\n no goals\n\n",
- "  rfl:\n ... Tactic `rfl` failed: not definitionally equal",
  "  apply Nat.add_comm:\n no goals\n\n"]
 ```
+All work! Pick simplest: `omega`
 
-**Instantly see:**
-- ✅ `simp [Nat.add_comm]` works
-- ✅ `omega` works
-- ❌ `rfl` fails
-- ✅ `apply Nat.add_comm` works
+**Example 2: Learning from failures**
+```
+lean_multi_attempt(file, line=82, snippets=[
+  "  exact Nat.lt_succ_self n",
+  "  apply Nat.lt_succ_self",
+  "  simp"
+])
 
-**Pick the simplest: `omega`**
+→ Output:
+["  exact Nat.lt_succ_self n:\n Unknown identifier `n`",
+ "  apply Nat.lt_succ_self:\n Could not unify...",
+ "  simp:\n no goals\n\n"]
+```
+**Key insight:** Errors tell you WHY tactics fail - `n` out of scope, wrong unification, etc.
+
+**Example 3: Multi-step tactics (single line)**
+```
+lean_multi_attempt(file, line=97, snippets=[
+  "  intro i j hij; exact hij",
+  "  intro i j; exact id",
+  "  unfold StrictMono; simp"
+])
+```
+Chain tactics with `;` - still single line!
 
 **Use cases:**
-- Test 3-5 candidate tactics at once
-- Compare performance/directness
-- Learn why certain tactics fail
+- A/B test 3-5 candidate tactics
+- Understand why approaches fail (exact error messages)
+- Compare clarity/directness
 - Explore proof strategies
 
 **Critical constraints:**
@@ -389,6 +407,8 @@ no goals
 **Total time:** < 10 seconds with absolute certainty
 
 **Build-only would take:** 30+ seconds per try-and-rebuild cycle
+
+**Advanced tip:** When you don't know how to prove a definition (like `StrictMono`), use `lean_hover_info` to see the expanded form, then test tactics against the unfolded goal.
 
 ## Common Mistakes to Avoid
 

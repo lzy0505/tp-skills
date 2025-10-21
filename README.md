@@ -32,6 +32,21 @@ cp -r lean4-theorem-proving ~/.claude/skills/
 cp -r lean4-memories ~/.claude/skills/
 ```
 
+**Windows 11 Users:**
+
+Claude Code requires Bash, which isn't installed by default on Windows 11.
+
+**Option 1: Use Git Bash (simplest)**
+1. Install [Git for Windows](https://git-scm.com/download/win) (includes Git Bash)
+2. Open Git Bash
+3. Start Claude Code: `claude`
+4. Run installation commands above
+
+**Option 2: VSCode Extension**
+- Install [Claude Code for VS Code](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code)
+- No Bash required
+- Full documentation: https://docs.claude.com/en/docs/claude-code/vs-code
+
 ### Usage
 
 Skills activate automatically when you work on Lean 4 files. No manual invocation needed!

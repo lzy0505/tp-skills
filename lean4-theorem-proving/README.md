@@ -58,7 +58,7 @@ This skill teaches Claude how to develop formal proofs in Lean 4 using battle-te
 
 ## Installation
 
-See [main README](../README.md#installation) for installation instructions.
+See [INSTALLATION.md](../INSTALLATION.md) for installation instructions.
 
 ## Usage
 

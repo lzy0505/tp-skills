@@ -27,18 +27,22 @@ cp -r lean4-memories ~/.claude/skills/
 
 ### Windows 11 Users
 
-Claude Code requires Bash, which isn't installed by default on Windows 11.
+**The Claude Code CLI requires Bash**, which isn't installed by default on Windows 11. However, you have options that don't require installing Bash:
 
-**Option 1: Use Git Bash (simplest)**
+**Option 1: VSCode Extension (recommended for Windows)**
+- Install [Claude Code for VS Code](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code)
+- **No Bash required** - works natively on Windows
+- Full documentation: https://docs.claude.com/en/docs/claude-code/vs-code
+
+**Option 2: Git Bash (if you want the CLI)**
 1. Install [Git for Windows](https://git-scm.com/download/win) (includes Git Bash)
 2. Open Git Bash
-3. Start Claude Code: `claude`
+3. Start Claude Code CLI: `claude`
 4. Run installation commands above
 
-**Option 2: VSCode Extension**
-- Install [Claude Code for VS Code](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code)
-- No Bash required
-- Full documentation: https://docs.claude.com/en/docs/claude-code/vs-code
+**Option 3: Codeium-based IDEs**
+- Use Claude Code in Cursor, Windsurf, or other Codeium-based editors
+- **No Bash required**
 
 ### macOS Users
 

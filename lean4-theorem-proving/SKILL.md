@@ -266,17 +266,69 @@ have h : Complex_Goal := by
   --       (3) Show bound. Need `tendsto_lintegral_of_monotone`, ~2h
 ```
 
+### The "Not in Mathlib" Antipattern
+
+**❌ WRONG - Treating missing mathlib lemmas as endpoints:**
+```lean
+lemma helper : Key_Property := by
+  sorry
+  -- TODO: This should be in mathlib but isn't
+
+lemma infrastructure : Basic_Fact := by
+  sorry
+  -- Infrastructure - not blocking main proof
+```
+
+**Why this is wrong:**
+- "Should be in mathlib" is not a justification to leave sorries
+- "Infrastructure" sorries are still sorries - they need proofs
+- The goal is a **complete, verified proof**, not "proof modulo missing lemmas"
+
+**✅ CORRECT - Prove it yourself:**
+```lean
+-- If it's not in mathlib, search thoroughly first
+-- scripts/smart_search.sh "key property" --source=all
+-- lean_local_search("key property")
+
+-- If truly missing: PROVE IT
+lemma helper : Key_Property := by
+  -- Actual proof steps
+  intro x
+  apply monotone_lemma
+  exact bound_from_hypothesis
+
+-- If complex: break into smaller lemmas
+lemma helper_step1 : Subproperty := by ...
+lemma helper_step2 : Another_Subproperty := by ...
+lemma helper : Key_Property := by
+  apply helper_step1
+  exact helper_step2 ...
+```
+
+**When sorries are acceptable:**
+1. **Active work in progress** - you're currently filling them (document order/plan)
+2. **Documented axioms** - clear elimination strategy and timeline
+3. **Explicitly scoped** - user agrees to leave as axioms (rare)
+
+**Not acceptable:**
+- "This should be in mathlib" (then search harder, or prove it)
+- "Infrastructure lemma" (still needs proof)
+- "Will be added later" (when? by whom? with what strategy?)
+
 ### Elimination Pattern
 
 ```lean
--- 1. Start with axiom
-axiom key_lemma : Goal  -- TODO: Replace with mathlib's result_X
+-- 1. Search mathlib thoroughly FIRST
+-- scripts/smart_search.sh "property name" --source=all
 
--- 2. Find infrastructure
-#check mathlib_result
+-- 2. If truly missing, prove it
+lemma key_lemma : Goal := by
+  -- YOUR proof here, not sorry
 
--- 3. Replace with proof
-theorem key_lemma : Goal := by exact mathlib_result ...
+-- 3. If you must use axiom temporarily, document elimination plan
+axiom key_lemma : Goal
+-- TODO: Eliminate by [concrete strategy], need [specific mathlib lemmas],
+--       estimated [time], assigned to [person/you]. NOT "hope mathlib adds this."
 ```
 
 ## Common Compilation Errors
@@ -350,6 +402,7 @@ Quick reference for the most common errors:
 - Adding custom axioms without plan
 - Reproving things mathlib has
 - Proofs are monolithic (>100 lines with no structure)
+- **Sorries justified with "should be in mathlib" or "infrastructure only"**
 
 **ALL red flags mean: Return to systematic approach.**
 

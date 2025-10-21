@@ -29,11 +29,11 @@ This skill applies to ANY Lean 4 development across all mathematical domains:
 
 ## Powerful Tools at Your Disposal
 
-**🚀 MCP Server (Best - if available):** Direct integration with Lean LSP
+**🚀 Lean LSP Server (Best - if available):** Direct integration with Lean LSP
 - `mcp__lean-lsp__lean_goal` - See proof state (VERY USEFUL!)
 - `mcp__lean-lsp__lean_leansearch` - Semantic search
 - `mcp__lean-lsp__lean_loogle` - Type-based search
-- See `references/mcp-server.md` for complete documentation
+- See `references/lean-lsp-server.md` for complete documentation
 
 **⚡ Subagent Delegation (Efficient - Claude Code users):** 6x token reduction
 - Dispatch Explore agents to run automation scripts
@@ -48,7 +48,7 @@ This skill applies to ANY Lean 4 development across all mathematical domains:
 - **Refactoring:** minimize_imports.py
 - See `scripts/README.md` for complete documentation
 
-**Priority:** Use MCP server when available → Delegate to subagents → Run scripts directly
+**Priority:** Use LSP server when available → Delegate to subagents → Run scripts directly
 
 ## The Build-First Principle
 
@@ -108,7 +108,7 @@ theorem main : Result := by
 
 **Never:** Fill 5 sorries simultaneously, commit without compiling, or skip documentation.
 
-**🚀 Track sorries with MCP server (if available):**
+**🚀 Track sorries with LSP server (if available):**
 ```lean
 -- See proof state at sorry location
 mcp__lean-lsp__lean_goal("MyFile.lean", line_number, column_number)
@@ -150,7 +150,7 @@ haveI : Fact (m ≤ m0) := ⟨h_le⟩
 
 **Philosophy:** Search before prove. Mathlib has 100,000+ theorems.
 
-**🚀 BEST: Use MCP server tools (if available)**
+**🚀 BEST: Use LSP server tools (if available)**
 ```lean
 -- Find theorems by semantic search
 mcp__lean-lsp__lean_leansearch("continuous functions on compact spaces")
@@ -174,7 +174,7 @@ scripts/search_mathlib.sh "continuous.*compact" name
 ```
 
 **Workflow:**
-1. Search using MCP tools (preferred) or scripts
+1. Search using LSP tools (preferred) or scripts
 2. Read candidate file
 3. Import and verify: `#check Continuous.isCompact_preimage`
 
@@ -235,9 +235,9 @@ ext x / funext x        -- Prove functions equal pointwise
 
 **For detailed patterns, real-world examples, and measure theory specifics, see:** `references/domain-patterns.md`
 
-## Lean MCP Server Tools (Claude Code)
+## Lean Lean LSP Server Tools (Claude Code)
 
-If using Claude Code with the Lean MCP server, powerful interactive tools are available:
+If using Claude Code with the Lean LSP server, powerful interactive tools are available:
 
 **Essential tools:**
 - `lean_goal` - Check proof state at cursor (USE OFTEN!)
@@ -254,7 +254,7 @@ If using Claude Code with the Lean MCP server, powerful interactive tools are av
 5. `lean_diagnostic_messages` to verify
 6. Repeat
 
-**For complete MCP tool reference, workflows, and troubleshooting, see:** `references/mcp-server.md`
+**For complete MCP tool reference, workflows, and troubleshooting, see:** `references/lean-lsp-server.md`
 
 ## Managing Incomplete Proofs
 
@@ -360,7 +360,7 @@ Quick reference for the most common errors:
 - Helper lemmas accumulate and get reused
 - Axioms decrease over time
 - Proofs build on mathlib
-- **Using MCP server or delegating to subagents for mechanical tasks**
+- **Using LSP server or delegating to subagents for mechanical tasks**
 
 **Red flags 🚩:**
 - Multiple compilation errors accumulating
@@ -381,7 +381,7 @@ This skill includes detailed reference files for deep dives:
 - **`references/tactics-reference.md`** - Comprehensive tactics guide, simp deep dive, tactic selection decision trees
 - **`references/domain-patterns.md`** - Analysis, topology, algebra, measure theory, probability patterns with real examples
 - **`references/compilation-errors.md`** - Detailed error explanations, debugging workflows, type class synthesis issues
-- **`references/mcp-server.md`** - Lean MCP server tools, workflows, troubleshooting (for Claude Code users)
+- **`references/lean-lsp-server.md`** - Lean LSP server tools, workflows, troubleshooting (for Claude Code users)
 - **`references/subagent-workflows.md`** - Subagent delegation patterns, workflows, examples (for Claude Code users)
 
 Claude will load these references as needed when working on specific tasks.

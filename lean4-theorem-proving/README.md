@@ -54,7 +54,7 @@ This skill teaches Claude how to develop formal proofs in Lean 4 using battle-te
 - [tactics-reference.md](references/tactics-reference.md) - Comprehensive tactics catalog
 - [domain-patterns.md](references/domain-patterns.md) - Math domain-specific patterns
 - [compilation-errors.md](references/compilation-errors.md) - Error debugging
-- [mcp-server.md](references/mcp-server.md) - Lean MCP server tools reference
+- [lean-lsp-server.md](references/lean-lsp-server.md) - Lean LSP server tools reference
 
 ## Installation
 
@@ -159,7 +159,7 @@ lean4-theorem-proving/
     ├── tactics-reference.md       # Tactics catalog
     ├── domain-patterns.md         # Math patterns
     ├── compilation-errors.md      # Error solutions
-    └── mcp-server.md              # MCP tools
+    └── lean-lsp-server.md              # MCP tools
 ```
 
 ## Examples from Real Projects

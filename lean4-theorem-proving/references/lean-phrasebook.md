@@ -278,6 +278,20 @@ rw [show A by r]
 rw [show X = Y by r]
 ```
 
+**"We rewrite multiple times in sequence"**
+```lean
+-- Sequential rewrites (separate calls)
+rw [h₁]
+rw [h₂]
+rw [h₃]
+
+-- Better: chain rewrites in one call
+simp_rw [h₁, h₂, h₃]
+```
+- `simp_rw` applies rewrites left-to-right repeatedly
+- More powerful than `rw` for chains: can use intermediate results
+- Alternative: `rw [h₁, h₂, h₃]` (simpler but less powerful)
+
 **"Applying f to both sides of h : X = Y"**
 ```lean
 apply_fun f at h    -- produces h : f X = f Y

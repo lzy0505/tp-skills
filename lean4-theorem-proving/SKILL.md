@@ -410,6 +410,80 @@ Quick reference for the most common errors:
 
 **For complete workflows, patterns, and examples, see:** `references/subagent-workflows.md`
 
+## Documentation Conventions
+
+### Write Timeless Documentation
+
+Documentation should describe what the code **is** and **does**, not what it **was** or how it evolved.
+
+**Avoid development history references:**
+```lean
+-- ❌ BAD
+/-- In earlier drafts, this used axioms, but now it doesn't. -/
+/-- Originally defined differently, but we changed the approach. -/
+/-- This replaces the old broken implementation. -/
+
+-- ✅ GOOD
+/-- Uses mathlib's standard measure theory infrastructure. -/
+/-- Constructs via the Koopman representation. -/
+```
+
+**Rationale:** Development history belongs in git commits, not source comments. Historical references become confusing and add no value to understanding code.
+
+### Avoid Highlighting "Axiom-Free" Code (After Proved)
+
+Once a theorem has been proved (removing the `axiom` keyword), don't highlight that it no longer uses axioms:
+
+```lean
+-- ❌ BAD (after development complete)
+/-- This construction is completely **axiom-free** and uses only standard mathlib. -/
+
+-- ✅ GOOD
+/-- This construction uses mathlib's standard measure theory infrastructure. -/
+```
+
+**Rationale:** Not adding custom `axiom` declarations is the expected default state. Highlighting it is unnecessary and may become outdated if code is refactored.
+
+**Exception:** During development, documenting axiom placeholders is appropriate:
+```lean
+-- ✅ GOOD (during development)
+/-- Key lemma for the martingale proof. For now, accepting as axiom. -/
+axiom conditionallyIID_of_exchangeable : ...
+```
+
+**Note:** Discussion of *mathematical* axioms (Choice, etc.) is perfectly acceptable when mathematically relevant:
+```lean
+-- ✅ GOOD
+/-- This construction avoids the Axiom of Choice by using a canonical limit process. -/
+```
+
+### Keep Public API Clean
+
+Make internal helpers `private` or place them in dedicated internal sections:
+
+```lean
+/-! ### Internal helpers -/
+
+private lemma indicator_bounded : ... := by ...
+private lemma intermediate_step : ... := by ...
+
+/-! ### Public API -/
+
+theorem main_result : ... := by ...
+```
+
+### Educational Examples
+
+Use `example` instead of `lemma/theorem` for educational code that shouldn't enter the namespace:
+
+```lean
+-- ❌ BAD: Unnecessary lemma in namespace
+lemma unused_stub : True := trivial
+
+-- ✅ GOOD: Educational example that doesn't pollute namespace
+example : True := trivial
+```
+
 ## Quality Checklist
 
 **Before commit:**
@@ -464,10 +538,12 @@ Detailed reference files for deep dives:
 
 - **`references/lean-phrasebook.md`** - Mathematical English to Lean translations ("observe that...", "it suffices to show...", etc.)
 - **`references/mathlib-guide.md`** - Finding lemmas, import organization, naming conventions, search strategies
+- **`references/mathlib-style.md`** - Mathlib style conventions, copyright headers, naming, line length, formatting (with pointers to official docs)
 - **`references/tactics-reference.md`** - Comprehensive tactics guide, simp deep dive, tactic selection decision trees
-- **`references/domain-patterns.md`** - Analysis, topology, algebra patterns with real examples
+- **`references/domain-patterns.md`** - Analysis, topology, algebra patterns; includes implicit parameter conventions (Pattern 9)
 - **`references/measure-theory.md`** - Sub-σ-algebras, conditional expectation, type class management, trimmed measures
 - **`references/compilation-errors.md`** - Detailed error explanations, debugging workflows, type class synthesis issues
+- **`references/proof-golfing.md`** - Simplifying proofs after compilation, consolidating rewrites, removing boilerplate
 - **`references/lean-lsp-server.md`** - Lean LSP server tools, workflows, troubleshooting (for Claude Code users)
 - **`references/subagent-workflows.md`** - Subagent delegation patterns, workflows, examples (for Claude Code users)
 

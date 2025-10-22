@@ -430,6 +430,180 @@ lemma important_theorem : complicated_property := by
 - Document with comments when automation does something non-trivial
 - If a tactic call raises "how does this work?", consider making it more explicit
 
+### Pattern 9: Implicit vs Explicit Parameters
+
+Following mathlib conventions for when to use `{param}` (implicit) vs `(param)` (explicit).
+
+**Core principle from mathlib:**
+- `{param}` when Lean can infer the value from other parameters
+- `(param)` when it's primary data or can't be inferred
+
+#### Use Implicit `{param : Type}` When:
+
+**1. Type inferrable from other parameters:**
+```lean
+-- ✅ GOOD: n inferrable from S
+def prefixCylinder {n : ℕ} (S : Set (Fin n → α)) : Set (ℕ → α)
+
+-- ✅ GOOD: n inferrable from c, p, q
+lemma l2_bound_from_steps {n : ℕ} {c p q : Fin n → ℝ} (σSq ρ : ℝ) : ...
+```
+
+**2. Parameter appears in types but not needed at call site:**
+```lean
+-- ✅ GOOD: m inferrable from fs
+def productCylinder {m : ℕ} (fs : Fin m → α → ℝ) : Ω[α] → ℝ
+
+-- ✅ GOOD: n inferrable from ξ
+theorem l2_contractability_bound {n : ℕ} (ξ : Fin n → Ω → ℝ) : ...
+```
+
+**3. Multiple parameters depend on same type variable:**
+```lean
+-- ✅ GOOD: Both c and covariance matrices depend on n
+lemma double_sum_covariance_formula {n : ℕ} {c : Fin n → ℝ} (σSq ρ : ℝ) : ...
+```
+
+#### Keep Explicit `(param : Type)` When:
+
+**1. Primary data arguments:**
+```lean
+-- ✅ CORRECT: μ and X are the main subjects
+theorem deFinetti {μ : Measure Ω} (X : ℕ → Ω → α) : ...
+
+-- ✅ CORRECT: s is what we're testing
+def isShiftInvariant (s : Set (Ω[α])) : Prop
+```
+
+**2. Parameter used in function body, not in types:**
+```lean
+-- ✅ CORRECT: n used in shift^[n], not inferrable
+def shiftedCylinder (n : ℕ) (F : Ω[α] → ℝ) : Ω[α] → ℝ :=
+  fun ω => F ((shift^[n]) ω)
+```
+
+**3. Application lemmas:**
+```lean
+-- ✅ CORRECT: n is the explicit argument being applied
+lemma shift_apply {α : Type*} (ξ : ℕ → α) (n : ℕ) :
+  shift ξ n = ξ (n + 1)
+```
+
+**4. Named hypotheses/proofs:**
+```lean
+-- ✅ CORRECT: These are explicit assumptions
+(hX : Measurable X) (hcov : ∀ i j, ...)
+```
+
+**5. Parameters in return types:**
+```lean
+-- ✅ CORRECT: n appears in Fin n in return type
+lemma Exchangeable.refl {μ : Measure Ω} {X : ℕ → Ω → α} (n : ℕ) :
+  ... → (Fin n → α) = ...
+```
+
+#### Conversion Workflow
+
+When converting explicit parameters to implicit:
+
+**1. Search and identify candidates:**
+```bash
+# Find lemmas with explicit nat parameters
+grep -rn "^lemma .* (n : ℕ)" . --include="*.lean" | grep -v "{n : ℕ}"
+
+# Find definitions with Fin parameters
+grep -rn "^def .* (.*: Fin .* →" . --include="*.lean" | grep -v "{.*: Fin"
+```
+
+**2. Analyze each candidate:**
+- Can it be inferred? (appears in type of another parameter)
+- Is it the main subject? (what the lemma is "about")
+- Is it in the return type?
+- Is it used in the body?
+
+**3. Convert and update call sites:**
+```lean
+-- Before
+lemma foo (n : ℕ) (c : Fin n → ℝ) := ...
+foo n c
+
+-- After
+lemma foo {n : ℕ} {c : Fin n → ℝ} := ...
+foo  -- Fully inferred
+```
+
+**4. Build and fix errors:**
+```bash
+lake build <file>
+# Fix "function expected" errors by adding named parameters if needed
+```
+
+#### Common Patterns
+
+**Pattern 1: Fin-Indexed Functions**
+```lean
+-- Before
+lemma sum_sq_le_sum_abs_mul_sup (n : ℕ) (c : Fin n → ℝ) : ...
+
+-- After
+lemma sum_sq_le_sum_abs_mul_sup {n : ℕ} {c : Fin n → ℝ} : ...
+```
+
+**Pattern 2: Cylinder Sets**
+```lean
+-- Before
+def prefixCylinder (n : ℕ) (S : Set (Fin n → α)) : Set (ℕ → α)
+
+-- After
+def prefixCylinder {n : ℕ} (S : Set (Fin n → α)) : Set (ℕ → α)
+```
+
+**Pattern 3: Permutations**
+```lean
+-- Before
+def extendFinPerm (n : ℕ) (σ : Equiv.Perm (Fin n)) : Equiv.Perm ℕ
+
+-- After
+def extendFinPerm {n : ℕ} (σ : Equiv.Perm (Fin n)) : Equiv.Perm ℕ
+```
+
+#### Common Errors and Fixes
+
+**Error 1: "Function expected"**
+```lean
+-- Symptom: After making n implicit, call site still passes it explicitly
+-- Fix: Use named parameters or remove the argument
+foo c                -- Option 1: Remove argument (if fully inferrable)
+foo (n:=n) c         -- Option 2: Named parameter (if needed)
+@foo n c             -- Option 3: Make explicit with @ (rarely needed)
+```
+
+**Error 2: "Cannot infer implicit parameter"**
+```lean
+-- Cause: Made parameter implicit when it's NOT inferrable
+-- Fix: Keep it explicit - it was correct before!
+```
+
+#### Best Practices
+
+**1. When in doubt, keep explicit:**
+It's better to have one explicit parameter that could be implicit than to have an implicit parameter causing inference issues. Main theorems especially benefit from clarity.
+
+**2. Work file-by-file:**
+Don't convert the whole codebase at once. Pick logical units and build after each change.
+
+**3. Document rationale in commits:**
+```
+Make n parameter implicit in <function>
+
+Converted the explicit `n : ℕ` parameter to implicit since it can be
+inferred from the type `x : Fin n → T`.
+
+Following mathlib conventions for inferrable parameters.
+```
+
+See [mathlib-style.md](mathlib-style.md) for more on mathlib's implicit parameter conventions.
+
 ### Real-World Example: Finite Marginals Uniqueness
 
 From exchangeability project - shows typical measure theory proof structure:

@@ -50,11 +50,16 @@ This skill teaches Claude how to develop formal proofs in Lean 4 using battle-te
 
 **References (loaded as needed):**
 - [lean-phrasebook.md](references/lean-phrasebook.md) - Mathematical English to Lean translations
-- [mathlib-guide.md](references/mathlib-guide.md) - Search strategies, imports, naming
+- [mathlib-guide.md](references/mathlib-guide.md) - Search strategies, imports, naming conventions
+- [mathlib-style.md](references/mathlib-style.md) - Mathlib style conventions and formatting
 - [tactics-reference.md](references/tactics-reference.md) - Comprehensive tactics catalog
+- [calc-patterns.md](references/calc-patterns.md) - Calc chain patterns and simp optimization
 - [domain-patterns.md](references/domain-patterns.md) - Math domain-specific patterns
-- [compilation-errors.md](references/compilation-errors.md) - Error debugging
-- [lean-lsp-server.md](references/lean-lsp-server.md) - Lean LSP server tools reference
+- [measure-theory.md](references/measure-theory.md) - Sub-σ-algebras and conditional expectation
+- [compilation-errors.md](references/compilation-errors.md) - Error debugging and solutions
+- [proof-golfing.md](references/proof-golfing.md) - Simplifying proofs after compilation
+- [lean-lsp-server.md](references/lean-lsp-server.md) - Lean LSP server tools (Claude Code users)
+- [subagent-workflows.md](references/subagent-workflows.md) - Subagent delegation patterns (Claude Code users)
 
 ## Installation
 
@@ -156,10 +161,15 @@ lean4-theorem-proving/
 └── references/                    # Detailed guides
     ├── lean-phrasebook.md         # Math English to Lean
     ├── mathlib-guide.md           # mathlib integration
+    ├── mathlib-style.md           # Mathlib style conventions
     ├── tactics-reference.md       # Tactics catalog
+    ├── calc-patterns.md           # Calc chain patterns
     ├── domain-patterns.md         # Math patterns
+    ├── measure-theory.md          # Sub-σ-algebras, conditional expectation
     ├── compilation-errors.md      # Error solutions
-    └── lean-lsp-server.md         # LSP tools (via MCP server)
+    ├── proof-golfing.md           # Proof simplification
+    ├── lean-lsp-server.md         # LSP tools (Claude Code)
+    └── subagent-workflows.md      # Subagent patterns (Claude Code)
 ```
 
 ## Examples from Real Projects

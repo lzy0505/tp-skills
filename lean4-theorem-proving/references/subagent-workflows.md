@@ -12,6 +12,19 @@
 - **Cleaner conversation** - focus on proof strategy, not script output
 - **Consistent patterns** - all scripts designed for subagent delegation
 
+## Quick Reference
+
+**Key takeaways:**
+
+1. **Delegate mechanical tasks** - search, analysis, verification
+2. **Keep strategic work** - proof development, design decisions
+3. **Use Explore agents** - for most script execution (fast, cheap)
+4. **Be specific** - tell agent exactly what to report
+5. **Batch operations** - combine related tasks in one dispatch
+6. **6x token savings** - measured benefit across typical session
+
+**Remember:** The goal is to keep your main conversation focused on **proof strategy and tactics**, while automating everything else.
+
 ## Agent Types
 
 ### Explore Agent (Fast, Lightweight)
@@ -440,18 +453,5 @@ Is it multi-step with decisions?
 Otherwise:
 └─> Explore agent (default choice)
 ```
-
-## Summary
-
-**Key takeaways:**
-
-1. **Delegate mechanical tasks** - search, analysis, verification
-2. **Keep strategic work** - proof development, design decisions
-3. **Use Explore agents** - for most script execution (fast, cheap)
-4. **Be specific** - tell agent exactly what to report
-5. **Batch operations** - combine related tasks in one dispatch
-6. **6x token savings** - measured benefit across typical session
-
-**Remember:** The goal is to keep your main conversation focused on **proof strategy and tactics**, while automating everything else.
 
 See `scripts/README.md` for complete script documentation.

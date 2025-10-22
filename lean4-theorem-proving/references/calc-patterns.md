@@ -4,6 +4,23 @@
 
 Calc chains are powerful for chaining equalities and inequalities, but they interact with simplification in non-obvious ways. This guide shows common patterns and pitfalls.
 
+## Quick Reference
+
+**Key principles:**
+1. **After simp, check the actual goal state FIRST** - simp may or may not simplify depending on context
+2. **Start calc from whatever the goal actually is** - not what you expect it to be
+3. **Context matters** - `filter_upwards with ω` enables more simp simplifications than without
+4. **Use canonical forms** - `(m:ℝ)⁻¹` not `1/(m:ℝ)` (but only if simp produced it)
+5. **Don't fight simp** - work with its transformations, not against them
+6. **One simplification pass** - let simp do all transformations, then reason
+
+**Debugging checklist when calc fails:**
+- [ ] Did I use simp before calc?
+- [ ] Did I check the actual goal state after simp? (Use LSP or `sorry`)
+- [ ] Am I starting calc from the ACTUAL goal, not the expected simplified form?
+- [ ] If simp didn't simplify, am I converting in the first calc step?
+- [ ] Am I using canonical notation consistently?
+
 ## Critical Pattern: simp Before calc
 
 **The Problem:** After `simp [Real.norm_eq_abs]` (or any simp), you must start the calc chain with **whatever form the goal is actually in** after simp runs. This might be the simplified form OR the original form, depending on context.
@@ -227,20 +244,3 @@ calc (m:ℝ)⁻¹ * |∑...|
 calc (m:ℝ)⁻¹ * |∑...|
     _ ≤ (m:ℝ)⁻¹ * bound := ...
 ```
-
-## Summary
-
-**Key principles:**
-1. **After simp, check the actual goal state FIRST** - simp may or may not simplify depending on context
-2. **Start calc from whatever the goal actually is** - not what you expect it to be
-3. **Context matters** - `filter_upwards with ω` enables more simp simplifications than without
-4. **Use canonical forms** - `(m:ℝ)⁻¹` not `1/(m:ℝ)` (but only if simp produced it)
-5. **Don't fight simp** - work with its transformations, not against them
-6. **One simplification pass** - let simp do all transformations, then reason
-
-**Debugging checklist when calc fails:**
-- [ ] Did I use simp before calc?
-- [ ] Did I check the actual goal state after simp? (Use LSP or `sorry`)
-- [ ] Am I starting calc from the ACTUAL goal, not the expected simplified form?
-- [ ] If simp didn't simplify, am I converting in the first calc step?
-- [ ] Am I using canonical notation consistently?

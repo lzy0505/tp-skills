@@ -4,6 +4,23 @@ This reference provides comprehensive guidance on essential Lean 4 tactics, when
 
 **For natural language translations:** See [lean-phrasebook.md](lean-phrasebook.md) for "Mathematical English to Lean" patterns organized by proof situation.
 
+## Quick Reference
+
+| Want to... | Use... |
+|------------|--------|
+| Close with exact term | `exact` |
+| Apply lemma | `apply` |
+| Rewrite once | `rw [lemma]` |
+| Normalize expression | `simp`, `ring`, `norm_num` |
+| Split cases | `by_cases`, `cases`, `rcases` |
+| Prove exists | `use witness` |
+| Prove and/iff | `constructor` |
+| Prove function equality | `ext` / `funext` |
+| Explore options | `exact?`, `apply?`, `simp?` |
+| Automate domain-specific | `ring`, `linarith`, `continuity`, `measurability` |
+
+The most important tactic is the one you understand!
+
 ## Essential Tactics
 
 ### Simplification Tactics
@@ -576,20 +593,3 @@ by
   · -- Second goal
     sorry
 ```
-
-## Summary: When to Use What
-
-| Want to... | Use... |
-|------------|--------|
-| Close with exact term | `exact` |
-| Apply lemma | `apply` |
-| Rewrite once | `rw [lemma]` |
-| Normalize expression | `simp`, `ring`, `norm_num` |
-| Split cases | `by_cases`, `cases`, `rcases` |
-| Prove exists | `use witness` |
-| Prove and/iff | `constructor` |
-| Prove function equality | `ext` / `funext` |
-| Explore options | `exact?`, `apply?`, `simp?` |
-| Automate domain-specific | `ring`, `linarith`, `continuity`, `measurability` |
-
-The most important tactic is the one you understand!

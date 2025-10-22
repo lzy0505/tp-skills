@@ -9,6 +9,24 @@ This reference provides comprehensive guidance for finding, importing, and using
 
 Mathlib contains over 100,000 theorems. The probability that your "obvious lemma" is already there is high.
 
+## Quick Reference Workflow
+
+```
+1. Understand what you need mathematically
+2. Identify keywords and type signature
+3. Search using multiple strategies:
+   - File organization (ls, find)
+   - Keyword search (grep)
+   - Naming conventions (grep with patterns)
+4. Use Read tool to examine candidate files
+5. Verify with #check
+6. Import and use
+7. If not found, search alternative phrasings
+8. If still not found, prove it yourself (and consider contributing!)
+```
+
+This search workflow saves hours compared to reproving existing lemmas!
+
 ## Finding Existing Lemmas
 
 ### In-Editor Search (For Human Users)
@@ -469,23 +487,5 @@ lemma condExp_add : ...                       -- Operation on structure
 -- ❌ Bad names
 lemma my_helper_1 : ...                       -- Meaningless
 lemma the_thing_I_need : ...                  -- Not descriptive
-lemma cameron_lemma : ...                     -- Not about content
+lemma authors_lemma : ...                      -- Not about content
 ```
-
-## Summary Workflow
-
-```
-1. Understand what you need mathematically
-2. Identify keywords and type signature
-3. Search using multiple strategies:
-   - File organization (ls, find)
-   - Keyword search (grep)
-   - Naming conventions (grep with patterns)
-4. Use Read tool to examine candidate files
-5. Verify with #check
-6. Import and use
-7. If not found, search alternative phrasings
-8. If still not found, prove it yourself (and consider contributing!)
-```
-
-This search workflow saves hours compared to reproving existing lemmas!

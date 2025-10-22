@@ -109,6 +109,24 @@ simp only [my_def]
 apply other_lemma
 ```
 
+**simp with calc chains:**
+
+When using `simp` before a `calc` chain, the calc must start with the **already simplified form**, not the original expression. This is especially important with `simp [Real.norm_eq_abs]` which automatically converts `‖x‖` to `|x|`, `|a * b|` to `|a| * |b|`, and `1/(m:ℝ)` to `(m:ℝ)⁻¹`.
+
+```lean
+-- ❌ WRONG: calc starts with unsimplified form
+filter_upwards with ω; simp [Real.norm_eq_abs]
+calc |(1/(m:ℝ)) * ∑...|  -- simp already transformed this!
+    _ = (m:ℝ)⁻¹ * |∑...| := by rw [one_div, abs_mul]  -- redundant!
+
+-- ✅ CORRECT: calc starts with simplified form
+filter_upwards with ω; simp [Real.norm_eq_abs]
+calc (m:ℝ)⁻¹ * |∑...|  -- Start with what simp produced
+    _ ≤ ...            -- Focus on actual reasoning
+```
+
+**For detailed calc chain patterns, performance tips, and debugging workflows, see:** `references/calc-patterns.md`
+
 ### Case Analysis Tactics
 
 #### `by_cases` - Boolean/Decidable Split

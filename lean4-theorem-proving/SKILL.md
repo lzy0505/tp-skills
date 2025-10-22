@@ -540,6 +540,7 @@ Detailed reference files for deep dives:
 - **`references/mathlib-guide.md`** - Finding lemmas, import organization, naming conventions, search strategies
 - **`references/mathlib-style.md`** - Mathlib style conventions, copyright headers, naming, line length, formatting (with pointers to official docs)
 - **`references/tactics-reference.md`** - Comprehensive tactics guide, simp deep dive, tactic selection decision trees
+- **`references/calc-patterns.md`** - Calc chain patterns after simp, canonical forms, performance optimization for inequality chains
 - **`references/domain-patterns.md`** - Analysis, topology, algebra patterns; includes implicit parameter conventions (Pattern 9)
 - **`references/measure-theory.md`** - Sub-σ-algebras, conditional expectation, type class management, trimmed measures
 - **`references/compilation-errors.md`** - Detailed error explanations, debugging workflows, type class synthesis issues

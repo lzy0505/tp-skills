@@ -392,6 +392,109 @@ If tactics fail, try:
 4. Unfold custom definitions first, then automate
 5. For complex set operations, write direct structured proofs
 
+### Pattern 10: Measurable Structure Must Match Goal
+
+When using `Measurable.const_mul` with sums, the structure must match the goal's parenthesization.
+
+**The Problem:** Applying `const_mul` to each term of a sum when the goal has the constant wrapping the entire sum causes variable binding mismatches.
+
+**Error symptom:** `type mismatch, term has type Measurable (fun k => ...) but is expected to have type Measurable (fun ω => ...)`
+
+```lean
+-- ❌ WRONG: constant inside each term of the sum
+have hA_meas : Measurable (fun ω => (1/(m:ℝ)) * ∑ k : Fin m, indIic t (X (k.val + 1) ω)) :=
+  Finset.measurable_sum _ (fun k _ =>
+    Measurable.const_mul ((indIic_measurable t).comp (hX_meas _)) _)
+--  ^^^ This tries to apply const_mul to EACH TERM, giving wrong variable binding
+
+-- ✅ CORRECT: constant wraps the entire sum
+have hA_meas : Measurable (fun ω => (1/(m:ℝ)) * ∑ k : Fin m, indIic t (X (k.val + 1) ω)) :=
+  Measurable.const_mul (Finset.measurable_sum _ (fun k _ =>
+    ((indIic_measurable t).comp (hX_meas _)))) _
+--  ^^^ const_mul wraps the whole sum, matching the structure of the goal
+```
+
+**Key insight:** The structure must match the goal's parenthesization: `c * (∑ ...)` not `∑ (c * ...)`
+
+**General pattern:**
+```lean
+-- Goal: Measurable (fun ω => c * ∑ i, f i ω)
+
+-- CORRECT structure
+Measurable.const_mul (Finset.measurable_sum _ (fun i _ => measurable_f i)) c
+
+-- NOT: Finset.measurable_sum _ (fun i _ => Measurable.const_mul (measurable_f i) c)
+```
+
+### Pattern 11: Integrable.of_bound Type Matching
+
+When using `Integrable.of_bound` after simplification, the bound expression in the measurability hypothesis must match the canonical form that `simp` produces.
+
+**The Problem:** Defining measurability with `1/(m:ℝ)` but the goal (after simp) has `(m:ℝ)⁻¹` causes type mismatches.
+
+**Error symptom:** `type mismatch in application of Integrable.of_bound`
+
+```lean
+-- ❌ WRONG: Definition uses 1/(m:ℝ) but goal has (m:ℝ)⁻¹ after simp
+have hB_meas : Measurable (fun ω => 1/(m:ℝ) * ∑ i : Fin m, indIic t (X i ω)) := ...
+apply Integrable.of_bound hB_meas.aestronglyMeasurable 1
+filter_upwards with ω; simp [Real.norm_eq_abs]
+-- After simp, goal is: ⊢ (m:ℝ)⁻¹ * |∑ ...| ≤ 1
+-- But hB_meas has: 1/(m:ℝ) * ∑ ...
+-- Type mismatch!
+
+-- ✅ CORRECT: Use (m:ℝ)⁻¹ consistently from the start
+have hB_meas : Measurable (fun ω => (m:ℝ)⁻¹ * ∑ i : Fin m, indIic t (X i ω)) := ...
+apply Integrable.of_bound hB_meas.aestronglyMeasurable 1
+filter_upwards with ω; simp [Real.norm_eq_abs]
+-- After simp, goal is: ⊢ (m:ℝ)⁻¹ * |∑ ...| ≤ 1
+-- hB_meas matches exactly!
+```
+
+**Why this matters:**
+- `simp [Real.norm_eq_abs]` automatically converts `1/(m:ℝ)` to `(m:ℝ)⁻¹`
+- `Integrable.of_bound` expects the measurability hypothesis to match the simplified goal
+- Using canonical form `(m:ℝ)⁻¹` from the start avoids the mismatch
+
+**General rule:** When using `Integrable.of_bound` with calc chains or simp:
+1. Use canonical forms in the measurability hypothesis: `(m:ℝ)⁻¹` not `1/(m:ℝ)`
+2. See `references/calc-patterns.md` for canonical form conventions
+
+### Pattern 12: Pointwise Inequalities - intro vs filter_upwards
+
+For simple pointwise inequality proofs, `intro ω` often works better than `filter_upwards` when you just need to apply a lemma.
+
+**When to use `intro ω`:**
+- Proving simple pointwise inequalities (e.g., triangle inequality)
+- No measure theory structure needed in the proof
+- Just applying a mathematical lemma at each point
+
+**When to use `filter_upwards`:**
+- Need to combine multiple ae conditions
+- Reasoning about measurability or ae equality
+- Working with filter/measure-theory structure
+
+**Example:**
+
+```lean
+-- ❌ WRONG: filter_upwards doesn't unfold enough for simple inequalities
+· -- Pointwise bound: |a - c| ≤ |a - b| + |b - c|
+  filter_upwards with ω
+  exact abs_sub_le _ _ _
+-- Error: "tactic 'apply' failed, failed to unify"
+-- The filter_upwards leaves goal in implicit EventuallyEq form
+
+-- ✅ CORRECT: intro explicitly for simple pointwise proofs
+· -- Pointwise bound: |a - c| ≤ |a - b| + |b - c|
+  intro ω
+  exact abs_sub_le _ _ _
+-- Success: intro gives us the ω and explicit inequality
+```
+
+**General rule:**
+- Use `intro ω` when proving simple pointwise inequalities where you just need the point
+- Use `filter_upwards` when you need filter/measure-theory structure (measurability, ae conditions)
+
 **Automation Philosophy - Balancing Power with Readability:**
 
 Automation tactics are powerful but should serve clarity, not obscure it:

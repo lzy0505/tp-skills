@@ -258,6 +258,60 @@ termination_by measure_func x
 decreasing_by sorry  -- TODO: Prove later
 ```
 
+### 7. Unsolved Goals (Nat.pos_of_ne_zero and Arithmetic)
+
+**Full error message:**
+```
+unsolved goals
+h : m ≠ 0
+h2 : (4 : ℝ) / ε ≤ ↑m
+⊢ False
+```
+
+**What it means:** After introducing a contradiction hypothesis, the goal is `False` but the tactic can't derive the contradiction.
+
+**Common scenario:** Proving `m > 0` from `m ≠ 0` and some bound, but `norm_num` fails because the expressions are symbolic (not concrete numbers).
+
+**Why norm_num fails:**
+- `norm_num` works on **concrete numerical expressions** (like `2 + 2 = 4`)
+- When you have symbolic variables like `4/ε`, `norm_num` can't evaluate them
+- After `rw [h]` where `h : m = 0`, you get `4/ε ≤ 0`, but `norm_num` can't derive `False` from this
+
+**Solution: Use simp to eliminate variables, then linarith**
+
+```lean
+-- ❌ WRONG: norm_num can't solve symbolic arithmetic
+have hm_pos' : m > 0 := Nat.pos_of_ne_zero (by
+  intro h
+  rw [h] at h2  -- Now h2 : 4/ε ≤ 0
+  norm_num at h2  -- FAILS: can't derive False because 4/ε is symbolic
+  )
+-- Error: unsolved goals ⊢ False
+
+-- ✅ CORRECT: simp eliminates the variable, then linarith
+have hm_pos' : m > 0 := Nat.pos_of_ne_zero (by
+  intro h
+  simp [h] at h2  -- Now h2 : 4/ε ≤ 0 AND we eliminated m entirely
+  have : (4 : ℝ) / ε > 0 := by positivity  -- Explicit positivity proof
+  linarith)  -- Can now derive contradiction: 0 < 4/ε ≤ 0
+```
+
+**Key insight:**
+- `norm_num` = numerical normalization (concrete numbers)
+- `simp` = simplification (eliminates variables, unfolds definitions)
+- `linarith` = linear arithmetic solver (works with inequalities and symbolic expressions)
+
+**General pattern for contradiction proofs:**
+1. `simp [hypothesis]` to eliminate the contradictory assumption
+2. Establish any needed positivity facts with `positivity`
+3. `linarith` to derive the contradiction from inequalities
+
+**When to use each tactic:**
+- `norm_num`: Concrete arithmetic (`2 + 2 = 4`, `7 < 10`)
+- `simp`: Simplify using hypotheses and definitions
+- `linarith`: Linear inequalities with variables (`a + b ≤ c`, `x > 0 → x + 1 > 0`)
+- `omega`: Integer linear arithmetic (Lean 4.13+, works on `ℕ` and `ℤ`)
+
 ## Quick Debug Workflow
 
 When encountering any error:

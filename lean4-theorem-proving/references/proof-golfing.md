@@ -10,6 +10,125 @@ Systematic patterns for simplifying and cleaning up proofs after the file compil
 
 Don't prematurely optimize proofs while getting code to work. Once everything compiles, apply these patterns systematically.
 
+## Before You Start: Essential Setup
+
+### 1. Establish File Scope Boundaries
+
+**Ask the user first:**
+```
+"I want to golf proofs. Which files are safe to edit?
+Which are you actively working on or recently refactored?"
+```
+
+**Why this matters:** Avoid wasting time on files with:
+- Active work in progress (changes will conflict)
+- Recent refactoring (cleanup may already be done)
+- Uncommitted changes (your edits may get lost)
+
+**Good targets:**
+- Files marked as "stable"
+- Files that haven't changed in >1 week
+- Files user explicitly designates
+
+### 2. Get Concrete Golfing Targets
+
+**Ask for specific patterns to look for:**
+
+```
+"What patterns should I simplify? Examples:
+1. := by exact <term>  →  := <term>
+2. Multiple consecutive rw steps  →  rw [a, b, c]
+3. by intro x; exact f x  →  f
+4. Proofs with >5 consecutive 'have' statements
+5. Other patterns specific to your codebase?"
+```
+
+**Why this matters:** Generic "golf proofs" leads to:
+- Inconsistent style choices
+- Missing domain-specific simplifications
+- Time spent on patterns user doesn't care about
+
+### 3. See Examples from the Actual Codebase
+
+**Request before/after examples:**
+
+```
+"Can you show me one example from YOUR code of:
+- ❌ Verbose style (what to golf)
+- ✅ Concise style (target result)
+
+This helps me match your aesthetic preferences."
+```
+
+**Common style preferences to clarify:**
+- `simp [foo, bar]` vs `simp only [foo, bar]`
+- Term mode (`:= term`) vs tactic mode (`:= by tactics`)
+- Calc chains vs transitive `have` statements
+- Anonymous `have :` vs named `have h_property :`
+
+### 4. Check for Existing Tooling
+
+**Ask about automation:**
+
+```
+"Are there scripts or tools for finding golfing targets?
+Examples:
+- scripts/proof_complexity.sh - find longest proofs
+- lake env lean --find-unused - detect dead code
+- Custom linters or style checkers"
+```
+
+**Why this matters:** Use existing infrastructure instead of manual search
+
+### 5. Get Quick Context on Recent Changes
+
+**Ask before starting:**
+
+```
+"Any recent changes I should know about?
+- Files recently refactored (may already be clean)
+- Known cleanup targets (technical debt areas)
+- Style changes in progress (avoid conflicts)"
+```
+
+## Quick Reference: Common Patterns
+
+Based on real-world session that golfed 11 proofs (~22 lines saved):
+
+**Pattern 1: Remove `by exact` wrapper**
+```lean
+-- ❌ Before (2 lines)
+lemma foo : P := by
+  exact term
+
+-- ✅ After (1 line)
+lemma foo : P := term
+```
+
+**Pattern 2: Term mode for simple proofs**
+```lean
+-- ❌ Before
+have hb_val : b.val = 1 := by
+  exact le_antisymm hb_val_le (Nat.succ_le_of_lt hm_pos)
+
+-- ✅ After
+have hb_val : b.val = 1 :=
+  le_antisymm hb_val_le (Nat.succ_le_of_lt hm_pos)
+```
+
+**Pattern 3: Direct measurability terms**
+```lean
+-- ❌ Before
+have hXvec_meas : Measurable ... := by
+  exact measurable_pi_lambda _ (fun i => hX_meas i.val)
+
+-- ✅ After
+have hXvec_meas : Measurable ... :=
+  measurable_pi_lambda _ (fun i => hX_meas i.val)
+```
+
+**Impact from real session:** 11 proofs golfed, ~22 lines saved, all files compile cleanly.
+
 ## Simplification Patterns
 
 ### Pattern 1: Inline Single-Use Intermediate Lemmas

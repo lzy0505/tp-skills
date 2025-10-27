@@ -1,27 +1,28 @@
-# Lean 4 Specialized Subagents
+# Lean 4 Specialized Subagents (EXPERIMENTAL)
+
+**STATUS: EXPERIMENTAL** - These agents are under development. Prefer using the `/lean4-theorem-proving:*` slash commands for interactive workflows.
 
 Autonomous subagents for batch Lean 4 proof development tasks.
 
 ## Overview
 
-This plugin provides three specialized subagents designed to work autonomously on specific Lean 4 development workflows. Each subagent encodes best practices and lessons learned from real proof development sessions.
+This plugin provides three **EXPERIMENTAL** specialized subagents designed to work autonomously on specific Lean 4 development workflows. Each subagent references the lean4-theorem-proving skill for complete workflows and patterns.
 
 ## Subagents
 
-### 1. lean4-proof-golfer
+### 1. lean4-proof-golfer (EXPERIMENTAL)
 
 **Purpose:** Optimize Lean 4 proofs by shortening length or runtime while maintaining readability
 
 **When to use:** After proofs compile successfully to achieve 30-40% size reduction
 
-**Key features:**
+**How it works:**
+- Reads and follows `lean4-theorem-proving/references/proof-golfing.md`
+- Looks for bundled scripts in `~/.claude/skills/lean4-theorem-proving/scripts/`
+- Falls back to manual patterns if scripts not accessible
 - 4-phase workflow (Find → Verify Safety → Apply → Report)
-- **MUST verify safety** with `analyze_let_usage.py` before inlining
-- Filters out let bindings used ≥3 times (prevents false positives)
-- Saturation detection (stops when returns diminish)
-- Built-in pattern reference from proof-golfing.md
 
-**Integration:** Works with `/golf-proofs` slash command (interactive mode)
+**Prefer:** Use `/lean4-theorem-proving:golf-proofs` command for interactive guidance
 
 **Example dispatch:**
 ```
@@ -30,20 +31,19 @@ Dispatch lean4-proof-golfer subagent to optimize all proofs in ViaL2.lean
 
 ---
 
-### 2. lean4-sorry-filler
+### 2. lean4-sorry-filler (EXPERIMENTAL)
 
 **Purpose:** Fill incomplete proofs (sorries) using mathlib search and multi-candidate testing
 
 **When to use:** When tackling incomplete proofs systematically
 
-**Key features:**
-- 6-phase workflow (Understand → Search → Suggest → Generate → Test → Apply)
-- **Always searches mathlib first** (90% success rate)
-- Generates 2-3 candidates, tests with `lean_multi_attempt` if available
-- Documents failures for next attempt
-- Batch sorry-filling support
+**How it works:**
+- Reads and follows `lean4-theorem-proving` skill workflows
+- Looks for bundled scripts in `~/.claude/skills/lean4-theorem-proving/scripts/`
+- Falls back to WebFetch (leansearch, loogle) if scripts not accessible
+- 6-phase workflow (Understand → Search → Generate → Test → Apply → Report)
 
-**Integration:** Works with `/fill-sorry` and `/analyze-sorries` slash commands
+**Prefer:** Use `/lean4-theorem-proving:analyze-sorries` command for interactive guidance
 
 **Example dispatch:**
 ```
@@ -52,20 +52,19 @@ Dispatch lean4-sorry-filler subagent to fill all sorries in Probability/CondExp.
 
 ---
 
-### 3. lean4-axiom-eliminator
+### 3. lean4-axiom-eliminator (EXPERIMENTAL)
 
 **Purpose:** Systematically eliminate axioms and sorries from Lean 4 proofs
 
 **When to use:** After checking axiom hygiene to reduce axiom count to zero
 
-**Key features:**
-- 7-phase workflow (Audit → Plan → Search → Eliminate → Handle Dependencies → Track → Verify)
-- Exhaustive mathlib search before proving from scratch
-- Prioritizes high-impact axioms (used multiple times)
-- Tracks elimination progress
-- Distinguishes custom axioms from mathlib foundational axioms
+**How it works:**
+- Reads and follows `lean4-theorem-proving/commands/check-axioms.md` workflow
+- Looks for bundled scripts in `~/.claude/skills/lean4-theorem-proving/scripts/`
+- Falls back to `#print axioms` and manual checking if scripts not accessible
+- 6-phase workflow (Audit → Plan → Search → Eliminate → Track → Verify)
 
-**Integration:** Works with `/check-axioms` slash command
+**Prefer:** Use `/lean4-theorem-proving:check-axioms` command for interactive guidance
 
 **Example dispatch:**
 ```

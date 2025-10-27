@@ -8,7 +8,7 @@ Claude Skills, commands, and agents for systematic development of formal proofs 
 |--------|----------|-------------|--------------|
 | **[lean4-theorem-proving](plugins/lean4-theorem-proving/)** | Skill + 6 Commands | Core workflows, 16 automation tools, best practices | None |
 | **[lean4-memories](plugins/lean4-memories/)** | Skill | Persistent learning across sessions | lean4-theorem-proving + MCP memory server |
-| **[lean4-subagents](plugins/lean4-subagents/)** | 3 Agents | Specialized agents for proof optimization, sorry filling, axiom checking | lean4-theorem-proving |
+| **[lean4-subagents](plugins/lean4-subagents/)** | 3 Agents (EXPERIMENTAL) | Specialized agents for proof optimization, sorry filling, axiom elimination | lean4-theorem-proving |
 
 ## Quick Start
 
@@ -91,14 +91,14 @@ Optional persistent learning across Lean 4 sessions. Extends lean4-theorem-provi
 
 ➡️ **[Full Documentation](plugins/lean4-memories/README.md)**
 
-## lean4-subagents
+## lean4-subagents (EXPERIMENTAL)
 
 Specialized agents for targeted Lean 4 development tasks. Extends lean4-theorem-proving with automation.
 
 **What you get:**
 - **lean4-proof-golfer** - Optimize proofs by reducing length/runtime (30-40% reduction)
 - **lean4-sorry-filler** - Fill in sorry placeholders systematically
-- **lean4-axiom-checker** - Verify axiom hygiene across theorems
+- **lean4-axiom-eliminator** - Eliminate custom axioms, reduce axiom count to zero
 
 **Perfect for:**
 - Polishing proofs before publication

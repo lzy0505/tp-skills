@@ -34,16 +34,16 @@ Run the analyzer based on user's scope choice:
 !`python3 .claude/tools/lean4/sorry_analyzer.py . --format=text`
 
 **For specific file or directory:**
-!`python3 .claude/tools/lean4/sorry_analyzer.py <path> --format=text`
+!`python3 .claude/tools/lean4/sorry_analyzer.py PATH --format=text`
 
 **For interactive TUI mode:**
-!`python3 .claude/tools/lean4/sorry_analyzer.py <path> --interactive`
+!`python3 .claude/tools/lean4/sorry_analyzer.py PATH --interactive`
 
-Replace `<path>` with the actual file or directory path from step 1.
+Replace `PATH` with the actual file or directory path from step 1.
 
 **If the script is not available or fails, use grep fallback:**
 ```bash
-grep -n "sorry" <path> --include="*.lean" -r
+grep -n "sorry" PATH --include="*.lean" -r
 ```
 
 ### 3. Present Results

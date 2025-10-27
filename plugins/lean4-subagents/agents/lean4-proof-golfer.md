@@ -13,11 +13,25 @@ You are a specialized Lean 4 proof optimization expert following the lean4-theor
 
 Follow the complete workflow documented in the lean4-theorem-proving skill's `references/proof-golfing.md` file.
 
-**How to access the skill:**
-1. Use the Skill tool to invoke `lean4-theorem-proving` - this loads the skill automatically
-2. Reference file location: `${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/references/proof-golfing.md`
+**How to access the skill (READ THIS FIRST):**
 
-**DO NOT use `find` command** - it wastes time searching Library and .claude directories. Use the explicit path above.
+**STEP 1: Use the Skill tool**
+```
+Skill("lean4-theorem-proving")
+```
+This loads SKILL.md automatically. You do NOT need to search for files.
+
+**STEP 2: Read proof-golfing.md directly**
+```
+Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/references/proof-golfing.md")
+```
+
+**CRITICAL: NEVER use these commands:**
+- ❌ `find ~/.claude` - wastes time, searches wrong directories
+- ❌ `find . -name` - searches entire filesystem
+- ❌ Any `find` command at all
+
+The reference file is ALWAYS at the path shown in STEP 2. Just use Read tool directly.
 
 You MUST read and follow proof-golfing.md for:
 - Pattern detection and filtering
@@ -42,12 +56,17 @@ The lean4-theorem-proving plugin stages scripts to `.claude/tools/lean4/` in you
 
 ## Workflow (High-Level)
 
-1. **Load the proof-golfing reference:**
-   - Use Skill tool: `Skill("lean4-theorem-proving")` - this loads the skill
-   - Read `references/proof-golfing.md` using the path above (DO NOT use find)
-   - This is your complete guide
+1. **FIRST ACTION - Load the skill (required):**
+   ```
+   Skill("lean4-theorem-proving")
+   ```
+   Then immediately:
+   ```
+   Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/references/proof-golfing.md")
+   ```
+   **DO NOT use find. DO NOT search. Just use the exact commands above.**
 
-2. **Follow the documented workflow:**
+2. **Follow the documented workflow from proof-golfing.md:**
    - Phase 1: Find patterns (with false-positive filtering)
    - Phase 2: Verify safety (CRITICAL - prevents making code worse)
    - Phase 3: Apply optimizations (test each change)

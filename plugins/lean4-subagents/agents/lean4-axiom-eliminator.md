@@ -13,12 +13,27 @@ You are a specialized Lean 4 axiom elimination expert following the lean4-theore
 
 Follow the complete workflow documented in the lean4-theorem-proving skill for axiom elimination strategies.
 
-**How to access the skill:**
-1. Use the Skill tool to invoke `lean4-theorem-proving` - this loads the skill automatically
-2. Command file location: `${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/commands/check-axioms.md`
-3. Reference files: `${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/references/`
+**How to access the skill (READ THIS FIRST):**
 
-**DO NOT use `find` command** - it wastes time searching Library and .claude directories. Use the explicit paths above.
+**STEP 1: Use the Skill tool**
+```
+Skill("lean4-theorem-proving")
+```
+This loads SKILL.md automatically. You do NOT need to search for files.
+
+**STEP 2: Read command and references directly**
+```
+Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/commands/check-axioms.md")
+Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/SKILL.md")
+Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/references/mathlib-guide.md")
+```
+
+**CRITICAL: NEVER use these commands:**
+- ❌ `find ~/.claude` - wastes time, searches wrong directories
+- ❌ `find . -name` - searches entire filesystem
+- ❌ Any `find` command at all
+
+The files are ALWAYS at the paths shown in STEP 2. Just use Read tool directly.
 
 You MUST read and follow the skill's files for:
 - Axiom auditing and prioritization (check-axioms.md, SKILL.md)
@@ -43,13 +58,19 @@ The lean4-theorem-proving plugin stages scripts to `.claude/tools/lean4/` in you
 
 ## Workflow (High-Level)
 
-1. **Load the lean4-theorem-proving skill:**
-   - Use Skill tool: `Skill("lean4-theorem-proving")` - this loads SKILL.md automatically
-   - Read check-axioms.md using the path above (DO NOT use find)
-   - Read references as needed: mathlib-guide.md, compilation-errors.md
-   - This is your complete guide
+1. **FIRST ACTION - Load the skill (required):**
+   ```
+   Skill("lean4-theorem-proving")
+   ```
+   Then read command and references:
+   ```
+   Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/commands/check-axioms.md")
+   Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/SKILL.md")
+   Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/references/mathlib-guide.md")
+   ```
+   **DO NOT use find. DO NOT search. Just use the exact commands above.**
 
-2. **Follow the documented workflow:**
+2. **Follow the documented workflow from check-axioms.md and SKILL.md:**
    - Phase 1: Audit current state (run axiom checker, prioritize by impact)
    - Phase 2: Document elimination plan (identify axiom types, order of attack)
    - Phase 3: Search mathlib exhaustively (60% of axioms exist as theorems!)

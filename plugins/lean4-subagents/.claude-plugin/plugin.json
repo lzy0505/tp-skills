@@ -5,12 +5,5 @@
   "author": {
     "name": "Cameron Freer",
     "email": "cameronfreer@gmail.com"
-  },
-  "category": "lean4",
-  "requires": {
-    "skills": ["lean4-theorem-proving"]
-  },
-  "optional": {
-    "mcpServers": ["lean-lsp-mcp"]
   }
 }

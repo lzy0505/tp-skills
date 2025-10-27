@@ -1,53 +1,59 @@
 ---
 description: Analyze Lean 4 sorries in the current repo and summarize hotspots
-allowed-tools: Bash(python3:*), Bash(test:*), Bash(echo:*), Bash(cat:*), Bash(grep:*), Bash(find:*), Bash(xargs:*), Bash(sed:*), Bash(awk:*)
+allowed-tools: Bash(python3:*), Bash(ls:*)
 ---
 
 # Sorry Analysis and Planning
 
 Interactive analysis of incomplete proofs to plan systematic sorry-filling work.
 
+## Default: Analyze Entire Project
+
+Run analysis on the entire project:
+
+!`python3 .claude/tools/lean4/sorry_analyzer.py . --format=text`
+
+**Note:** If this fails, the SessionStart hook may not have staged the analyzer. Restart your session after reinstalling the plugin.
+
 ## Workflow
 
 ### 1. Determine Scope
 
-**Ask user if not specified:**
+**Ask user if analyzing specific scope:**
 ```
 Analyze sorries in:
-1. Current file ([detect from context])
-2. Specific directory (e.g., src/)
-3. Entire project (.)
+1. Specific file (provide path)
+2. Specific directory (provide path)
+3. Entire project (default above)
 4. Interactive mode (TUI browser)
 
 Which scope? (1/2/3/4)
 ```
 
-### 2. Run Analysis
+### 2. Run Analysis for Specific Scope
 
-Verify bootstrap staged the analyzer:
+Based on user's choice, construct and execute ONE of these commands:
 
-!`test -f .claude/tools/lean4/sorry_analyzer.py || { echo ":: analyzer missing; restart session or reinstall plugin."; exit 1; }`
-
-Run the analyzer based on user's scope choice.
-
-**For entire project:**
+**For specific file (replace with actual path):**
 ```bash
-python3 .claude/tools/lean4/sorry_analyzer.py . --format=text
+python3 .claude/tools/lean4/sorry_analyzer.py MyFile.lean --format=text
 ```
 
-**For specific file or directory (replace PATH with actual path):**
+**For specific directory (replace with actual path):**
 ```bash
-python3 .claude/tools/lean4/sorry_analyzer.py PATH --format=text
+python3 .claude/tools/lean4/sorry_analyzer.py src/ --format=text
 ```
 
-**For interactive TUI mode (replace PATH with actual path):**
+**For interactive TUI mode (replace with actual path):**
 ```bash
-python3 .claude/tools/lean4/sorry_analyzer.py PATH --interactive
+python3 .claude/tools/lean4/sorry_analyzer.py . --interactive
 ```
 
-**If the script is not available or fails, use grep fallback:**
+**IMPORTANT:** Never use placeholders like `PATH` or `<path>` in executed commands. Always use concrete file paths provided by the user.
+
+**If the script is not available, use grep fallback:**
 ```bash
-grep -n "sorry" PATH --include="*.lean" -r
+grep -n "sorry" . --include="*.lean" -r
 ```
 
 ### 3. Present Results
@@ -292,10 +298,11 @@ Error: [error message]
 
 Common causes:
 - Not in a Lean project directory
-- Python not installed
+- SessionStart hook didn't stage analyzer (restart session)
+- Python not installed (requires Python 3.6+)
 - File encoding issues
 
-Try: Run from project root with Python 3.6+
+Try: Ensure you're in project root with Python 3.6+
 ```
 
 **If no $EDITOR set (interactive mode):**
@@ -325,6 +332,7 @@ Then re-run in interactive mode.
 - Skip the "Easy" ones thinking they're not important
 - Forget to update documentation when strategy changes
 - Let sorry count grow unbounded
+- Use placeholders in executed commands
 
 ## Related Commands
 

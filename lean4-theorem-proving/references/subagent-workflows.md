@@ -59,6 +59,49 @@
 - "Analyze proof complexity and suggest refactoring priorities with reasoning"
 - "Compare multiple proof approaches and explain tradeoffs"
 
+### Specialized Subagents (lean4-subagents Plugin)
+
+**Optional plugin:** If you have the `lean4-subagents` plugin installed, three specialized subagents are available:
+
+**1. lean4-proof-golfer**
+- **Purpose:** Systematically optimize Lean 4 proofs with false-positive filtering
+- **When to use:** After proofs compile successfully to achieve 30-40% size reduction
+- **Key feature:** MUST verify safety with analyze_let_usage.py before inlining let bindings
+- **Integration:** Works with /golf-proofs slash command
+
+**2. lean4-sorry-filler**
+- **Purpose:** Fill incomplete proofs (sorries) using mathlib search and multi-candidate testing
+- **When to use:** When tackling incomplete proofs systematically
+- **Key feature:** Searches mathlib first (90% success rate), generates 2-3 candidates, tests in parallel
+- **Integration:** Works with /fill-sorry and /analyze-sorries slash commands
+
+**3. lean4-axiom-eliminator**
+- **Purpose:** Systematically eliminate axioms and sorries from Lean 4 proofs
+- **When to use:** After checking axiom hygiene to reduce axiom count to zero
+- **Key feature:** Exhaustive mathlib search, prioritizes high-impact axioms, tracks elimination progress
+- **Integration:** Works with /check-axioms slash command
+
+**How these differ from Explore/General-Purpose:**
+- **Specialized workflows:** Each has a domain-specific multi-phase workflow
+- **Built-in best practices:** Encode lessons learned from proof development sessions
+- **Autonomous operation:** Can work through entire batches of similar tasks
+- **Quality gates:** Built-in safety checks and verification steps
+
+**When to use specialized vs general subagents:**
+```
+Task: "Optimize these 5 proofs"
+✅ Dispatch lean4-proof-golfer (specialized workflow with safety checks)
+❌ Dispatch general-purpose agent to run find_golfable.py (misses false-positive filtering)
+
+Task: "Find mathlib lemmas for this sorry"
+✅ Dispatch Explore agent to run smart_search.sh (simple delegation)
+❌ Dispatch lean4-sorry-filler (overkill for single search)
+
+Task: "Fill all 15 sorries in this file"
+✅ Dispatch lean4-sorry-filler (batch processing with testing)
+❌ Manual iteration in main conversation (inefficient)
+```
+
 ## When to Dispatch Subagents
 
 ### ✅ Dispatch Subagents For

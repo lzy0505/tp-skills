@@ -1,0 +1,13 @@
+{
+  "name": "lean4-subagents",
+  "version": "1.0.0",
+  "description": "Specialized subagents for Lean 4 proof development workflows",
+  "author": "lean4-skills",
+  "category": "lean4",
+  "requires": {
+    "skills": ["lean4-theorem-proving"]
+  },
+  "optional": {
+    "mcpServers": ["lean-lsp-mcp"]
+  }
+}

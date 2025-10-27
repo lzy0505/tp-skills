@@ -380,6 +380,46 @@ have hlt : j < j_succ := by simp [Fin.lt_iff_val_lt_val, j, j_succ]
 - `List.length_cons` followed by `Nat.succ_pos`
 - Any standard library fact that `simp` knows
 
+**Pattern 9: `have`-`calc` single-use elimination** ⭐ NEW
+
+When a `have` statement is used exactly once in the immediately following `calc` chain, inline it directly.
+
+```lean
+-- ❌ Before (4 lines, ~15 tokens)
+have hsqrt : Real.sqrt (Cf / m) < Real.sqrt (ε^2 / 4) :=
+  Real.sqrt_lt_sqrt hnonneg hlt
+calc Real.sqrt (Cf / m)
+    < Real.sqrt (ε^2 / 4) := hsqrt
+
+-- ✅ After (2 lines, ~13 tokens)
+calc Real.sqrt (Cf / m)
+    < Real.sqrt (ε^2 / 4) := Real.sqrt_lt_sqrt hnonneg hlt
+```
+
+**When to inline:**
+- ✅ `have` used exactly once in subsequent `calc`
+- ✅ Proof term is short-to-medium length (<40 chars)
+- ✅ No descriptive value lost (name like `hsqrt` vs meaningful name like `monotonicity_property`)
+
+**When NOT to inline:**
+- ❌ `have` binding used multiple times in `calc` chain
+- ❌ Proof term is very long (>40 chars) - hurts readability
+- ❌ Descriptive name aids understanding (e.g., `h_measurable`, `continuity_at_x`)
+- ❌ `have` binding reused outside the `calc` block
+
+**Why this works:**
+- `calc` chains are inherently readable due to structure
+- Single-use bindings add no semantic value
+- Direct proof term in calc step is just as clear
+
+**Savings:** ~50% line reduction (4 lines → 2 lines), ~13% token reduction
+
+**Detection strategy:** Look for pattern:
+1. Line N: `have h_name : Type := proof`
+2. Line N+1 (or nearby): `calc ...`
+3. Within calc: `:= h_name` appears exactly once
+4. `h_name` not used elsewhere in scope
+
 **Impact from real sessions:**
 - Session 1: 11 proofs, ~22 lines saved
 - Session 2: 3 proofs, ~26 lines saved (76.5% reduction avg)

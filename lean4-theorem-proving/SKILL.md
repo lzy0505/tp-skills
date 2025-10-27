@@ -39,22 +39,22 @@ Use these workflows for ANY Lean 4 development across all mathematical domains:
 
 **🎯 Six interactive workflows available:**
 
-1. **/build-lean** - Build project with formatted error analysis and fix suggestions
-2. **/check-axioms** - Verify axiom hygiene and get elimination strategies
-3. **/golf-proofs** - Optimize proofs systematically with false-positive filtering (30-40% size reduction)
-4. **/fill-sorry** - Fill incomplete proofs with mathlib search, tactic suggestions, and multi-candidate testing
-5. **/analyze-sorries** - Categorize all sorries and plan which to tackle first
-6. **/search-mathlib** - Fast mathlib lemma search with 4 search modes (name, semantic, type pattern, content)
+1. **/lean:build-lean** - Build project with formatted error analysis and fix suggestions
+2. **/lean:check-axioms** - Verify axiom hygiene and get elimination strategies
+3. **/lean:golf-proofs** - Optimize proofs systematically with false-positive filtering (30-40% size reduction)
+4. **/lean:fill-sorry** - Fill incomplete proofs with mathlib search, tactic suggestions, and multi-candidate testing
+5. **/lean:analyze-sorries** - Categorize all sorries and plan which to tackle first
+6. **/lean:search-mathlib** - Fast mathlib lemma search with 4 search modes (name, semantic, type pattern, content)
 
 **Usage examples:**
 ```
-You: /build-lean
+You: /lean:build-lean
 Claude: [Runs lake build, analyzes errors, offers fixes interactively]
 
-You: /search-mathlib continuous compact
+You: /lean:search-mathlib continuous compact
 Claude: [Searches mathlib, shows top results with import paths]
 
-You: /fill-sorry MyFile.lean:245
+You: /lean:fill-sorry MyFile.lean:245
 Claude: [Analyzes sorry, searches mathlib, generates candidates, tests them]
 ```
 
@@ -62,16 +62,16 @@ Claude: [Analyzes sorry, searches mathlib, generates candidates, tests them]
 
 If you install the `lean4-subagents` plugin, three specialized subagents become available:
 
-- **lean4-proof-golfer** - Systematically optimize proofs after compilation (works with /golf-proofs)
-- **lean4-sorry-filler** - Batch fill incomplete proofs (works with /fill-sorry and /analyze-sorries)
-- **lean4-axiom-eliminator** - Eliminate axioms and replace with proofs (works with /check-axioms)
+- **lean4-proof-golfer** - Systematically optimize proofs after compilation (works with /lean:golf-proofs)
+- **lean4-sorry-filler** - Batch fill incomplete proofs (works with /lean:fill-sorry and /lean:analyze-sorries)
+- **lean4-axiom-eliminator** - Eliminate axioms and replace with proofs (works with /lean:check-axioms)
 
 **When to use:**
 ```
-Single sorry: Use /fill-sorry slash command (interactive)
+Single sorry: Use /lean:fill-sorry slash command (interactive)
 Batch of 15 sorries: Dispatch lean4-sorry-filler subagent (autonomous)
 
-Single proof to optimize: Use /golf-proofs slash command (interactive)
+Single proof to optimize: Use /lean:golf-proofs slash command (interactive)
 Optimize all proofs in file: Dispatch lean4-proof-golfer subagent (autonomous)
 ```
 

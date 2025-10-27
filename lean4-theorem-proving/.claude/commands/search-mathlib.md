@@ -1,5 +1,5 @@
 ---
-name: search-mathlib
+name: lean:search-mathlib
 description: Fast search for existing lemmas in mathlib to avoid reproving standard results
 ---
 

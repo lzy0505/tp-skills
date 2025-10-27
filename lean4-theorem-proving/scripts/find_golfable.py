@@ -221,6 +221,115 @@ def find_multiple_haves(file_path: Path, lines: List[str]) -> List[GolfablePatte
 
     return patterns
 
+def find_have_calc(file_path: Path, lines: List[str]) -> List[GolfablePattern]:
+    """Find have statements used once in immediately following calc chain.
+
+    Pattern:
+        have h_name : Type := proof
+        calc expr
+            relationship value := h_name
+
+    Where h_name is used exactly once in the calc and nowhere else.
+    """
+    patterns = []
+    i = 0
+
+    while i < len(lines):
+        line = lines[i].strip()
+
+        # Look for "have" statements with binding name
+        # Match: "have h_name : Type := proof" or multi-line variants
+        match = re.match(r'have\s+(\w+)\s*:', line)
+        if match:
+            have_name = match.group(1)
+            have_line = i
+
+            # Look for calc in next 5 lines (allowing some spacing)
+            calc_line = None
+            for j in range(i + 1, min(i + 6, len(lines))):
+                if re.match(r'\s*calc\s+', lines[j]):
+                    calc_line = j
+                    break
+
+            if calc_line is not None:
+                # Find the end of calc block (next unindented line or theorem/lemma/def)
+                calc_end = calc_line + 1
+                base_indent = len(lines[calc_line]) - len(lines[calc_line].lstrip())
+
+                for j in range(calc_line + 1, min(calc_line + 20, len(lines))):
+                    line_content = lines[j]
+                    stripped = line_content.strip()
+
+                    # Empty lines or comments don't end calc
+                    if not stripped or stripped.startswith('--'):
+                        calc_end = j + 1
+                        continue
+
+                    # Check indentation
+                    indent = len(line_content) - len(line_content.lstrip())
+
+                    # If less indented than calc start, we've exited the calc block
+                    if indent <= base_indent and not re.match(r'\s*[<>=≤≥_]', line_content):
+                        break
+
+                    calc_end = j + 1
+
+                # Count uses of have_name within calc block
+                calc_uses = 0
+                for j in range(calc_line, calc_end):
+                    calc_text = lines[j]
+                    # Remove comments
+                    calc_text = re.sub(r'--.*$', '', calc_text)
+                    # Count occurrences as whole word
+                    pattern = r'\b' + re.escape(have_name) + r'\b'
+                    calc_uses += len(re.findall(pattern, calc_text))
+
+                # Count uses after calc block
+                after_calc_uses = 0
+                for j in range(calc_end, min(calc_end + 20, len(lines))):
+                    after_text = lines[j]
+                    # Stop at next theorem/lemma/def
+                    if re.match(r'\s*(theorem|lemma|def|example)\s+', after_text):
+                        break
+                    # Remove comments
+                    after_text = re.sub(r'--.*$', '', after_text)
+                    # Count occurrences
+                    pattern = r'\b' + re.escape(have_name) + r'\b'
+                    after_calc_uses += len(re.findall(pattern, after_text))
+
+                # Pattern detected: exactly 1 use in calc, 0 uses after
+                if calc_uses == 1 and after_calc_uses == 0:
+                    # Get proof term length (rough estimate)
+                    have_full_text = lines[have_line:calc_line]
+                    proof_length = sum(len(l.strip()) for l in have_full_text)
+
+                    # Determine priority based on proof length
+                    if proof_length > 80:
+                        priority = "LOW"  # Long proof, readability matters
+                        reduction = "30-40%"
+                    else:
+                        priority = "MEDIUM"
+                        reduction = "40-50%"
+
+                    snippet_lines = lines[have_line:min(calc_end, have_line + 8)]
+                    snippet = ''.join(snippet_lines)
+
+                    patterns.append(GolfablePattern(
+                        pattern_type="have-calc single-use",
+                        file_path=str(file_path),
+                        line_number=have_line + 1,  # 1-indexed
+                        line_count=calc_line - have_line + 1,
+                        snippet=snippet[:200] + "..." if len(snippet) > 200 else snippet,
+                        reduction_estimate=reduction,
+                        priority=priority
+                    ))
+
+                    i = calc_end - 1
+
+        i += 1
+
+    return patterns
+
 def analyze_file(file_path: Path, pattern_types: Optional[List[str]] = None,
                 filter_false_positives: bool = False) -> List[GolfablePattern]:
     """Analyze a file for optimization patterns.
@@ -239,11 +348,13 @@ def analyze_file(file_path: Path, pattern_types: Optional[List[str]] = None,
 
     # If no specific patterns requested, find all
     if pattern_types is None or 'all' in pattern_types:
-        pattern_types = ['let-have-exact', 'by-exact', 'calc', 'constructor', 'multiple-haves']
+        pattern_types = ['let-have-exact', 'have-calc', 'by-exact', 'calc', 'constructor', 'multiple-haves']
 
     for pattern_type in pattern_types:
         if pattern_type == 'let-have-exact':
             patterns = find_let_have_exact(file_path, lines, filter_false_positives)
+        elif pattern_type == 'have-calc':
+            patterns = find_have_calc(file_path, lines)
         elif pattern_type == 'by-exact':
             patterns = find_by_exact(file_path, lines)
         elif pattern_type == 'calc':
@@ -317,6 +428,7 @@ Examples:
 
 Pattern types:
   let-have-exact  : let + have + exact pattern (HIGHEST value, 60-80%% reduction)
+  have-calc       : have used once in following calc (MEDIUM value, 40-50%% reduction)
   by-exact        : by-exact wrapper pattern (50%% reduction)
   calc            : Long calc chains (30-50%% reduction)
   constructor     : Constructor branches (25-50%% reduction)

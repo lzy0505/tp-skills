@@ -16,14 +16,23 @@
 |---------|---------|------|----------|-------|
 | `rw; exact` → `rwa` | 50% | Zero | ⭐⭐⭐⭐⭐ | Always safe, instant |
 | `ext + rfl` → `rfl` | 67% | Low | ⭐⭐⭐⭐⭐ | Test first, revert if fails |
+| **intro-dsimp-exact → lambda** | **75%** | **Low** | **⭐⭐⭐⭐⭐** | **Tactic proof → direct term** |
 | let+have+exact inline | 60-80% | HIGH | ⭐⭐⭐⭐⭐ | MUST verify usage ≤2x |
+| **Single-use `have` inline (general)** | **30-50%** | **Low** | **⭐⭐⭐⭐** | **Beyond calc blocks** |
+| **Remove redundant `show` wrappers** | **50-75%** | **Low** | **⭐⭐⭐⭐** | **`simp` handles it** |
+| **Convert-based helper inlining** | **30-40%** | **Medium** | **⭐⭐⭐⭐** | **`convert ... using N`** |
 | Redundant `ext` before `simp` | 50% | Medium | ⭐⭐⭐⭐ | Not all ext is redundant |
 | `congr; ext; rw` → `simp only` | 67% | Medium | ⭐⭐⭐⭐ | simp is smarter than you think |
+| **`simpa using` → `exact`** | **1 token** | **Zero** | **⭐⭐⭐** | **When `simp` does nothing** |
+| **Unused lambda variables cleanup** | **0 lines** | **Zero** | **⭐⭐⭐** | **Eliminates linter warnings** |
 | Smart `ext` (nested) | 50% | Low | ⭐⭐⭐ | ext handles multiple layers |
 | `simp` closes goals directly | 67% | Low | ⭐⭐⭐ | Remove explicit `exact` |
 | have-calc single-use inline | 50% | Low | ⭐⭐⭐ | Only if used once in calc |
+| **Remove duplicate inline comments** | **Lines** | **Zero** | **⭐⭐** | **If docstring is complete** |
 | ext-simp chain combination | Variable | Medium | ⭐⭐ | Only when saves ≥2 lines |
 | Arithmetic with automation | 30-50% | Medium | ⭐⭐ | Direct lemmas often better |
+
+**New patterns in bold** - discovered from real-world optimization sessions.
 
 **ROI Strategy:** Do ⭐⭐⭐⭐⭐ first (instant wins), then ⭐⭐⭐⭐ (quick with testing), skip ⭐-⭐⭐ if time-limited.
 
@@ -104,6 +113,57 @@ have h : proj ∘ (fun ω => fun i : ℕ => X i ω)
 **Savings:** 67% reduction
 **Warning:** Not all `ext + rfl` can be simplified!
 
+### Pattern 2A: `intro-dsimp-exact` → Direct Lambda
+
+**⭐⭐⭐⭐⭐ HIGH-IMPACT PATTERN** - Common and gives 75% reduction!
+
+Convert tactic proofs that just unfold and extract a term into direct lambda expressions.
+
+```lean
+-- Before (4 lines)
+have hι_mem : ∀ i : Fin m, p (ι i) := by
+  intro i
+  dsimp [p, ι]
+  exact i.isLt
+
+-- After (1 line)
+have hι_mem : ∀ i : Fin m, p (ι i) := fun i => i.isLt
+```
+
+**When to apply:**
+- Proof is `intro x; dsimp [...]; exact term`
+- The `term` is just field access or coercion after unfolding
+- No complex logic, just definitional simplification
+
+**Pattern recognition:**
+```lean
+-- Generic pattern
+have h : ∀ x, P x := by
+  intro x
+  dsimp [definitions]
+  exact simple_term_involving_x
+
+-- Becomes
+have h : ∀ x, P x := fun x => simple_term_involving_x
+```
+
+**When:** Tactic proof is just intro + trivial unfolding + term extraction
+**Risk:** Low (if proof body is just field access after unfolding)
+**Savings:** 75% reduction (4 lines → 1 line)
+
+**Real-world example:**
+```lean
+-- Before
+have hk_inj : Function.Injective k' := by
+  intro i j hij
+  simp only [k'] at hij
+  exact Fin.val_injective (hk_inj hij)
+
+-- After
+have hk_inj : Function.Injective k' := fun i j hij =>
+  Fin.val_injective (hk_inj hij)
+```
+
 ### Pattern 3: let+have+exact Inline
 
 **⚠️ MOST VALUABLE but HIGHEST RISK - MUST verify safety first!**
@@ -141,6 +201,42 @@ lemma foo ... := by
 
 **Savings:** 60-80% reduction when applicable
 **Risk:** HIGH (93% false positive rate without verification)
+
+### Pattern 3A: General Single-Use `have` Inlining (⭐⭐⭐⭐)
+
+**Extension of Pattern 3** - Applies beyond `let+have+exact` to ANY single-use `have` statement.
+
+```lean
+-- Before (3 lines)
+have hf_id_meas : Measurable f_id := measurable_pi_lambda _ ...
+have hf_perm_meas : Measurable f_perm := measurable_pi_lambda _ ...
+rw [← Measure.map_map hproj_meas hf_perm_meas,
+    ← Measure.map_map hproj_meas hf_id_meas]
+
+-- After (inline directly when used once - 2 lines)
+rw [← Measure.map_map hproj_meas (measurable_pi_lambda _ ...),
+    ← Measure.map_map hproj_meas (measurable_pi_lambda _ ...)]
+```
+
+**When to apply (ALL must be true):**
+- ✅ `have` used exactly once anywhere in proof (not just calc)
+- ✅ Proof term < 40 chars or low complexity
+- ✅ No semantic naming value (name like `h_meas` vs descriptive `homotopy_preserves_paths`)
+- ✅ Doesn't obscure proof flow
+
+**When NOT to apply:**
+- ❌ `have` used ≥2 times
+- ❌ Long or complex proof term (would hurt readability)
+- ❌ Semantic name aids understanding
+- ❌ Part of structured proof narrative
+
+**Difference from docs Pattern 8 (have-calc):**
+- Docs focus on calc-specific inlining
+- This pattern applies to ALL single-use haves
+- Same safety principles, broader application
+
+**Savings:** 30-50% per instance
+**Risk:** Low (if truly single-use and term is simple)
 
 ## Medium-Priority Patterns (⭐⭐⭐⭐)
 
@@ -190,6 +286,76 @@ lemma foo ... :
 **Lesson:** simp is smarter than you think - try it first!
 **Savings:** 67% reduction
 
+### Pattern 5A: Remove Redundant `show` Wrappers
+
+When `simp` handles the equality directly, `show X by simp` wrappers are unnecessary.
+
+```lean
+-- Before (4 lines)
+rw [show (Set.univ : Set (∀ i, α i)) = Set.univ.pi (fun _ => Set.univ) by simp,
+    Measure.pi_pi]
+simp [measure_univ]
+
+-- After (1 line)
+simp [measure_univ]
+```
+
+**Pattern recognition:**
+```lean
+-- Generic
+rw [show X = Y by simp, other_lemma]
+simp [...]
+
+-- Becomes (simp handles X = Y)
+simp [...]
+```
+
+**When to apply:**
+- `show X by simp` wrapper where simp proves the equality
+- The wrapped equality is used only for this simp call
+- simp can handle it directly in context
+
+**When:** `show X by simp` wrapper is unnecessary - simp handles it in context
+**Risk:** Low (test with build to confirm simp handles it)
+**Savings:** 50-75% reduction
+
+### Pattern 5B: Convert-Based Helper Inlining
+
+Replace helper equality lemmas with inline `convert ... using N` to avoid separate `have` statements.
+
+```lean
+-- Before (8 lines with helper lemma)
+have hfun : (fun f : ι → α => f ∘ σ) =
+    (MeasurableEquiv.piCongrLeft ...) := by
+  ext g i
+  simp [...]
+simpa [hfun] using main_proof
+
+-- After (5 lines, inline with convert)
+convert (MeasureTheory.measurePreserving_piCongrLeft ...).map_eq using 2
+ext g i
+simp [...]
+```
+
+**Pattern recognition:**
+- Helper `have` proves equality `f = g`
+- Used once in `simpa [hfun]` or `exact ... hfun ...`
+- Can be inlined with `convert` + appropriate `using` level
+
+**Technique:**
+- `convert target using N` where `N` is the unification depth
+- The `using N` tells Lean how many steps to unfold before checking equality
+- Common values: `using 1` (surface level), `using 2` (one level deep)
+
+**When to apply:**
+- Helper equality used just for rewriting in simpa/exact
+- Converting to direct proof is clearer
+- You know the right `using` level (trial and error is OK)
+
+**When:** Helper equality just for rewriting once
+**Risk:** Medium (need right `using` level, may need trial-error)
+**Savings:** 30-40% reduction
+
 ### Pattern 6: Smart `ext`
 
 `ext` handles multiple nested extensionality layers automatically.
@@ -225,6 +391,54 @@ have hlt : j < j_succ := by simp [Fin.lt_iff_val_lt_val, j, j_succ]
 **Savings:** 67% reduction
 
 ## Medium-Priority Patterns (⭐⭐⭐)
+
+### Pattern 7A: `simpa using` → `exact`
+
+When `simpa` does no actual simplification work, use `exact` for clarity.
+
+```lean
+-- Before
+simpa using (MeasureTheory.Measure.pi_comp_perm ...).symm
+
+-- After
+exact (MeasureTheory.Measure.pi_comp_perm ...).symm
+```
+
+**When to apply:**
+- The `simp` in `simpa` does no actual simplification
+- Goal matches the provided term exactly
+- Clarifies that no simplification is happening
+
+**How to detect:**
+- Try replacing `simpa using h` with `exact h`
+- If it works, `simpa` was doing nothing
+
+**When:** Simplification does no actual work
+**Risk:** Zero (if simp truly does nothing, exact is equivalent and clearer)
+**Savings:** 1 token, but improves intent clarity
+
+### Pattern 7B: Unused Lambda Variable Cleanup
+
+Replace unused lambda parameters with `_` to eliminate linter warnings.
+
+```lean
+-- Before (triggers linter warnings)
+fun i j hij => proof_not_using_i_or_j
+
+-- After (clean, no warnings)
+fun _ _ hij => proof_not_using_i_or_j
+```
+
+**When to apply:**
+- Lambda binds parameters that are never used
+- Linter warns about unused variables
+- Code quality matters
+
+**When:** Lambda parameters bound but never used
+**Risk:** Zero (pure cleanup)
+**Savings:** 0 lines but eliminates linter noise and improves code quality
+
+**Note:** This is a code quality improvement, not a size optimization. However, eliminating linter warnings makes real issues more visible.
 
 ### Pattern 8: have-calc Single-Use Inline
 
@@ -345,6 +559,48 @@ After 5-10 optimizations, check indicators:
 - Mostly false positives → Stop
 
 **Recommendation:** Declare victory at saturation.
+
+## Documentation Quality Patterns (⭐⭐)
+
+### Pattern 11: Remove Duplicate Inline Comments
+
+When comprehensive docstrings exist above a proof, inline comments that restate the same information are redundant.
+
+```lean
+-- Before (with comprehensive docstring above)
+/-- Computes measure by factoring through permutation then identity,
+    applying the product formula twice. -/
+calc Measure.map ...
+    -- Factor as permutation composed with identity
+    = ... := by rw [...]
+    _ -- Apply product formula for identity
+    = ... := by rw [...]
+
+-- After (docstring is the single source of truth)
+/-- Computes measure by factoring through permutation then identity,
+    applying the product formula twice. -/
+calc Measure.map ...
+    = ... := by rw [...]
+    _ = ... := by rw [...]
+```
+
+**When to apply:**
+- Comprehensive docstring already explains the proof strategy
+- Inline comments duplicate information from docstring
+- Comments don't add new insights beyond docstring
+- Goal is single source of truth for documentation
+
+**When NOT to apply:**
+- Inline comments provide details NOT in docstring
+- Comments explain non-obvious steps
+- No docstring exists (then comments are valuable!)
+- Comments mark TODO or highlight subtleties
+
+**Principle:** Single source of truth for documentation. Comprehensive docstrings document strategy; code documents details only if non-obvious.
+
+**When:** Inline comments restate comprehensive docstring
+**Risk:** Zero if docstring is complete
+**Savings:** Lines + visual clarity
 
 ## Anti-Patterns
 

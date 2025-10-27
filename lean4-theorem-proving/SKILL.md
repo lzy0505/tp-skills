@@ -41,7 +41,7 @@ Use these workflows for ANY Lean 4 development across all mathematical domains:
 
 1. **/build-lean** - Build project with formatted error analysis and fix suggestions
 2. **/check-axioms** - Verify axiom hygiene and get elimination strategies
-3. **/golf-proofs** - Optimize proofs systematically with false-positive filtering (30-40% size reduction)
+3. **/golf-proofs** - Optimize proofs by shortening length or runtime while maintaining readability (30-40% size reduction)
 4. **/fill-sorry** - Fill incomplete proofs with mathlib search, tactic suggestions, and multi-candidate testing
 5. **/analyze-sorries** - Categorize all sorries and plan which to tackle first
 6. **/search-mathlib** - Fast mathlib lemma search with 4 search modes (name, semantic, type pattern, content)

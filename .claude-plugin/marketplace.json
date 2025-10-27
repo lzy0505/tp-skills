@@ -26,6 +26,11 @@
       "skills": [
         "./lean4-memories"
       ]
+    },
+    {
+      "name": "lean4-subagents",
+      "description": "Specialized subagents for Lean 4 proof development workflows",
+      "source": "./lean4-subagents"
     }
   ]
 }

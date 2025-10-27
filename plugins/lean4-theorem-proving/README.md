@@ -8,58 +8,24 @@ This skill teaches Claude how to develop formal proofs in Lean 4 using battle-te
 
 ## What You Get
 
-### 4-Phase Proof Development Workflow
+### Battle-Tested Proof Development System
 
-1. **Structure Before Solving** - Outline proof strategy before writing tactics
-2. **Helper Lemmas First** - Build infrastructure bottom-up
-3. **Incremental Filling** - One `sorry` at a time, compile, commit, repeat
-4. **Type Class Management** - Explicit instance handling for sub-structures
+**4-Phase Workflow:**
+- Structure before solving, helper lemmas first, incremental filling, type class management
 
-### 16 Automation Scripts
+**7 Interactive Slash Commands:**
+- Search mathlib, analyze sorries, fill proofs, check axioms, build with error analysis, optimize proofs, clean warnings
 
-**Search (4 scripts):**
-- `search_mathlib.sh` - Find lemmas in mathlib by name, type, or content
-- `smart_search.sh` - Multi-source search (mathlib + APIs)
-- `find_instances.sh` - Locate type class instances
-- `find_usages.sh` - Track theorem usage across project
+**16 Automation Scripts:**
+- Search, analysis, verification, and refactoring tools (see [detailed list](#automation-scripts))
 
-**Analysis (4 scripts):**
-- `proof_complexity.sh` - Analyze proof metrics (lines, tactics, tokens)
-- `dependency_graph.sh` - Visualize theorem dependencies
-- `build_profile.sh` - Profile build performance and bottlenecks
-- `suggest_tactics.sh` - Get tactic suggestions for goals
+**Comprehensive Reference Guides:**
+- Lean phrasebook, mathlib guide, tactics reference, domain patterns, proof golfing, and more
 
-**Verification (4 scripts):**
-- `sorry_analyzer.py` - Extract and track sorries with context
-- `check_axioms.sh` - Verify axiom usage (external import method)
-- `check_axioms_inline.sh` - Verify axiom usage (inline method)
-- `simp_lemma_tester.sh` - Test `@[simp]` lemmas for issues
+**Optional Add-ons:**
+- **lean4-memories plugin** - Persistent project-specific learning across sessions (experimental)
+- **lean4-subagents plugin** - Autonomous agents for batch proof optimization and sorry-filling (experimental)
 
-**Quality & Refactoring (4 scripts):**
-- `pre_commit_hook.sh` - Comprehensive quality gates
-- `unused_declarations.sh` - Find dead code
-- `minimize_imports.py` - Remove unused imports
-- `proof_templates.sh` - Generate proof skeletons
-
-➡️ **[Scripts Documentation](scripts/README.md)** | **[Testing Report](scripts/TESTING.md)**
-
-### Comprehensive Guides
-
-**Core Workflow:**
-- [SKILL.md](skills/lean4-theorem-proving/SKILL.md) - Main skill document (loaded automatically)
-
-**References (loaded as needed):**
-- [lean-phrasebook.md](skills/lean4-theorem-proving/references/lean-phrasebook.md) - Mathematical English to Lean translations
-- [mathlib-guide.md](skills/lean4-theorem-proving/references/mathlib-guide.md) - Search strategies, imports, naming conventions
-- [mathlib-style.md](skills/lean4-theorem-proving/references/mathlib-style.md) - Mathlib style conventions and formatting
-- [tactics-reference.md](skills/lean4-theorem-proving/references/tactics-reference.md) - Comprehensive tactics catalog
-- [calc-patterns.md](skills/lean4-theorem-proving/references/calc-patterns.md) - Calc chain patterns and simp optimization
-- [domain-patterns.md](skills/lean4-theorem-proving/references/domain-patterns.md) - Math domain-specific patterns
-- [measure-theory.md](skills/lean4-theorem-proving/references/measure-theory.md) - Sub-σ-algebras and conditional expectation
-- [compilation-errors.md](skills/lean4-theorem-proving/references/compilation-errors.md) - Error debugging and solutions
-- [proof-golfing.md](skills/lean4-theorem-proving/references/proof-golfing.md) - Simplifying proofs after compilation
-- [lean-lsp-server.md](skills/lean4-theorem-proving/references/lean-lsp-server.md) - Lean LSP server tools (Claude Code users)
-- [subagent-workflows.md](skills/lean4-theorem-proving/references/subagent-workflows.md) - Subagent delegation patterns (Claude Code users)
 
 ## Installation
 
@@ -131,6 +97,54 @@ haveI : IsProbabilityMeasure μ := h_prob
 -- Now use dependent results
 apply measure_eq_on_generateFrom
 ```
+
+## Automation Scripts
+
+The plugin includes 16 automation scripts organized by category:
+
+**Search (4 scripts):**
+- `search_mathlib.sh` - Find lemmas in mathlib by name, type, or content
+- `smart_search.sh` - Multi-source search (mathlib + APIs)
+- `find_instances.sh` - Locate type class instances
+- `find_usages.sh` - Track theorem usage across project
+
+**Analysis (4 scripts):**
+- `proof_complexity.sh` - Analyze proof metrics (lines, tactics, tokens)
+- `dependency_graph.sh` - Visualize theorem dependencies
+- `build_profile.sh` - Profile build performance and bottlenecks
+- `suggest_tactics.sh` - Get tactic suggestions for goals
+
+**Verification (4 scripts):**
+- `sorry_analyzer.py` - Extract and track sorries with context
+- `check_axioms.sh` - Verify axiom usage (external import method)
+- `check_axioms_inline.sh` - Verify axiom usage (inline method)
+- `simp_lemma_tester.sh` - Test `@[simp]` lemmas for issues
+
+**Quality & Refactoring (4 scripts):**
+- `pre_commit_hook.sh` - Comprehensive quality gates
+- `unused_declarations.sh` - Find dead code
+- `minimize_imports.py` - Remove unused imports
+- `proof_templates.sh` - Generate proof skeletons
+
+➡️ **[Scripts Documentation](scripts/README.md)** | **[Testing Report](scripts/TESTING.md)**
+
+## Reference Guides
+
+**Core Workflow:**
+- [SKILL.md](skills/lean4-theorem-proving/SKILL.md) - Main skill document (loaded automatically)
+
+**Comprehensive References:**
+- [lean-phrasebook.md](skills/lean4-theorem-proving/references/lean-phrasebook.md) - Mathematical English to Lean translations
+- [mathlib-guide.md](skills/lean4-theorem-proving/references/mathlib-guide.md) - Search strategies, imports, naming conventions
+- [mathlib-style.md](skills/lean4-theorem-proving/references/mathlib-style.md) - Mathlib style conventions and formatting
+- [tactics-reference.md](skills/lean4-theorem-proving/references/tactics-reference.md) - Comprehensive tactics catalog
+- [calc-patterns.md](skills/lean4-theorem-proving/references/calc-patterns.md) - Calc chain patterns and simp optimization
+- [domain-patterns.md](skills/lean4-theorem-proving/references/domain-patterns.md) - Math domain-specific patterns
+- [measure-theory.md](skills/lean4-theorem-proving/references/measure-theory.md) - Sub-σ-algebras and conditional expectation
+- [compilation-errors.md](skills/lean4-theorem-proving/references/compilation-errors.md) - Error debugging and solutions
+- [proof-golfing.md](skills/lean4-theorem-proving/references/proof-golfing.md) - Simplifying proofs after compilation
+- [lean-lsp-server.md](skills/lean4-theorem-proving/references/lean-lsp-server.md) - Lean LSP server tools (Claude Code users)
+- [subagent-workflows.md](skills/lean4-theorem-proving/references/subagent-workflows.md) - Subagent delegation patterns (Claude Code users)
 
 ## When to Use
 

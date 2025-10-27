@@ -8,6 +8,21 @@ Interactive workflow for filling incomplete proofs (sorries) using mathlib searc
 
 ## Workflow
 
+### 0. Locate Scripts (Optional - Fallbacks Available)
+
+**The lean4-theorem-proving skill bundles search and tactics scripts:**
+
+Try: `$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/`
+
+**Set SCRIPTS_DIR:**
+```bash
+SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
+```
+
+**Fallbacks if scripts not found:**
+- Use WebFetch with leansearch/loogle for lemma search
+- Manual tactic suggestions based on goal structure (see references/tactics-reference.md)
+
 ### 1. Locate Sorry
 
 **If sorry not specified:**
@@ -72,7 +87,11 @@ Hypotheses available:
 
 a) **Use suggest_tactics.sh:**
 ```bash
-./scripts/suggest_tactics.sh --goal "[goal_text]"
+bash "$SCRIPTS_DIR/suggest_tactics.sh" --goal "[goal_text]"
+
+**Fallback if script not found:**
+- Use tactics-reference.md table: match goal pattern to suggested tactic
+- Example: `⊢ a = b` → try `rfl`, `simp`, or `ring`
 ```
 
 b) **Present suggestions:**
@@ -120,7 +139,11 @@ Searching mathlib...
 b) **Run searches:**
 ```bash
 # For each needed lemma type
-./scripts/smart_search.sh "[lemma_description]" --source=leansearch
+bash "$SCRIPTS_DIR/smart_search.sh" "[lemma_description]" --source=leansearch
+
+**Fallback if script not found:**
+- Use WebFetch with leansearch API directly (https://leansearch.net/)
+- Or use /search-mathlib command which has WebFetch fallbacks
 ```
 
 c) **Present findings:**

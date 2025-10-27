@@ -10,6 +10,25 @@ Apply systematic proof-golfing patterns to optimize Lean 4 proofs after compilat
 
 Follow this systematic process to achieve 30-40% size reduction while avoiding the 93% false-positive trap:
 
+### 0. Locate Scripts
+
+**The lean4-theorem-proving skill bundles proof-golfing scripts. Find them first:**
+
+Try these locations in order:
+1. `~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/` (if skill is installed)
+2. Search: `find ~ -name "find_golfable.py" 2>/dev/null | grep lean4-theorem-proving | head -1`
+
+**Set SCRIPTS_DIR for convenience:**
+```bash
+SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
+```
+
+**If scripts not found:**
+- Fall back to manual pattern detection (use Grep to search for patterns from references/proof-golfing.md)
+- Inform user: "Scripts not found - using manual pattern detection"
+
+**All script references below assume SCRIPTS_DIR is set or scripts are accessible.**
+
 ### 1. Verify File is Ready
 
 **Before starting, confirm:**
@@ -31,7 +50,14 @@ Continue? (yes/no)
 
 **Run pattern detection with false-positive filtering:**
 ```bash
-./scripts/find_golfable.py [file] --filter-false-positives --verbose
+python3 "$SCRIPTS_DIR/find_golfable.py" [file] --filter-false-positives --verbose
+```
+
+**Fallback if script not found:**
+```bash
+# Manual pattern detection - search for common patterns
+grep -n "let.*:=.*have.*:=.*exact" [file]  # let+have+exact pattern
+grep -n "by$" [file] | grep -A1 "exact"     # by-exact pattern
 ```
 
 **If 0 patterns found:**
@@ -72,8 +98,13 @@ Tackle HIGH patterns? (yes/no)
 
 a) **Check if let binding is safe to inline:**
 ```bash
-./scripts/analyze_let_usage.py [file] --line [pattern_line]
+python3 "$SCRIPTS_DIR/analyze_let_usage.py" [file] --line [pattern_line]
 ```
+
+**Fallback if script not found:**
+- Manually count let binding uses in the proof
+- If used ≥3 times → SKIP (false positive)
+- If used ≤2 times → Proceed carefully
 
 b) **Interpret results:**
 - ✅ "SAFE TO INLINE" (used ≤1 time) → Proceed with optimization
@@ -214,11 +245,16 @@ Recommendation: Skip this pattern (safety first).
 
 ## Integration with Other Tools
 
-**Use count_tokens.py for unclear cases:**
+**Use count_tokens.py for unclear cases (if available):**
 ```bash
-./scripts/count_tokens.py --before-file [file]:[start]-[end] \
-                          --after "[optimized_code]"
+python3 "$SCRIPTS_DIR/count_tokens.py" --before-file [file]:[start]-[end] \
+                                        --after "[optimized_code]"
 ```
+
+**Fallback if script not found:**
+- Use token counting quick reference from proof-golfing.md
+- Each line ≈ 8-12 tokens, each have+proof ≈ 15-20 tokens
+- Compare line counts first, then estimate token density
 
 **Use lean_multi_attempt (if MCP available):**
 ```

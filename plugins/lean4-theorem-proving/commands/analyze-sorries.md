@@ -23,12 +23,18 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Analysis
 
-**For file or directory:**
+**Find the script first:**
+
+Try these locations in order:
+1. `~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py` (if skill is installed)
+2. Use `grep -n "sorry" [path]` as fallback (basic analysis)
+
+**For file or directory (if script found):**
 ```bash
-./scripts/sorry_analyzer.py [path] --format=text
+python3 ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py [path] --format=text
 ```
 
-**For interactive mode:**
+**For interactive mode (if script found):**
 ```
 I'll launch the interactive sorry browser in your terminal.
 You can browse sorries, view context, and open files directly.
@@ -37,7 +43,13 @@ Press any key when ready to launch...
 ```
 
 ```bash
-./scripts/sorry_analyzer.py [path] --interactive
+python3 ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py [path] --interactive
+```
+
+**Fallback if script not found:**
+```bash
+# Basic sorry count and location
+grep -n "sorry" [path] --include="*.lean" -r
 ```
 
 ### 3. Present Results

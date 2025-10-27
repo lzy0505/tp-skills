@@ -15,6 +15,24 @@ Time wasted reproving something that exists: 30-60 minutes
 
 ## Workflow
 
+### 0. Locate Scripts (Optional - Fallbacks Available)
+
+**The lean4-theorem-proving skill bundles search scripts:**
+
+Try these locations:
+1. `~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/` (if skill is installed)
+2. Search: `find ~ -name "search_mathlib.sh" 2>/dev/null | grep lean4-theorem-proving | head -1`
+
+**Set SCRIPTS_DIR for convenience:**
+```bash
+SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
+```
+
+**Fallbacks if scripts not found:**
+- Use WebFetch with leansearch API (https://leansearch.net/)
+- Use WebFetch with loogle API (https://loogle.lean-lang.org/)
+- Search online mathlib docs (https://leanprover-community.github.io/mathlib4_docs/)
+
 ### 1. Understand What You Need
 
 **Ask clarifying questions if query is vague:**
@@ -34,27 +52,35 @@ Describe what you need: [wait for user]
 
 **A) Know approximate name:**
 ```bash
-./scripts/search_mathlib.sh "[pattern]" name
+bash "$SCRIPTS_DIR/search_mathlib.sh" "[pattern]" name
 ```
 Example: `continuous_compact` → finds `Continuous.isCompact_image`
 
+**Fallback:** Use Grep to search local mathlib if cloned: `grep -r "continuous.*compact" ~/.elan/toolchains/*/lib/lean/library/`
+
 **B) Know type signature pattern:**
 ```bash
-./scripts/smart_search.sh "[type pattern]" --source=loogle
+bash "$SCRIPTS_DIR/smart_search.sh" "[type pattern]" --source=loogle
 ```
 Example: `(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCompact (?f '' ?s)`
 
+**Fallback:** Use WebFetch to loogle API directly with the type pattern
+
 **C) Natural language description:**
 ```bash
-./scripts/smart_search.sh "[description]" --source=leansearch
+bash "$SCRIPTS_DIR/smart_search.sh" "[description]" --source=leansearch
 ```
 Example: "continuous functions preserve compactness"
 
+**Fallback:** Use WebFetch to leansearch API directly with the description
+
 **D) Specific mathematical property:**
 ```bash
-./scripts/search_mathlib.sh "[math_term]" content
+bash "$SCRIPTS_DIR/search_mathlib.sh" "[math_term]" content
 ```
 Example: `conditional expectation tower property`
+
+**Fallback:** Use Grep to search local mathlib content if available
 
 ### 3. Run Search
 

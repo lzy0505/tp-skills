@@ -91,16 +91,19 @@ See `references/subagent-workflows.md` for delegation patterns.
 
 **⚡ Subagent Delegation (Efficient - Claude Code users):** 6x token reduction
 - Dispatch Explore agents to run automation scripts
-- Example: `"Dispatch Explore agent to run scripts/smart_search.sh..."`
+- Example: `"Dispatch Explore agent to search using $LEAN4_SMART_SEARCH..."`
+- Scripts are available via persisted env vars set by SessionStart hook
 - See `references/subagent-workflows.md` for patterns and examples
 
-**🔧 Automation Scripts (16 tools - all users):** Located in `scripts/`
-- **Search:** search_mathlib.sh, smart_search.sh, find_instances.sh, find_usages.sh
+**🔧 Automation Scripts (19 tools - all users):** Available via persisted env vars
+- **Search:** `$LEAN4_SEARCH_MATHLIB`, `$LEAN4_SMART_SEARCH`, find_instances.sh, find_usages.sh
 - **Analysis:** proof_complexity.sh, dependency_graph.sh, build_profile.sh, unused_declarations.sh
-- **Learning:** suggest_tactics.sh, proof_templates.sh
-- **Verification:** check_axioms_inline.sh, sorry_analyzer.py, simp_lemma_tester.sh, pre_commit_hook.sh
+- **Learning:** `$LEAN4_SUGGEST_TACTICS`, proof_templates.sh
+- **Verification:** `$LEAN4_CHECK_AXIOMS`, `$LEAN4_SORRY_ANALYZER`, simp_lemma_tester.sh, pre_commit_hook.sh
 - **Refactoring:** minimize_imports.py
-- See `scripts/README.md` for complete documentation
+- **Optimization:** `$LEAN4_FIND_GOLFABLE`, `$LEAN4_ANALYZE_LET_USAGE`, `$LEAN4_COUNT_TOKENS`
+- Located at plugin level in `scripts/` directory
+- Use `/lean4-theorem-proving:*` slash commands for interactive workflows
 
 **Priority:** Use LSP server when available → Delegate to subagents → Run scripts directly
 
@@ -193,14 +196,14 @@ mcp__lean-lsp__lean_goal("MyFile.lean", line_number, column_number)
 
 **⚡ Use interactive navigator (Claude Code users):**
 ```bash
-scripts/sorry_analyzer.py . --interactive
+python3 "$LEAN4_SORRY_ANALYZER" . --interactive
 # Browse sorries, open in $EDITOR, navigate by file
 ```
 
 **🔧 Generate sorry reports:**
 ```bash
 # Dispatch Explore agent to run:
-scripts/sorry_analyzer.py src/ --format=markdown > SORRIES.md
+python3 "$LEAN4_SORRY_ANALYZER" src/ --format=markdown > SORRIES.md
 ```
 
 ### Phase 4: Managing Type Class Issues

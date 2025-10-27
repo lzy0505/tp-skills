@@ -82,6 +82,38 @@ if [[ -n "${TOOLS_DIR}" && -d "${TOOLS_DIR}" ]]; then
   echo "Staged ${STAGED_COUNT} additional tool scripts to ${WORKSPACE_TOOLS_DIR}"
 fi
 
+# Stage reference documentation for subagents at predictable paths
+DOC_STAGE=".claude/docs/lean4"
+mkdir -p "${DOC_STAGE}"
+
+DOC_STAGED_COUNT=0
+# Find references directory (support both layouts)
+REFS_DIR=""
+for candidate in \
+  "${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/references" \
+  "${CLAUDE_PLUGIN_ROOT}/references"
+do
+  if [[ -d "$candidate" ]]; then
+    REFS_DIR="$candidate"
+    break
+  fi
+done
+
+if [[ -n "${REFS_DIR}" && -d "${REFS_DIR}" ]]; then
+  for doc in proof-golfing.md sorry-filling.md axiom-elimination.md; do
+    if [[ -f "${REFS_DIR}/${doc}" ]]; then
+      cp -f "${REFS_DIR}/${doc}" "${DOC_STAGE}/${doc}"
+      DOC_STAGED_COUNT=$((DOC_STAGED_COUNT + 1))
+    fi
+  done
+  echo "Staged ${DOC_STAGED_COUNT} reference docs to ${DOC_STAGE}"
+
+  # Export doc stage location for reference
+  if [[ -n "${ENV_OUT}" ]]; then
+    printf 'export LEAN4_DOC_HOME="%s"\n' "${DOC_STAGE}" >> "${ENV_OUT}"
+  fi
+fi
+
 # Persist variables for the rest of the session (so slash-commands can use them).
 persist() {
   local kv="$1"

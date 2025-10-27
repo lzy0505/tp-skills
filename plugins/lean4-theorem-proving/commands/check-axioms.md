@@ -26,16 +26,24 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Verification
 
-Run the bundled axiom checker script from the plugin directory:
+Check that the tool is available, then run verification:
+
+```bash
+# Verify the tool is available (SessionStart hook should have set this)
+if [ -z "${LEAN4_CHECK_AXIOMS:-}" ] || [ ! -f "$LEAN4_CHECK_AXIOMS" ]; then
+  echo "ERROR: lean4-check-axioms not found. Try restarting the session or re-enabling the plugin."
+  exit 1
+fi
+```
 
 **For single or multiple files:**
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/check_axioms_inline.sh <file-or-pattern>
+bash "$LEAN4_CHECK_AXIOMS" <file-or-pattern>
 ```
 
 Replace `<file-or-pattern>` with the actual file path, glob pattern, or multiple files.
 
-**If the script fails, fall back to manual Lean checks:**
+**If the script is not available or fails, fall back to manual Lean checks:**
 
 For individual theorems:
 ```bash

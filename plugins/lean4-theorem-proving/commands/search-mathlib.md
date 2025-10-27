@@ -37,7 +37,7 @@ Describe what you need: [wait for user]
 
 **A) Know approximate name:**
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/search_mathlib.sh "<pattern>" name
+bash "$LEAN4_SEARCH_MATHLIB" "<pattern>" name
 ```
 Example: `continuous_compact` → finds `Continuous.isCompact_image`
 
@@ -45,7 +45,7 @@ Example: `continuous_compact` → finds `Continuous.isCompact_image`
 
 **B) Know type signature pattern:**
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "<type pattern>" --source=loogle
+bash "$LEAN4_SMART_SEARCH" "<type pattern>" --source=loogle
 ```
 Example pattern: `(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCompact (?f '' ?s)`
 
@@ -53,7 +53,7 @@ Example pattern: `(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCo
 
 **C) Natural language description:**
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "<description>" --source=leansearch
+bash "$LEAN4_SMART_SEARCH" "<description>" --source=leansearch
 ```
 Example: "continuous functions preserve compactness"
 
@@ -61,7 +61,7 @@ Example: "continuous functions preserve compactness"
 
 **D) Specific mathematical property:**
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/search_mathlib.sh "<math_term>" content
+bash "$LEAN4_SEARCH_MATHLIB" "<math_term>" content
 ```
 Example: `conditional expectation tower property`
 

@@ -1,13 +1,11 @@
 ---
 description: Analyze and plan work for incomplete Lean 4 proofs (sorries)
-allowed-tools: Bash(python:*), Bash(grep:*)
+allowed-tools: Bash(${LEAN4_PYTHON_BIN}:*), Bash(grep:*), Bash(find:*), Bash(xargs:*), Bash(cat:*), Bash(sed:*), Bash(awk:*)
 ---
 
 # Sorry Analysis and Planning
 
 Interactive analysis of incomplete proofs to plan systematic sorry-filling work.
-
-**IMPORTANT:** All script paths use `${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/` - never check for scripts in the current directory.
 
 ## Workflow
 
@@ -26,21 +24,26 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Analysis
 
-Run the sorry analyzer script from the plugin directory. **The script is bundled with this plugin - do not check for its existence in the current directory. Always use the full path with ${CLAUDE_PLUGIN_ROOT}.**
+Verify the analyzer is available (SessionStart hook should have set this):
 
-For file or directory analysis:
-```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py <path> --format=text
-```
+!`if [ -z "${LEAN4_SORRY_ANALYZER:-}" ] || [ ! -f "${LEAN4_SORRY_ANALYZER:-/dev/null}" ]; then \
+    echo ":: lean4-sorry-analyzer not found. Try restarting the session or re-enabling the plugin."; \
+    exit 1; fi`
 
-For interactive TUI mode:
-```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py <path> --interactive
-```
+Then run the analyzer based on user's scope choice:
 
-Replace `<path>` with the actual file path, directory path, or `.` for entire project.
+**For entire project:**
+!`${LEAN4_PYTHON_BIN:-python3} "${LEAN4_SORRY_ANALYZER}" . --format=text`
 
-**If the script fails, fall back to grep:**
+**For specific file or directory:**
+!`${LEAN4_PYTHON_BIN:-python3} "${LEAN4_SORRY_ANALYZER}" <path> --format=text`
+
+**For interactive TUI mode:**
+!`${LEAN4_PYTHON_BIN:-python3} "${LEAN4_SORRY_ANALYZER}" <path> --interactive`
+
+Replace `<path>` with the actual file or directory path from step 1.
+
+**If the script is not available or fails, use grep fallback:**
 ```bash
 grep -n "sorry" <path> --include="*.lean" -r
 ```

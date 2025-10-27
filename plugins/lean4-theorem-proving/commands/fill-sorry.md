@@ -75,12 +75,12 @@ Hypotheses available:
 
 a) **Suggest tactics:**
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/suggest_tactics.sh --goal "<goal_text>"
+bash "$LEAN4_SUGGEST_TACTICS" --goal "<goal_text>"
 ```
 
 Replace `<goal_text>` with the actual goal to analyze.
 
-**Fallback if script fails:**
+**Fallback if script is not available or fails:**
 - Use tactics-reference.md table: match goal pattern to suggested tactic
 - Example: `⊢ a = b` → try `rfl`, `simp`, or `ring`
 

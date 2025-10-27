@@ -32,15 +32,24 @@ Continue? (yes/no)
 
 ### 2. Find High-Value Patterns
 
-Run the pattern detection script from the plugin directory:
+Check that the tool is available, then run pattern detection:
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/find_golfable.py <file> --filter-false-positives --verbose
+# Verify the tool is available
+if [ -z "${LEAN4_FIND_GOLFABLE:-}" ] || [ ! -f "$LEAN4_FIND_GOLFABLE" ]; then
+  echo "ERROR: lean4-find-golfable not found. Try restarting the session or re-enabling the plugin."
+  exit 1
+fi
+```
+
+**Run pattern detection with false-positive filtering:**
+```bash
+python3 "$LEAN4_FIND_GOLFABLE" <file> --filter-false-positives --verbose
 ```
 
 Replace `<file>` with the actual file path to optimize.
 
-**Fallback if script fails:**
+**Fallback if script is not available or fails:**
 ```bash
 # Manual pattern detection - search for common patterns
 grep -n "let.*:=.*have.*:=.*exact" <file>  # let+have+exact pattern
@@ -85,12 +94,12 @@ Tackle HIGH patterns? (yes/no)
 
 a) **Check if let binding is safe to inline:**
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/analyze_let_usage.py <file> --line <pattern_line>
+python3 "$LEAN4_ANALYZE_LET_USAGE" <file> --line <pattern_line>
 ```
 
 Replace `<file>` and `<pattern_line>` with actual values.
 
-**Fallback if script fails:**
+**Fallback if script is not available or fails:**
 - Manually count let binding uses in the proof
 - If used ≥3 times → SKIP (false positive)
 - If used ≤2 times → Proceed carefully
@@ -236,12 +245,12 @@ Recommendation: Skip this pattern (safety first).
 
 **Use count_tokens.py for unclear cases:**
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/count_tokens.py --before-file <file>:<start>-<end> --after "<optimized_code>"
+python3 "$LEAN4_COUNT_TOKENS" --before-file <file>:<start>-<end> --after "<optimized_code>"
 ```
 
 Replace placeholders with actual values.
 
-**Fallback if script fails:**
+**Fallback if script is not available or fails:**
 - Use token counting quick reference from proof-golfing.md
 - Each line ≈ 8-12 tokens, each have+proof ≈ 15-20 tokens
 - Compare line counts first, then estimate token density

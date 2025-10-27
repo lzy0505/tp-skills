@@ -351,6 +351,35 @@ have : m' ≤ k ⟨m', Nat.lt_succ_self m'⟩ :=
 - `simpa` is only unfolding definitions (no real work)
 - The intermediate `have` adds no value
 
+**Pattern 8: `simp` can close goals directly**
+
+When `simp` alone makes the goal trivial, skip the explicit `exact` step.
+
+```lean
+-- ❌ Before (3 lines - unnecessary exact)
+have hlt : j < j_succ := by
+  simp only [Fin.lt_iff_val_lt_val, j, j_succ]
+  exact Nat.lt_succ_self n
+
+-- ✅ After (1 line - simp closes the goal)
+have hlt : j < j_succ := by simp [Fin.lt_iff_val_lt_val, j, j_succ]
+```
+
+**When `simp` alone suffices:**
+- Goal becomes trivial after unfolding definitions
+- The `exact` step applies a lemma that `simp` already knows about
+- `simp` can see through the rewrites and close automatically
+
+**Why this works:**
+- `simp` has a database of rewrite rules and basic facts
+- After unfolding, `Nat.lt_succ_self n` is in its database
+- No need to explicitly apply what `simp` already knows
+
+**Common cases:**
+- `Fin.lt_iff_val_lt_val` followed by `Nat.lt_succ_self`
+- `List.length_cons` followed by `Nat.succ_pos`
+- Any standard library fact that `simp` knows
+
 **Impact from real sessions:**
 - Session 1: 11 proofs, ~22 lines saved
 - Session 2: 3 proofs, ~26 lines saved (76.5% reduction avg)
@@ -530,9 +559,10 @@ cases x with
 2. Smart ext (nested extensionality): 50% reduction, no loss of clarity
 3. Multi-candidate testing: 80% success rate, ~70% time savings vs manual
 4. ext-simp chain combinations: Saves ≥2 lines when natural
-5. Arithmetic simplification: 30-50% reduction per instance
-6. have-simpa indirection removal: Simple, safe, always beneficial
-7. Constructor branch compression: 25-57% reduction per instance
+5. simp closes goals directly: Simple, saves 2 lines (67% reduction)
+6. Arithmetic simplification: 30-50% reduction per instance
+7. have-simpa indirection removal: Simple, safe, always beneficial
+8. Constructor branch compression: 25-57% reduction per instance
 
 ## Simplification Patterns
 

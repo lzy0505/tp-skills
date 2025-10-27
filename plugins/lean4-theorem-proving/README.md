@@ -46,20 +46,20 @@ This skill teaches Claude how to develop formal proofs in Lean 4 using battle-te
 ### Comprehensive Guides
 
 **Core Workflow:**
-- [SKILL.md](SKILL.md) - Main skill document (loaded automatically)
+- [SKILL.md](skills/lean4-theorem-proving/SKILL.md) - Main skill document (loaded automatically)
 
 **References (loaded as needed):**
-- [lean-phrasebook.md](references/lean-phrasebook.md) - Mathematical English to Lean translations
-- [mathlib-guide.md](references/mathlib-guide.md) - Search strategies, imports, naming conventions
-- [mathlib-style.md](references/mathlib-style.md) - Mathlib style conventions and formatting
-- [tactics-reference.md](references/tactics-reference.md) - Comprehensive tactics catalog
-- [calc-patterns.md](references/calc-patterns.md) - Calc chain patterns and simp optimization
-- [domain-patterns.md](references/domain-patterns.md) - Math domain-specific patterns
-- [measure-theory.md](references/measure-theory.md) - Sub-σ-algebras and conditional expectation
-- [compilation-errors.md](references/compilation-errors.md) - Error debugging and solutions
-- [proof-golfing.md](references/proof-golfing.md) - Simplifying proofs after compilation
-- [lean-lsp-server.md](references/lean-lsp-server.md) - Lean LSP server tools (Claude Code users)
-- [subagent-workflows.md](references/subagent-workflows.md) - Subagent delegation patterns (Claude Code users)
+- [lean-phrasebook.md](skills/lean4-theorem-proving/references/lean-phrasebook.md) - Mathematical English to Lean translations
+- [mathlib-guide.md](skills/lean4-theorem-proving/references/mathlib-guide.md) - Search strategies, imports, naming conventions
+- [mathlib-style.md](skills/lean4-theorem-proving/references/mathlib-style.md) - Mathlib style conventions and formatting
+- [tactics-reference.md](skills/lean4-theorem-proving/references/tactics-reference.md) - Comprehensive tactics catalog
+- [calc-patterns.md](skills/lean4-theorem-proving/references/calc-patterns.md) - Calc chain patterns and simp optimization
+- [domain-patterns.md](skills/lean4-theorem-proving/references/domain-patterns.md) - Math domain-specific patterns
+- [measure-theory.md](skills/lean4-theorem-proving/references/measure-theory.md) - Sub-σ-algebras and conditional expectation
+- [compilation-errors.md](skills/lean4-theorem-proving/references/compilation-errors.md) - Error debugging and solutions
+- [proof-golfing.md](skills/lean4-theorem-proving/references/proof-golfing.md) - Simplifying proofs after compilation
+- [lean-lsp-server.md](skills/lean4-theorem-proving/references/lean-lsp-server.md) - Lean LSP server tools (Claude Code users)
+- [subagent-workflows.md](skills/lean4-theorem-proving/references/subagent-workflows.md) - Subagent delegation patterns (Claude Code users)
 
 ## Installation
 
@@ -84,6 +84,50 @@ No manual invocation needed!
 - ✅ **Search mathlib first** before reproving standard results
 - ✅ **Eliminate axioms systematically** with documented plans
 - ✅ **One change at a time** - fill one sorry, compile, commit
+
+### Slash Commands
+
+Quick access to common workflows via slash commands:
+
+**Search & Discovery:**
+```
+/lean4-theorem-proving:search-mathlib continuity compactness
+```
+Find relevant lemmas in mathlib before proving. Searches by name, type pattern, or natural language description.
+
+**Project Analysis:**
+```
+/lean4-theorem-proving:analyze-sorries
+```
+Scan project for incomplete proofs, categorize by difficulty, and plan systematic filling work.
+
+**Interactive Proof Development:**
+```
+/lean4-theorem-proving:fill-sorry MyTheorems.lean:142
+```
+Get tactic suggestions, lemma search results, and multi-candidate testing for a specific sorry.
+
+**Quality Verification:**
+```
+/lean4-theorem-proving:check-axioms MyTheorems.lean
+```
+Verify proofs use only standard axioms (propext, quot.sound, Classical.choice).
+
+```
+/lean4-theorem-proving:build-lean
+```
+Run `lake build` with formatted error analysis and actionable debugging hints.
+
+**Proof Optimization:**
+```
+/lean4-theorem-proving:golf-proofs MyFile.lean
+```
+Interactively simplify proofs after compilation (30-40% reduction typical).
+
+```
+/lean4-theorem-proving:clean-warnings
+```
+Systematically clean up linter warnings by category (unused variables, simp args, etc.).
 
 ### Common Patterns
 
@@ -138,7 +182,14 @@ apply measure_eq_on_generateFrom
 ```
 lean4-theorem-proving/
 ├── README.md                      # This file
-├── SKILL.md                       # Core workflow (loaded by Claude)
+├── commands/                      # Slash commands
+│   ├── search-mathlib.md          # Search mathlib lemmas
+│   ├── analyze-sorries.md         # Analyze incomplete proofs
+│   ├── fill-sorry.md              # Fill sorries interactively
+│   ├── check-axioms.md            # Verify axiom hygiene
+│   ├── build-lean.md              # Build with error analysis
+│   ├── golf-proofs.md             # Optimize proofs
+│   └── clean-warnings.md          # Clean linter warnings
 ├── scripts/                       # 16 automation tools
 │   ├── README.md                  # Scripts documentation
 │   ├── TESTING.md                 # Comprehensive validation report
@@ -158,18 +209,20 @@ lean4-theorem-proving/
 │   ├── simp_lemma_tester.sh       # Simp hygiene
 │   ├── pre_commit_hook.sh         # Quality gates
 │   └── minimize_imports.py        # Import minimization
-└── references/                    # Detailed guides
-    ├── lean-phrasebook.md         # Math English to Lean
-    ├── mathlib-guide.md           # mathlib integration
-    ├── mathlib-style.md           # Mathlib style conventions
-    ├── tactics-reference.md       # Tactics catalog
-    ├── calc-patterns.md           # Calc chain patterns
-    ├── domain-patterns.md         # Math patterns
-    ├── measure-theory.md          # Sub-σ-algebras, conditional expectation
-    ├── compilation-errors.md      # Error solutions
-    ├── proof-golfing.md           # Proof simplification
-    ├── lean-lsp-server.md         # LSP tools (Claude Code)
-    └── subagent-workflows.md      # Subagent patterns (Claude Code)
+└── skills/lean4-theorem-proving/  # Skill content
+    ├── SKILL.md                   # Core workflow (loaded by Claude)
+    └── references/                # Detailed guides
+        ├── lean-phrasebook.md     # Math English to Lean
+        ├── mathlib-guide.md       # mathlib integration
+        ├── mathlib-style.md       # Mathlib style conventions
+        ├── tactics-reference.md   # Tactics catalog
+        ├── calc-patterns.md       # Calc chain patterns
+        ├── domain-patterns.md     # Math patterns
+        ├── measure-theory.md      # Sub-σ-algebras, conditional expectation
+        ├── compilation-errors.md  # Error solutions
+        ├── proof-golfing.md       # Proof simplification
+        ├── lean-lsp-server.md     # LSP tools (Claude Code)
+        └── subagent-workflows.md  # Subagent patterns (Claude Code)
 ```
 
 ## Examples from Real Projects

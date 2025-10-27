@@ -7,31 +7,33 @@ Claude Skills, commands, and agents for systematic development of formal proofs 
 | Plugin | Provides | Description | Requirements |
 |--------|----------|-------------|--------------|
 | **[lean4-theorem-proving](plugins/lean4-theorem-proving/)** | Skill + 6 Commands | Core workflows, 16 automation tools, best practices | None |
-| **[lean4-memories](plugins/lean4-memories/)** | Skill | Persistent learning across sessions | MCP memory server |
-| **[lean4-subagents](plugins/lean4-subagents/)** | 3 Agents | Specialized agents for proof optimization, sorry filling, axiom checking | None |
+| **[lean4-memories](plugins/lean4-memories/)** | Skill | Persistent learning across sessions | lean4-theorem-proving + MCP memory server |
+| **[lean4-subagents](plugins/lean4-subagents/)** | 3 Agents | Specialized agents for proof optimization, sorry filling, axiom checking | lean4-theorem-proving |
 
 ## Quick Start
 
 **Via Marketplace (Recommended):**
 ```bash
 /plugin marketplace add cameronfreer/lean4-skills
-/plugin install lean4-theorem-proving    # Core skill + commands
-/plugin install lean4-memories           # Optional memory skill
-/plugin install lean4-subagents          # Optional specialized agents
+/plugin install lean4-theorem-proving    # Core skill + commands (REQUIRED)
+/plugin install lean4-memories           # Optional: adds persistent memory (requires lean4-theorem-proving)
+/plugin install lean4-subagents          # Optional: adds specialized agents (requires lean4-theorem-proving)
 ```
+
+**Note:** lean4-theorem-proving is the foundation. The other two plugins extend it with memory and specialized agents.
 
 **Manual Installation:**
 ```bash
 git clone https://github.com/cameronfreer/lean4-skills.git
 cd lean4-skills
 
-# Install core skill + commands (recommended)
+# Install core skill + commands (REQUIRED - foundation for other plugins)
 cp -r plugins/lean4-theorem-proving ~/.claude/skills/
 
-# Install memory skill (optional, requires MCP memory server)
+# Install memory skill (optional, requires lean4-theorem-proving + MCP memory server)
 cp -r plugins/lean4-memories ~/.claude/skills/
 
-# Install specialized agents (optional)
+# Install specialized agents (optional, requires lean4-theorem-proving)
 cp -r plugins/lean4-subagents ~/.claude/skills/
 ```
 
@@ -70,7 +72,7 @@ Systematic workflows for Lean 4 proof development.
 
 ## lean4-memories
 
-Optional persistent learning across Lean 4 sessions.
+Optional persistent learning across Lean 4 sessions. Extends lean4-theorem-proving with memory.
 
 **What you get:**
 - Remember successful proof patterns
@@ -83,13 +85,15 @@ Optional persistent learning across Lean 4 sessions.
 - Repeated proof patterns
 - Team projects with shared knowledge
 
-**Requires:** MCP memory server configuration
+**Requires:**
+- lean4-theorem-proving plugin (provides the workflows this extends)
+- MCP memory server configuration
 
 ➡️ **[Full Documentation](plugins/lean4-memories/README.md)**
 
 ## lean4-subagents
 
-Specialized agents for targeted Lean 4 development tasks.
+Specialized agents for targeted Lean 4 development tasks. Extends lean4-theorem-proving with automation.
 
 **What you get:**
 - **lean4-proof-golfer** - Optimize proofs by reducing length/runtime (30-40% reduction)
@@ -100,6 +104,8 @@ Specialized agents for targeted Lean 4 development tasks.
 - Polishing proofs before publication
 - Batch-filling sorries in development
 - Ensuring axiom-free theorems
+
+**Requires:** lean4-theorem-proving plugin (agents use its workflows and patterns)
 
 **Usage:** Available via Task tool when lean4-subagents is installed
 

@@ -7,30 +7,35 @@ Detailed installation instructions for Lean 4 Skills.
 **Via Marketplace (Recommended):**
 ```bash
 /plugin marketplace add cameronfreer/lean4-skills
-/plugin install lean4-theorem-proving    # Core skill + 6 slash commands
-/plugin install lean4-memories           # Optional: persistent memory skill
-/plugin install lean4-subagents          # Optional: 3 specialized agents
+/plugin install lean4-theorem-proving    # Core skill + 6 slash commands (REQUIRED)
+/plugin install lean4-memories           # Optional: persistent memory (requires lean4-theorem-proving)
+/plugin install lean4-subagents          # Optional: specialized agents (requires lean4-theorem-proving)
 ```
 
 **What Each Plugin Provides:**
 - **lean4-theorem-proving:** Skill (auto-activates) + 6 slash commands (`/lean4-theorem-proving:build-lean`, etc.)
-- **lean4-memories:** Skill (auto-activates, requires MCP memory server)
+  - **Foundation for the other plugins** - install this first
+- **lean4-memories:** Skill (auto-activates, requires lean4-theorem-proving + MCP memory server)
+  - Extends lean4-theorem-proving with persistent learning
 - **lean4-subagents:** 3 agents (lean4-proof-golfer, lean4-sorry-filler, lean4-axiom-checker)
+  - Extends lean4-theorem-proving with specialized automation
 
 **Manual Installation:**
 ```bash
 git clone https://github.com/cameronfreer/lean4-skills.git
 cd lean4-skills
 
-# Install core skill + commands (recommended)
+# Install core skill + commands (REQUIRED - foundation for other plugins)
 cp -r plugins/lean4-theorem-proving ~/.claude/skills/
 
-# Install memory skill (optional, requires MCP memory server)
+# Install memory skill (optional, requires lean4-theorem-proving + MCP memory server)
 cp -r plugins/lean4-memories ~/.claude/skills/
 
-# Install specialized agents (optional)
+# Install specialized agents (optional, requires lean4-theorem-proving)
 cp -r plugins/lean4-subagents ~/.claude/skills/
 ```
+
+**Important:** Install lean4-theorem-proving first. The other plugins extend its functionality.
 
 ## Platform-Specific Setup
 
@@ -105,17 +110,19 @@ If they work, you're ready! See `plugins/lean4-theorem-proving/references/lean-l
 
 ## Requirements
 
-**For lean4-theorem-proving:**
+**For lean4-theorem-proving (foundation - install first):**
 - Claude Code 2.0.13+ (marketplace) OR
 - Claude.ai Pro/Max/Team/Enterprise OR
 - Any Claude (CLAUDE.md method)
 
-**For lean4-memories (additional):**
+**For lean4-memories (optional extension):**
+- lean4-theorem-proving plugin (required - provides the workflows this extends)
 - MCP memory server (simple config file edit - [setup guide](plugins/lean4-memories/README.md#installation))
 - Claude Desktop or Claude Code with MCP support
 
-**For lean4-subagents:**
-- Same as lean4-theorem-proving (no additional requirements)
+**For lean4-subagents (optional extension):**
+- lean4-theorem-proving plugin (required - agents use its workflows and patterns)
+- Same Claude requirements as lean4-theorem-proving
 
 **For Lean LSP server (optional but highly recommended):**
 - Claude Code or Claude Desktop with MCP support

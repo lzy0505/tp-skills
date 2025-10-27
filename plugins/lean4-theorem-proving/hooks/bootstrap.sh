@@ -49,14 +49,37 @@ if [[ -n "${ANALYZER_PATH}" && -f "${ANALYZER_PATH}" ]]; then
   chmod +x "${ANALYZER_PATH}" || true
 fi
 
-# Copy the script to workspace to avoid parameter substitution in commands.
+# Copy scripts to workspace to avoid parameter substitution in commands.
 # This makes commands immune to Claude Code's ${...} security filter.
 WORKSPACE_TOOLS_DIR=".claude/tools/lean4"
 mkdir -p "${WORKSPACE_TOOLS_DIR}"
+
+# Stage sorry_analyzer (already found above)
 if [[ -n "${ANALYZER_PATH}" && -f "${ANALYZER_PATH}" ]]; then
   cp -f "${ANALYZER_PATH}" "${WORKSPACE_TOOLS_DIR}/sorry_analyzer.py"
   chmod +x "${WORKSPACE_TOOLS_DIR}/sorry_analyzer.py" || true
-  echo "Staged sorry_analyzer.py -> ${WORKSPACE_TOOLS_DIR}/sorry_analyzer.py"
+  echo "Staged sorry_analyzer.py"
+fi
+
+# Stage other frequently-used scripts
+STAGED_COUNT=0
+if [[ -n "${TOOLS_DIR}" && -d "${TOOLS_DIR}" ]]; then
+  for script in \
+    search_mathlib.sh \
+    smart_search.sh \
+    check_axioms.sh \
+    find_golfable.py \
+    analyze_let_usage.py \
+    count_tokens.py \
+    suggest_tactics.sh
+  do
+    if [[ -f "${TOOLS_DIR}/${script}" ]]; then
+      cp -f "${TOOLS_DIR}/${script}" "${WORKSPACE_TOOLS_DIR}/${script}"
+      chmod +x "${WORKSPACE_TOOLS_DIR}/${script}" || true
+      STAGED_COUNT=$((STAGED_COUNT + 1))
+    fi
+  done
+  echo "Staged ${STAGED_COUNT} additional tool scripts to ${WORKSPACE_TOOLS_DIR}"
 fi
 
 # Persist variables for the rest of the session (so slash-commands can use them).

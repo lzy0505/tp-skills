@@ -29,19 +29,22 @@ Which scope? (1/2/3/4)
 Check that the tool is available, then run verification:
 
 ```bash
-# Verify the tool is available (SessionStart hook should have set this)
-if [ -z "${LEAN4_CHECK_AXIOMS:-}" ] || [ ! -f "$LEAN4_CHECK_AXIOMS" ]; then
-  echo "ERROR: lean4-check-axioms not found. Try restarting the session or re-enabling the plugin."
+# Verify the tool is staged
+test -f .claude/tools/lean4/check_axioms.sh || {
+  echo "ERROR: check_axioms.sh not staged. Restart session after reinstalling plugin."
   exit 1
-fi
+}
 ```
 
-**For single or multiple files:**
+**For single or multiple files** (replace `MyTheorems.lean` with your actual file):
 ```bash
-bash "$LEAN4_CHECK_AXIOMS" <file-or-pattern>
+bash .claude/tools/lean4/check_axioms.sh MyTheorems.lean
 ```
 
-Replace `<file-or-pattern>` with the actual file path, glob pattern, or multiple files.
+**For multiple files or glob patterns:**
+```bash
+bash .claude/tools/lean4/check_axioms.sh src/*.lean
+```
 
 **If the script is not available or fails, fall back to manual Lean checks:**
 
@@ -52,14 +55,16 @@ lake env lean --run <<EOF
 EOF
 ```
 
-For all theorems in a file:
+For all theorems in a file (replace `MyFile.lean` with your actual file):
 ```bash
-grep "^theorem\|^lemma\|^def" <file> | while read line; do
+grep "^theorem\|^lemma\|^def" MyFile.lean | while read line; do
   name=$(echo "$line" | awk '{print $2}' | cut -d'(' -f1 | cut -d':' -f1)
   echo "Checking $name..."
-  lake env lean --run -c "#print axioms $name" <file>
+  lake env lean --run -c "#print axioms $name" MyFile.lean
 done
 ```
+
+**IMPORTANT:** Replace `MyTheorems.lean` and `MyFile.lean` with your actual file paths. Never use placeholders like `<file>` in executed commands.
 
 ### 3. Interpret Results
 

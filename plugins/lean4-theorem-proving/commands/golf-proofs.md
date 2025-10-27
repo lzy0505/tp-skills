@@ -32,29 +32,29 @@ Continue? (yes/no)
 
 ### 2. Find High-Value Patterns
 
-Check that the tool is available, then run pattern detection:
+Check that the tool is available, then run pattern detection.
 
+**Verify tool is staged:**
 ```bash
-# Verify the tool is available
-if [ -z "${LEAN4_FIND_GOLFABLE:-}" ] || [ ! -f "$LEAN4_FIND_GOLFABLE" ]; then
-  echo "ERROR: lean4-find-golfable not found. Try restarting the session or re-enabling the plugin."
+test -f .claude/tools/lean4/find_golfable.py || {
+  echo "ERROR: find_golfable.py not staged. Restart session after reinstalling plugin."
   exit 1
-fi
+}
 ```
 
-**Run pattern detection with false-positive filtering:**
+**Run pattern detection with false-positive filtering** (replace `MyFile.lean` with your actual file):
 ```bash
-python3 "$LEAN4_FIND_GOLFABLE" <file> --filter-false-positives --verbose
+python3 .claude/tools/lean4/find_golfable.py MyFile.lean --filter-false-positives --verbose
 ```
 
-Replace `<file>` with the actual file path to optimize.
-
-**Fallback if script is not available or fails:**
+**Fallback if script is not available or fails** (replace `MyFile.lean` with your actual file):
 ```bash
 # Manual pattern detection - search for common patterns
-grep -n "let.*:=.*have.*:=.*exact" <file>  # let+have+exact pattern
-grep -n "by$" <file> | grep -A1 "exact"     # by-exact pattern
+grep -n "let.*:=.*have.*:=.*exact" MyFile.lean  # let+have+exact pattern
+grep -n "by$" MyFile.lean | grep -A1 "exact"     # by-exact pattern
 ```
+
+**IMPORTANT:** Never use placeholders like `<file>` in executed commands. Always use the actual file path.
 
 **If 0 patterns found:**
 ```
@@ -92,16 +92,16 @@ Tackle HIGH patterns? (yes/no)
 
 **For each HIGH priority pattern:**
 
-a) **Check if let binding is safe to inline:**
+a) **Check if let binding is safe to inline** (replace with your actual file and line number):
 ```bash
-python3 "$LEAN4_ANALYZE_LET_USAGE" <file> --line <pattern_line>
+python3 .claude/tools/lean4/analyze_let_usage.py MyFile.lean --line 42
 ```
-
-Replace `<file>` and `<pattern_line>` with actual values.
 
 **Fallback if script is not available or fails:**
 - Manually count let binding uses in the proof
 - If used ≥3 times → SKIP (false positive)
+
+**IMPORTANT:** Replace `MyFile.lean` and `42` with your actual file path and line number.
 - If used ≤2 times → Proceed carefully
 
 b) **Interpret results:**
@@ -243,17 +243,17 @@ Recommendation: Skip this pattern (safety first).
 
 ## Integration with Other Tools
 
-**Use count_tokens.py for unclear cases:**
+**Use count_tokens.py for unclear cases** (replace with your actual file and code):
 ```bash
-python3 "$LEAN4_COUNT_TOKENS" --before-file <file>:<start>-<end> --after "<optimized_code>"
+python3 .claude/tools/lean4/count_tokens.py --before-file MyFile.lean:10-25 --after "optimized code here"
 ```
-
-Replace placeholders with actual values.
 
 **Fallback if script is not available or fails:**
 - Use token counting quick reference from proof-golfing.md
 - Each line ≈ 8-12 tokens, each have+proof ≈ 15-20 tokens
 - Compare line counts first, then estimate token density
+
+**IMPORTANT:** Replace `MyFile.lean:10-25` and `"optimized code here"` with your actual values.
 
 **Use lean_multi_attempt (if MCP available):**
 ```

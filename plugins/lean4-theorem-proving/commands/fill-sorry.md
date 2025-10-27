@@ -73,16 +73,16 @@ Hypotheses available:
 
 **Based on goal structure:**
 
-a) **Suggest tactics:**
+a) **Suggest tactics** (replace with your actual goal text):
 ```bash
-bash "$LEAN4_SUGGEST_TACTICS" --goal "<goal_text>"
+bash .claude/tools/lean4/suggest_tactics.sh --goal "∀ x : ℕ, x + 0 = x"
 ```
-
-Replace `<goal_text>` with the actual goal to analyze.
 
 **Fallback if script is not available or fails:**
 - Use tactics-reference.md table: match goal pattern to suggested tactic
 - Example: `⊢ a = b` → try `rfl`, `simp`, or `ring`
+
+**IMPORTANT:** Replace `"∀ x : ℕ, x + 0 = x"` with your actual goal text. Never use placeholders like `<goal_text>` in executed commands.
 
 b) **Present suggestions:**
 ```

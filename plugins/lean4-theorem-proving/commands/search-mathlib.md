@@ -33,41 +33,46 @@ Describe what you need: [wait for user]
 
 ### 2. Choose Search Strategy
 
-**Based on query type:**
+**Based on query type, construct ONE of these commands with user's actual query:**
 
 **A) Know approximate name:**
+
+For example, searching for "continuous_compact":
 ```bash
-bash "$LEAN4_SEARCH_MATHLIB" "<pattern>" name
+bash .claude/tools/lean4/search_mathlib.sh "continuous_compact" name
 ```
-Example: `continuous_compact` → finds `Continuous.isCompact_image`
+Finds lemmas like `Continuous.isCompact_image`
 
 **Fallback:** Use Grep to search local mathlib if cloned, or use WebFetch with mathlib docs
 
 **B) Know type signature pattern:**
+
+For example, searching for continuous function properties:
 ```bash
-bash "$LEAN4_SMART_SEARCH" "<type pattern>" --source=loogle
+bash .claude/tools/lean4/smart_search.sh "(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCompact (?f '' ?s)" --source=loogle
 ```
-Example pattern: `(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCompact (?f '' ?s)`
 
 **Fallback:** Use WebFetch to loogle API directly with the type pattern
 
 **C) Natural language description:**
+
+For example, searching for compactness properties:
 ```bash
-bash "$LEAN4_SMART_SEARCH" "<description>" --source=leansearch
+bash .claude/tools/lean4/smart_search.sh "continuous functions preserve compactness" --source=leansearch
 ```
-Example: "continuous functions preserve compactness"
 
 **Fallback:** Use WebFetch to leansearch API directly with the description
 
 **D) Specific mathematical property:**
+
+For example, searching for conditional expectation:
 ```bash
-bash "$LEAN4_SEARCH_MATHLIB" "<math_term>" content
+bash .claude/tools/lean4/search_mathlib.sh "conditional expectation tower property" content
 ```
-Example: `conditional expectation tower property`
 
 **Fallback:** Use Grep to search local mathlib content if available
 
-Replace angle-bracketed placeholders with actual search queries.
+**IMPORTANT:** Replace example queries with user's actual search terms. Never use placeholders like `<pattern>` in executed commands.
 
 ### 3. Run Search
 

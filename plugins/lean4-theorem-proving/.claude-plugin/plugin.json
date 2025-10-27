@@ -1,0 +1,10 @@
+{
+  "name": "lean4-theorem-proving",
+  "version": "3.1.0",
+  "description": "Systematic workflows for Lean 4 proofs: sorries management, mathlib usage, verified math",
+  "author": {
+    "name": "Cameron Freer",
+    "email": "cameronfreer@gmail.com"
+  },
+  "category": "lean4"
+}

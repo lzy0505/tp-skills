@@ -1,32 +1,11 @@
 ---
 description: Guided workflow for filling a Lean 4 sorry with tactics and lemma search
+allowed-tools: Bash(bash:*)
 ---
 
 # Guided Sorry Filling
 
 Interactive workflow for filling incomplete proofs (sorries) using mathlib search, tactic suggestions, and multi-candidate testing.
-
-## IMPORTANT: Script Location
-
-**BEFORE RUNNING ANY COMMANDS:**
-
-Search and tactic scripts are bundled in the lean4-theorem-proving skill, NOT in the user's project.
-
-**Check if scripts directory exists:**
-```bash
-ls -la ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/
-```
-
-**If found, set SCRIPTS_DIR:**
-```bash
-SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
-```
-
-**If NOT found, use fallbacks:**
-- Lemma search: WebFetch with leansearch/loogle APIs
-- Tactic suggestions: references/tactics-reference.md pattern matching
-
-**All commands below use $SCRIPTS_DIR. If not available, use fallback methods.**
 
 ## Workflow
 
@@ -92,14 +71,14 @@ Hypotheses available:
 
 **Based on goal structure:**
 
-a) **Use suggest_tactics.sh:**
+a) **Suggest tactics:**
 ```bash
-bash "$SCRIPTS_DIR/suggest_tactics.sh" --goal "[goal_text]"
+!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/suggest_tactics.sh --goal "[goal_text]"`
+```
 
-**Fallback if script not found:**
+**Fallback if script fails:**
 - Use tactics-reference.md table: match goal pattern to suggested tactic
 - Example: `⊢ a = b` → try `rfl`, `simp`, or `ring`
-```
 
 b) **Present suggestions:**
 ```
@@ -146,12 +125,12 @@ Searching mathlib...
 b) **Run searches:**
 ```bash
 # For each needed lemma type
-bash "$SCRIPTS_DIR/smart_search.sh" "[lemma_description]" --source=leansearch
-
-**Fallback if script not found:**
-- Use WebFetch with leansearch API directly (https://leansearch.net/)
-- Or use /search-mathlib command which has WebFetch fallbacks
+!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "[lemma_description]" --source=leansearch`
 ```
+
+**Fallback if script fails:**
+- Use WebFetch with leansearch API directly (https://leansearch.net/)
+- Or use /lean4-theorem-proving:search-mathlib command
 
 c) **Present findings:**
 ```

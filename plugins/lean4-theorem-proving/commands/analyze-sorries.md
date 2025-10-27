@@ -1,32 +1,11 @@
 ---
 description: Analyze and plan work for incomplete Lean 4 proofs (sorries)
+allowed-tools: Bash(python:*), Bash(grep:*)
 ---
 
 # Sorry Analysis and Planning
 
 Interactive analysis of incomplete proofs to plan systematic sorry-filling work.
-
-## IMPORTANT: Script Location
-
-**BEFORE RUNNING ANY COMMANDS:**
-
-The sorry_analyzer.py script is bundled in the lean4-theorem-proving skill, NOT in the user's project.
-
-**Check if script exists:**
-```bash
-ls -la ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py
-```
-
-**If found, use:**
-```bash
-SCRIPT_PATH="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py"
-```
-
-**If NOT found, use grep fallback:**
-```bash
-# Basic sorry analysis without script
-grep -n "sorry" [path] --include="*.lean" -r
-```
 
 ## Workflow
 
@@ -45,21 +24,18 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Analysis
 
-**If SCRIPT_PATH is set (script was found):**
-
 For file or directory:
 ```bash
-python3 "$SCRIPT_PATH" [path] --format=text
+!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py [path] --format=text`
 ```
 
 For interactive mode:
 ```bash
-python3 "$SCRIPT_PATH" [path] --interactive
+!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py [path] --interactive`
 ```
 
-**If script NOT found (use grep fallback):**
+**If script fails (use grep fallback):**
 ```bash
-# Basic sorry analysis
 grep -n "sorry" [path] --include="*.lean" -r
 ```
 
@@ -183,9 +159,7 @@ b) **Search for relevant lemmas:**
 Searching mathlib for relevant lemmas...
 ```
 
-```bash
-./scripts/smart_search.sh "[goal_pattern]" --source=leansearch
-```
+Use the `/lean4-theorem-proving:search-mathlib` command to find relevant lemmas.
 
 c) **Suggest approach:**
 ```

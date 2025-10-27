@@ -1,33 +1,11 @@
 ---
 description: Interactively optimize Lean 4 proofs by shortening length or runtime without sacrificing readability
+allowed-tools: Bash(python:*)
 ---
 
 # Interactive Proof Optimization
 
 Apply systematic proof-golfing patterns to optimize Lean 4 proofs after compilation.
-
-## IMPORTANT: Script Location
-
-**BEFORE RUNNING ANY COMMANDS:**
-
-Proof-golfing scripts are bundled in the lean4-theorem-proving skill, NOT in the user's project.
-
-**Check if scripts directory exists:**
-```bash
-ls -la ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/
-```
-
-**If found, set SCRIPTS_DIR:**
-```bash
-SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
-```
-
-**If NOT found, use manual fallbacks:**
-- Pattern detection: grep for patterns from references/proof-golfing.md
-- Usage counting: manual inspection
-- Token counting: estimation from quick reference
-
-**All commands below use $SCRIPTS_DIR. If not available, use fallback methods.**
 
 ## Workflow
 
@@ -54,10 +32,10 @@ Continue? (yes/no)
 
 **Run pattern detection with false-positive filtering:**
 ```bash
-python3 "$SCRIPTS_DIR/find_golfable.py" [file] --filter-false-positives --verbose
+!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/find_golfable.py [file] --filter-false-positives --verbose`
 ```
 
-**Fallback if script not found:**
+**Fallback if script fails:**
 ```bash
 # Manual pattern detection - search for common patterns
 grep -n "let.*:=.*have.*:=.*exact" [file]  # let+have+exact pattern
@@ -102,10 +80,10 @@ Tackle HIGH patterns? (yes/no)
 
 a) **Check if let binding is safe to inline:**
 ```bash
-python3 "$SCRIPTS_DIR/analyze_let_usage.py" [file] --line [pattern_line]
+!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/analyze_let_usage.py [file] --line [pattern_line]`
 ```
 
-**Fallback if script not found:**
+**Fallback if script fails:**
 - Manually count let binding uses in the proof
 - If used ≥3 times → SKIP (false positive)
 - If used ≤2 times → Proceed carefully
@@ -249,13 +227,12 @@ Recommendation: Skip this pattern (safety first).
 
 ## Integration with Other Tools
 
-**Use count_tokens.py for unclear cases (if available):**
+**Use count_tokens.py for unclear cases:**
 ```bash
-python3 "$SCRIPTS_DIR/count_tokens.py" --before-file [file]:[start]-[end] \
-                                        --after "[optimized_code]"
+!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/count_tokens.py --before-file [file]:[start]-[end] --after "[optimized_code]"`
 ```
 
-**Fallback if script not found:**
+**Fallback if script fails:**
 - Use token counting quick reference from proof-golfing.md
 - Each line ≈ 8-12 tokens, each have+proof ≈ 15-20 tokens
 - Compare line counts first, then estimate token density

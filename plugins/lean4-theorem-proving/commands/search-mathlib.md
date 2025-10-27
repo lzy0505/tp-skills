@@ -1,5 +1,6 @@
 ---
 description: Fast search for existing lemmas in mathlib to avoid reproving standard results
+allowed-tools: Bash(bash:*)
 ---
 
 # Mathlib Lemma Search
@@ -12,29 +13,6 @@ Quick search for existing lemmas, theorems, and definitions in mathlib before re
 
 Time saved by finding existing lemma: 5 minutes
 Time wasted reproving something that exists: 30-60 minutes
-
-## IMPORTANT: Script Location
-
-**BEFORE RUNNING ANY COMMANDS:**
-
-Search scripts are bundled in the lean4-theorem-proving skill, NOT in the user's project.
-
-**Check if scripts directory exists:**
-```bash
-ls -la ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/
-```
-
-**If found, set SCRIPTS_DIR:**
-```bash
-SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
-```
-
-**If NOT found, use WebFetch fallbacks:**
-- leansearch API: https://leansearch.net/
-- loogle API: https://loogle.lean-lang.org/
-- Online mathlib docs: https://leanprover-community.github.io/mathlib4_docs/
-
-**All commands below use $SCRIPTS_DIR. If not available, use WebFetch.**
 
 ## Workflow
 
@@ -57,15 +35,15 @@ Describe what you need: [wait for user]
 
 **A) Know approximate name:**
 ```bash
-bash "$SCRIPTS_DIR/search_mathlib.sh" "[pattern]" name
+!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/search_mathlib.sh "[pattern]" name`
 ```
 Example: `continuous_compact` → finds `Continuous.isCompact_image`
 
-**Fallback:** Use Grep to search local mathlib if cloned: `grep -r "continuous.*compact" ~/.elan/toolchains/*/lib/lean/library/`
+**Fallback:** Use Grep to search local mathlib if cloned, or use WebFetch with mathlib docs
 
 **B) Know type signature pattern:**
 ```bash
-bash "$SCRIPTS_DIR/smart_search.sh" "[type pattern]" --source=loogle
+!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "[type pattern]" --source=loogle`
 ```
 Example: `(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCompact (?f '' ?s)`
 
@@ -73,7 +51,7 @@ Example: `(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCompact (?
 
 **C) Natural language description:**
 ```bash
-bash "$SCRIPTS_DIR/smart_search.sh" "[description]" --source=leansearch
+!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "[description]" --source=leansearch`
 ```
 Example: "continuous functions preserve compactness"
 
@@ -81,7 +59,7 @@ Example: "continuous functions preserve compactness"
 
 **D) Specific mathematical property:**
 ```bash
-bash "$SCRIPTS_DIR/search_mathlib.sh" "[math_term]" content
+!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/search_mathlib.sh "[math_term]" content`
 ```
 Example: `conditional expectation tower property`
 

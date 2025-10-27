@@ -67,37 +67,6 @@ Interactive workflows you can invoke by typing `/lean` in Claude Code (autocompl
 
 ➡️ **[Full Commands Guide](COMMANDS.md)** - Detailed documentation with examples and workflows
 
-### Common Patterns
-
-**Integrability proofs:**
-```lean
-have h_integrable : Integrable X μ := by
-  refine ⟨h_measurable, ?_⟩
-  calc ∫⁻ a, ‖X a‖₊ ∂μ
-    ≤ ∫⁻ a, M ∂μ := by apply lintegral_mono; intro; apply h_bound
-    _ = M * μ univ := lintegral_const M
-    _ < ∞ := by simp [h_prob, ENNReal.mul_lt_top]
-```
-
-**Conditional expectation equalities:**
-```lean
-theorem condExp_unique (hX : Measurable X) (hY : Measurable Y)
-    (h_eq : ∀ s, MeasurableSet[m] s → ∫ x in s, X x ∂μ = ∫ x in s, Y x ∂μ) :
-    condExp μ m X =ᵐ[μ] Y := by
-  apply ae_eq_condExp_of_forall_setIntegral_eq hX hY
-  exact h_eq
-```
-
-**Type class instance management:**
-```lean
--- Explicit instance when Lean can't infer
-haveI : MeasurableSpace Ω := inferInstance
-haveI : IsProbabilityMeasure μ := h_prob
-
--- Now use dependent results
-apply measure_eq_on_generateFrom
-```
-
 ## Automation Scripts
 
 The plugin includes 16 automation scripts organized by category:

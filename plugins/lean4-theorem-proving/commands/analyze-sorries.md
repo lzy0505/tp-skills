@@ -7,6 +7,8 @@ allowed-tools: Bash(python:*), Bash(grep:*)
 
 Interactive analysis of incomplete proofs to plan systematic sorry-filling work.
 
+**IMPORTANT:** All script paths use `${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/` - never check for scripts in the current directory.
+
 ## Workflow
 
 ### 1. Determine Scope
@@ -24,19 +26,23 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Analysis
 
-For file or directory:
+Run the sorry analyzer script from the plugin directory. **The script is bundled with this plugin - do not check for its existence in the current directory. Always use the full path with ${CLAUDE_PLUGIN_ROOT}.**
+
+For file or directory analysis:
 ```bash
-!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py [path] --format=text`
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py <path> --format=text
 ```
 
-For interactive mode:
+For interactive TUI mode:
 ```bash
-!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py [path] --interactive`
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py <path> --interactive
 ```
 
-**If script fails (use grep fallback):**
+Replace `<path>` with the actual file path, directory path, or `.` for entire project.
+
+**If the script fails, fall back to grep:**
 ```bash
-grep -n "sorry" [path] --include="*.lean" -r
+grep -n "sorry" <path> --include="*.lean" -r
 ```
 
 ### 3. Present Results

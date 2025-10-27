@@ -7,6 +7,8 @@ allowed-tools: Bash(python:*)
 
 Apply systematic proof-golfing patterns to optimize Lean 4 proofs after compilation.
 
+**IMPORTANT:** Proof-golfing scripts are bundled with this plugin - do not look for them in the current directory. Always use the full path with ${CLAUDE_PLUGIN_ROOT}.
+
 ## Workflow
 
 Follow this systematic process to achieve 30-40% size reduction while avoiding the 93% false-positive trap:
@@ -30,16 +32,19 @@ Continue? (yes/no)
 
 ### 2. Find High-Value Patterns
 
-**Run pattern detection with false-positive filtering:**
+Run the pattern detection script from the plugin directory:
+
 ```bash
-!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/find_golfable.py [file] --filter-false-positives --verbose`
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/find_golfable.py <file> --filter-false-positives --verbose
 ```
+
+Replace `<file>` with the actual file path to optimize.
 
 **Fallback if script fails:**
 ```bash
 # Manual pattern detection - search for common patterns
-grep -n "let.*:=.*have.*:=.*exact" [file]  # let+have+exact pattern
-grep -n "by$" [file] | grep -A1 "exact"     # by-exact pattern
+grep -n "let.*:=.*have.*:=.*exact" <file>  # let+have+exact pattern
+grep -n "by$" <file> | grep -A1 "exact"     # by-exact pattern
 ```
 
 **If 0 patterns found:**
@@ -80,8 +85,10 @@ Tackle HIGH patterns? (yes/no)
 
 a) **Check if let binding is safe to inline:**
 ```bash
-!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/analyze_let_usage.py [file] --line [pattern_line]`
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/analyze_let_usage.py <file> --line <pattern_line>
 ```
+
+Replace `<file>` and `<pattern_line>` with actual values.
 
 **Fallback if script fails:**
 - Manually count let binding uses in the proof
@@ -229,8 +236,10 @@ Recommendation: Skip this pattern (safety first).
 
 **Use count_tokens.py for unclear cases:**
 ```bash
-!`python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/count_tokens.py --before-file [file]:[start]-[end] --after "[optimized_code]"`
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/count_tokens.py --before-file <file>:<start>-<end> --after "<optimized_code>"
 ```
+
+Replace placeholders with actual values.
 
 **Fallback if script fails:**
 - Use token counting quick reference from proof-golfing.md

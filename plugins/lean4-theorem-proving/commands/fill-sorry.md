@@ -7,6 +7,8 @@ allowed-tools: Bash(bash:*)
 
 Interactive workflow for filling incomplete proofs (sorries) using mathlib search, tactic suggestions, and multi-candidate testing.
 
+**IMPORTANT:** Tactic and search scripts are bundled with this plugin - do not look for them in the current directory. Always use the full path with ${CLAUDE_PLUGIN_ROOT}.
+
 ## Workflow
 
 ### 1. Locate Sorry
@@ -73,8 +75,10 @@ Hypotheses available:
 
 a) **Suggest tactics:**
 ```bash
-!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/suggest_tactics.sh --goal "[goal_text]"`
+bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/suggest_tactics.sh --goal "<goal_text>"
 ```
+
+Replace `<goal_text>` with the actual goal to analyze.
 
 **Fallback if script fails:**
 - Use tactics-reference.md table: match goal pattern to suggested tactic
@@ -125,8 +129,10 @@ Searching mathlib...
 b) **Run searches:**
 ```bash
 # For each needed lemma type
-!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "[lemma_description]" --source=leansearch`
+bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "<lemma_description>" --source=leansearch
 ```
+
+Replace `<lemma_description>` with the actual lemma to search for.
 
 **Fallback if script fails:**
 - Use WebFetch with leansearch API directly (https://leansearch.net/)

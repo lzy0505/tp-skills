@@ -1,10 +1,13 @@
 ---
 description: Verify that Lean 4 proofs use only standard mathlib axioms
+allowed-tools: Bash(bash:*)
 ---
 
 # Axiom Hygiene Verification
 
 Quick verification that your Lean 4 proofs use only standard axioms (propext, quot.sound, Classical.choice).
+
+**IMPORTANT:** The axiom checker script is bundled with this plugin - do not look for it in the current directory. Always use the full path with ${CLAUDE_PLUGIN_ROOT}.
 
 ## Workflow
 
@@ -23,32 +26,30 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Verification
 
-**Find and run the check_axioms_inline.sh script:**
+Run the bundled axiom checker script from the plugin directory:
 
-Try these locations in order:
-1. `./lean4-theorem-proving/scripts/check_axioms_inline.sh` (if skill is cloned locally)
-2. Use `#print axioms` directly in Lean for individual theorems
-3. Ask user where the lean4-theorem-proving skill is installed
+**For single or multiple files:**
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/check_axioms_inline.sh <file-or-pattern>
+```
 
-**For individual theorems:**
+Replace `<file-or-pattern>` with the actual file path, glob pattern, or multiple files.
+
+**If the script fails, fall back to manual Lean checks:**
+
+For individual theorems:
 ```bash
 lake env lean --run <<EOF
 #print axioms theoremName
 EOF
 ```
 
-**For comprehensive file check (if script found):**
+For all theorems in a file:
 ```bash
-[script_path]/check_axioms_inline.sh [file]
-```
-
-**If script not available**, use Lean directly to check each theorem:
-```bash
-# List all theorems in file
-grep "^theorem\|^lemma\|^def" [file] | while read line; do
+grep "^theorem\|^lemma\|^def" <file> | while read line; do
   name=$(echo "$line" | awk '{print $2}' | cut -d'(' -f1 | cut -d':' -f1)
   echo "Checking $name..."
-  lake env lean --run -c "#print axioms $name" [file]
+  lake env lean --run -c "#print axioms $name" <file>
 done
 ```
 

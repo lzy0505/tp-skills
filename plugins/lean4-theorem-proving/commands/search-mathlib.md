@@ -14,6 +14,8 @@ Quick search for existing lemmas, theorems, and definitions in mathlib before re
 Time saved by finding existing lemma: 5 minutes
 Time wasted reproving something that exists: 30-60 minutes
 
+**IMPORTANT:** Search scripts are bundled with this plugin - do not look for them in the current directory. Always use the full path with ${CLAUDE_PLUGIN_ROOT}.
+
 ## Workflow
 
 ### 1. Understand What You Need
@@ -35,7 +37,7 @@ Describe what you need: [wait for user]
 
 **A) Know approximate name:**
 ```bash
-!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/search_mathlib.sh "[pattern]" name`
+bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/search_mathlib.sh "<pattern>" name
 ```
 Example: `continuous_compact` → finds `Continuous.isCompact_image`
 
@@ -43,15 +45,15 @@ Example: `continuous_compact` → finds `Continuous.isCompact_image`
 
 **B) Know type signature pattern:**
 ```bash
-!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "[type pattern]" --source=loogle`
+bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "<type pattern>" --source=loogle
 ```
-Example: `(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCompact (?f '' ?s)`
+Example pattern: `(?f : ?α → ?β) → Continuous ?f → IsCompact ?s → IsCompact (?f '' ?s)`
 
 **Fallback:** Use WebFetch to loogle API directly with the type pattern
 
 **C) Natural language description:**
 ```bash
-!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "[description]" --source=leansearch`
+bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/smart_search.sh "<description>" --source=leansearch
 ```
 Example: "continuous functions preserve compactness"
 
@@ -59,11 +61,13 @@ Example: "continuous functions preserve compactness"
 
 **D) Specific mathematical property:**
 ```bash
-!`bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/search_mathlib.sh "[math_term]" content`
+bash ${CLAUDE_PLUGIN_ROOT}/skills/lean4-theorem-proving/scripts/search_mathlib.sh "<math_term>" content
 ```
 Example: `conditional expectation tower property`
 
 **Fallback:** Use Grep to search local mathlib content if available
+
+Replace angle-bracketed placeholders with actual search queries.
 
 ### 3. Run Search
 

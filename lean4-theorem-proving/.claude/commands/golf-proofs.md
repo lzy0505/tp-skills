@@ -1,5 +1,5 @@
 ---
-name: lean:golf-proofs
+name: golf-proofs
 description: Interactively optimize Lean 4 proofs with systematic false-positive filtering
 ---
 

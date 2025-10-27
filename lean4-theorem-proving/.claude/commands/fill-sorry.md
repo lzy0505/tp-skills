@@ -1,5 +1,5 @@
 ---
-name: lean:fill-sorry
+name: fill-sorry
 description: Guided workflow for filling a Lean 4 sorry with tactics and lemma search
 ---
 

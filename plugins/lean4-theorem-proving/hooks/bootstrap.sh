@@ -49,6 +49,16 @@ if [[ -n "${ANALYZER_PATH}" && -f "${ANALYZER_PATH}" ]]; then
   chmod +x "${ANALYZER_PATH}" || true
 fi
 
+# Copy the script to workspace to avoid parameter substitution in commands.
+# This makes commands immune to Claude Code's ${...} security filter.
+WORKSPACE_TOOLS_DIR=".claude/tools/lean4"
+mkdir -p "${WORKSPACE_TOOLS_DIR}"
+if [[ -n "${ANALYZER_PATH}" && -f "${ANALYZER_PATH}" ]]; then
+  cp -f "${ANALYZER_PATH}" "${WORKSPACE_TOOLS_DIR}/sorry_analyzer.py"
+  chmod +x "${WORKSPACE_TOOLS_DIR}/sorry_analyzer.py" || true
+  echo "Staged sorry_analyzer.py -> ${WORKSPACE_TOOLS_DIR}/sorry_analyzer.py"
+fi
+
 # Persist variables for the rest of the session (so slash-commands can use them).
 persist() {
   local kv="$1"

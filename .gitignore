@@ -13,3 +13,6 @@
 # Temporary files
 *.tmp
 *.bak
+
+# Claude Code staged tools (generated at session start)
+.claude/tools/

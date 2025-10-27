@@ -1,6 +1,6 @@
 ---
 description: Analyze Lean 4 sorries in the current repo and summarize hotspots
-allowed-tools: Bash(python3:*), Bash(find:*), Bash(grep:*), Bash(xargs:*), Bash(sed:*), Bash(awk:*), Bash(cat:*), Bash(echo:*), Bash(python3 "${LEAN4_SORRY_ANALYZER}" * --format=text), Bash(python3 "${LEAN4_SORRY_ANALYZER}" * --interactive), Bash(if [ * ]; then *; fi)
+allowed-tools: Bash(python3:*), Bash(test:*), Bash(echo:*), Bash(cat:*), Bash(grep:*), Bash(find:*), Bash(xargs:*), Bash(sed:*), Bash(awk:*)
 ---
 
 # Sorry Analysis and Planning
@@ -24,27 +24,20 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Analysis
 
-Verify bootstrap ran and the analyzer was found:
+Verify bootstrap staged the analyzer:
 
-!`echo ":: LEAN4_SORRY_ANALYZER=${LEAN4_SORRY_ANALYZER:-<unset>}"`
-
-!`if [ -z "${LEAN4_SORRY_ANALYZER:-}" ] || [ ! -f "${LEAN4_SORRY_ANALYZER}" ]; then \
-  echo ":: lean4-sorry-analyzer not found. Try restarting the session or re-enabling the plugin."; \
-  echo ":: Expected one of:"; \
-  echo "   ${LEAN4_PLUGIN_ROOT:-<unset>}/scripts/sorry_analyzer.py"; \
-  echo "   ${LEAN4_PLUGIN_ROOT:-<unset>}/skills/lean4-theorem-proving/scripts/sorry_analyzer.py"; \
-  exit 1; fi`
+!`test -f .claude/tools/lean4/sorry_analyzer.py || { echo ":: analyzer missing; restart session or reinstall plugin."; exit 1; }`
 
 Run the analyzer based on user's scope choice:
 
 **For entire project:**
-!`python3 "${LEAN4_SORRY_ANALYZER}" . --format=text`
+!`python3 .claude/tools/lean4/sorry_analyzer.py . --format=text`
 
 **For specific file or directory:**
-!`python3 "${LEAN4_SORRY_ANALYZER}" <path> --format=text`
+!`python3 .claude/tools/lean4/sorry_analyzer.py <path> --format=text`
 
 **For interactive TUI mode:**
-!`python3 "${LEAN4_SORRY_ANALYZER}" <path> --interactive`
+!`python3 .claude/tools/lean4/sorry_analyzer.py <path> --interactive`
 
 Replace `<path>` with the actual file or directory path from step 1.
 

@@ -22,15 +22,17 @@ You MUST read and follow that reference file for:
 
 ## Script Locations
 
-The lean4-theorem-proving skill bundles these scripts. Find them by:
+The lean4-theorem-proving plugin stages scripts to `.claude/tools/lean4/` in your workspace during SessionStart.
 
-1. **Check if skill is installed locally:**
-   - Look in `~/.claude/skills/lean4-theorem-proving/scripts/`
-   - Or search for the skill installation directory
+**Scripts available:**
+- `.claude/tools/lean4/find_golfable.py` - Find optimization patterns with filtering
+- `.claude/tools/lean4/analyze_let_usage.py` - Verify let binding safety
+- `.claude/tools/lean4/count_tokens.py` - Count proof tokens
 
-2. **If scripts not accessible:**
-   - Follow the manual patterns from `references/proof-golfing.md`
-   - Use Grep/Read to identify patterns manually
+**If scripts not accessible:**
+- Use `/lean4-theorem-proving:golf-proofs` slash command (preferred)
+- Follow manual patterns from `references/proof-golfing.md`
+- Use Grep/Read to identify patterns manually
 
 ## Workflow (High-Level)
 

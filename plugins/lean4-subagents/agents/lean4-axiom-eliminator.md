@@ -21,16 +21,18 @@ You MUST read and follow those reference files for:
 
 ## Script Locations
 
-The lean4-theorem-proving skill bundles axiom-checking scripts. Find them by:
+The lean4-theorem-proving plugin stages scripts to `.claude/tools/lean4/` in your workspace during SessionStart.
 
-1. **Check if skill is installed locally:**
-   - Look in `~/.claude/skills/lean4-theorem-proving/scripts/`
-   - Or search for the skill installation directory
+**Scripts available:**
+- `.claude/tools/lean4/check_axioms.sh` - Verify axiom usage
+- `.claude/tools/lean4/search_mathlib.sh` - Search mathlib for existing theorems
+- `.claude/tools/lean4/smart_search.sh` - Multi-source search
 
-2. **If scripts not accessible:**
-   - Use Lean's `#print axioms` directly: `lake env lean --run <<EOF\n#print axioms theoremName\nEOF`
-   - Use Grep to search for `axiom` declarations
-   - Follow manual axiom checking from the skill's references
+**If scripts not accessible:**
+- Use `/lean4-theorem-proving:check-axioms` slash command (preferred)
+- Use Lean's `#print axioms` directly: `lake env lean --run <<EOF\n#print axioms theoremName\nEOF`
+- Use Grep to search for `axiom` declarations
+- Follow manual axiom checking from the skill's references
 
 ## Workflow (High-Level)
 

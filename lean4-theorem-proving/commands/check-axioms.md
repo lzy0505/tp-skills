@@ -23,19 +23,33 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Verification
 
-**For single file:**
+**Find and run the check_axioms_inline.sh script:**
+
+Try these locations in order:
+1. `./lean4-theorem-proving/scripts/check_axioms_inline.sh` (if skill is cloned locally)
+2. Use `#print axioms` directly in Lean for individual theorems
+3. Ask user where the lean4-theorem-proving skill is installed
+
+**For individual theorems:**
 ```bash
-./scripts/check_axioms_inline.sh [file]
+lake env lean --run <<EOF
+#print axioms theoremName
+EOF
 ```
 
-**For multiple files:**
+**For comprehensive file check (if script found):**
 ```bash
-./scripts/check_axioms_inline.sh [pattern] --verbose
+[script_path]/check_axioms_inline.sh [file]
 ```
 
-**For project-wide:**
+**If script not available**, use Lean directly to check each theorem:
 ```bash
-./scripts/check_axioms_inline.sh "**/*.lean"
+# List all theorems in file
+grep "^theorem\|^lemma\|^def" [file] | while read line; do
+  name=$(echo "$line" | awk '{print $2}' | cut -d'(' -f1 | cut -d':' -f1)
+  echo "Checking $name..."
+  lake env lean --run -c "#print axioms $name" [file]
+done
 ```
 
 ### 3. Interpret Results

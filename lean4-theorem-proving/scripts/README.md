@@ -24,6 +24,8 @@ Automated tools for common Lean 4 workflows. These scripts implement the workflo
 | `sorry_analyzer.py` | Extract and report sorries | Planning work, tracking progress | ✅ Production |
 | `proof_complexity.sh` | Analyze proof metrics | Refactoring, identifying complex proofs | ✅ Production |
 | `dependency_graph.sh` | Visualize theorem dependencies | Understanding proof structure | ✅ Production |
+| `find_golfable.py` | Find proof-golfing opportunities | After proofs compile, before final commit | ✅ Production |
+| `count_tokens.py` | Count tokens in code | Comparing optimization candidates | ✅ Production |
 
 ## search_mathlib.sh
 
@@ -882,6 +884,240 @@ Proceeding with commit...
 
 ---
 
+## find_golfable.py
+
+**Purpose:** Identify proof optimization opportunities by detecting common patterns that can be simplified (proof golfing).
+
+**Usage:**
+```bash
+./find_golfable.py <file-or-directory> [--patterns <types>] [--verbose] [--recursive]
+```
+
+**Pattern Types:**
+- `let-have-exact` - let + have + exact pattern (60-80% reduction, HIGH priority)
+- `by-exact` - by-exact wrapper pattern (50% reduction, MEDIUM priority)
+- `calc` - Long calc chains (30-50% reduction, MEDIUM priority)
+- `constructor` - Constructor branches (25-50% reduction, LOW priority)
+- `multiple-haves` - 5+ consecutive haves (10-30% reduction, LOW priority)
+- `all` (default) - All patterns
+
+**Examples:**
+```bash
+# Find all patterns in a file
+./find_golfable.py MyFile.lean
+
+# Find specific pattern types
+./find_golfable.py src/ --patterns let-have-exact by-exact --recursive
+
+# Show code snippets
+./find_golfable.py MyFile.lean --verbose
+
+# Analyze all .lean files in directory
+./find_golfable.py src/ --recursive
+```
+
+**Output:**
+```
+======================================================================
+Found 3 optimization opportunities
+======================================================================
+
+1. LET + HAVE + EXACT [HIGH PRIORITY]
+   File: MyFile.lean:42
+   Lines: 4 | Est. reduction: 60-80%
+
+2. BY EXACT WRAPPER [MEDIUM PRIORITY]
+   File: MyFile.lean:78
+   Lines: 2 | Est. reduction: 50%
+
+Summary: 1 HIGH, 1 MEDIUM, 1 LOW priority
+Expected total reduction: 30-40% with systematic optimization
+```
+
+**Pattern Detection:**
+
+**1. let + have + exact (HIGH value)**
+```lean
+-- ❌ BEFORE (verbose, ~15 tokens)
+let x := definition
+have h : Property x := by
+  intro i
+  exact proof
+exact result x h
+
+-- ✅ AFTER (direct, ~3 tokens, 80% reduction)
+exact result definition proof
+```
+
+**2. by exact wrapper (MEDIUM value)**
+```lean
+-- ❌ BEFORE
+theorem foo : P := by
+  exact term
+
+-- ✅ AFTER (50% reduction)
+theorem foo : P := term
+```
+
+**3. Long calc chains (MEDIUM value)**
+- Detects calc chains with 4+ steps
+- Suggests combining with simp or using direct lemmas
+- 30-50% reduction potential
+
+**4. Constructor branches (LOW value)**
+- Detects constructor proofs with 6+ branch lines
+- Suggests extracting helper lemmas
+- 25-50% reduction potential
+
+**5. Multiple haves (LOW value)**
+- Detects 5+ consecutive have statements
+- Suggests calc chains or direct composition
+- 10-30% reduction potential
+
+**Use Cases:**
+- After proofs compile, before final commit
+- Identifying optimization opportunities in mature code
+- Learning which patterns to avoid in new proofs
+- Preparing proofs for mathlib contribution (shorter = better)
+
+**Integration with count_tokens.py:**
+```bash
+# Find opportunities
+./find_golfable.py MyFile.lean
+
+# Compare before/after for specific proof
+./count_tokens.py --before-file MyFile.lean:42-47 \
+                  --after "exact result definition proof"
+```
+
+**Workflow:**
+1. Run after all proofs compile successfully
+2. Focus on HIGH priority patterns first (best ROI)
+3. Use count_tokens.py to validate reduction estimates
+4. Test each optimization to ensure correctness
+5. Commit optimizations separately from functional changes
+
+**Inspired by:** ProofOptimizer research (https://proof-optimizer.github.io/)
+
+---
+
+## count_tokens.py
+
+**Purpose:** Count tokens in Lean 4 code to compare optimization candidates and measure reduction.
+
+**Usage:**
+```bash
+# Single code snippet
+./count_tokens.py "<code>"
+
+# File range
+./count_tokens.py MyFile.lean:10-15
+
+# Compare before/after
+./count_tokens.py --before "<code1>" --after "<code2>"
+
+# Compare file ranges
+./count_tokens.py --before-file MyFile.lean:10-15 \
+                  --after-file MyFile.lean:20-22
+```
+
+**Examples:**
+```bash
+# Count tokens in code snippet
+./count_tokens.py "lemma foo := by exact bar"
+
+# Count tokens in file range
+./count_tokens.py MyFile.lean:42-47
+
+# Compare before/after optimization
+./count_tokens.py \
+  --before "let x := def; have h := proof; exact result x h" \
+  --after "exact result def proof"
+
+# Compare file ranges
+./count_tokens.py \
+  --before-file MyFile.lean:42-47 \
+  --after-file MyFile.lean:50-50
+```
+
+**Output (single count):**
+```
+Token Count
+========================================
+Lines:  5
+Tokens: 32 (estimated)
+Avg:    6.4 tokens/line
+```
+
+**Output (comparison):**
+```
+============================================================
+Optimization Comparison
+============================================================
+
+BEFORE:
+  Lines:  5
+  Tokens: 32 (estimated)
+
+AFTER:
+  Lines:  1
+  Tokens: 6 (estimated)
+
+REDUCTION:
+  Lines:  -4 (80.0%)
+  Tokens: -26 (81.2%)
+
+✅ Excellent optimization! (>81% reduction)
+```
+
+**Token Estimation:**
+- Keyword weights (let, have, exact, by, etc.)
+- Operator weights (∀, ∃, →, ←, ≤, etc.)
+- Identifier counting (words, function names)
+- Structure overhead (parentheses, colons)
+- Rough approximation for comparison purposes
+
+**Reduction Quality:**
+- **Excellent** (>50%): Major simplification, high-value optimization
+- **Good** (30-50%): Significant improvement, worth doing
+- **Moderate** (10-30%): Minor improvement, lower priority
+- **Minimal** (<10%): Possibly not worth the effort
+
+**Use Cases:**
+- Validating optimization candidates from find_golfable.py
+- Measuring proof simplification impact
+- Comparing multiple optimization approaches
+- Prioritizing which proofs to optimize (biggest reductions first)
+- Learning which patterns save the most tokens
+
+**Workflow with find_golfable.py:**
+```bash
+# 1. Find optimization opportunities
+./find_golfable.py MyFile.lean
+
+# 2. For each opportunity, count tokens before/after
+./count_tokens.py --before-file MyFile.lean:42-47 \
+                  --after "candidate_optimization"
+
+# 3. Try multiple candidates, compare reductions
+./count_tokens.py --before-file MyFile.lean:42-47 \
+                  --after "candidate_1"  # 70% reduction
+
+./count_tokens.py --before-file MyFile.lean:42-47 \
+                  --after "candidate_2"  # 85% reduction ← better!
+
+# 4. Use best candidate
+```
+
+**Limitations:**
+- Token counts are rough estimates (not exact Lean tokenization)
+- Use for relative comparison, not absolute measurement
+- Context-dependent optimizations may not be captured
+
+**Note:** Inspired by ProofOptimizer paper's token-based optimization approach.
+
+---
+
 ## Installation
 
 All scripts are executable and self-contained:
@@ -930,6 +1166,13 @@ These scripts implement the systematic approaches from SKILL.md:
   - `minimize_imports.py` to clean up unused imports
   - `simp_lemma_tester.sh` to verify simp lemmas
   - `sorry_analyzer.py` to check for undocumented sorries
+
+**After Proofs Compile (Proof Golfing):**
+→ Use `find_golfable.py` to identify optimization opportunities
+→ Use `count_tokens.py` to compare optimization candidates
+→ Focus on HIGH priority patterns first (60-80% reduction)
+→ Test optimizations to ensure correctness
+→ Commit optimizations separately from functional changes
 
 **Before Refactoring:**
 → Use `find_usages.sh` to understand impact

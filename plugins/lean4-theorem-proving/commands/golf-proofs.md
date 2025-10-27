@@ -6,28 +6,32 @@ description: Interactively optimize Lean 4 proofs by shortening length or runtim
 
 Apply systematic proof-golfing patterns to optimize Lean 4 proofs after compilation.
 
-## Workflow
+## IMPORTANT: Script Location
 
-Follow this systematic process to achieve 30-40% size reduction while avoiding the 93% false-positive trap:
+**BEFORE RUNNING ANY COMMANDS:**
 
-### 0. Locate Scripts
+Proof-golfing scripts are bundled in the lean4-theorem-proving skill, NOT in the user's project.
 
-**The lean4-theorem-proving skill bundles proof-golfing scripts. Find them first:**
+**Check if scripts directory exists:**
+```bash
+ls -la ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/
+```
 
-Try these locations in order:
-1. `~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/` (if skill is installed)
-2. Search: `find ~ -name "find_golfable.py" 2>/dev/null | grep lean4-theorem-proving | head -1`
-
-**Set SCRIPTS_DIR for convenience:**
+**If found, set SCRIPTS_DIR:**
 ```bash
 SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
 ```
 
-**If scripts not found:**
-- Fall back to manual pattern detection (use Grep to search for patterns from references/proof-golfing.md)
-- Inform user: "Scripts not found - using manual pattern detection"
+**If NOT found, use manual fallbacks:**
+- Pattern detection: grep for patterns from references/proof-golfing.md
+- Usage counting: manual inspection
+- Token counting: estimation from quick reference
 
-**All script references below assume SCRIPTS_DIR is set or scripts are accessible.**
+**All commands below use $SCRIPTS_DIR. If not available, use fallback methods.**
+
+## Workflow
+
+Follow this systematic process to achieve 30-40% size reduction while avoiding the 93% false-positive trap:
 
 ### 1. Verify File is Ready
 

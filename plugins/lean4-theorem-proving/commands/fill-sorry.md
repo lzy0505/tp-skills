@@ -6,22 +6,29 @@ description: Guided workflow for filling a Lean 4 sorry with tactics and lemma s
 
 Interactive workflow for filling incomplete proofs (sorries) using mathlib search, tactic suggestions, and multi-candidate testing.
 
-## Workflow
+## IMPORTANT: Script Location
 
-### 0. Locate Scripts (Optional - Fallbacks Available)
+**BEFORE RUNNING ANY COMMANDS:**
 
-**The lean4-theorem-proving skill bundles search and tactics scripts:**
+Search and tactic scripts are bundled in the lean4-theorem-proving skill, NOT in the user's project.
 
-Try: `$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/`
+**Check if scripts directory exists:**
+```bash
+ls -la ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/
+```
 
-**Set SCRIPTS_DIR:**
+**If found, set SCRIPTS_DIR:**
 ```bash
 SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
 ```
 
-**Fallbacks if scripts not found:**
-- Use WebFetch with leansearch/loogle for lemma search
-- Manual tactic suggestions based on goal structure (see references/tactics-reference.md)
+**If NOT found, use fallbacks:**
+- Lemma search: WebFetch with leansearch/loogle APIs
+- Tactic suggestions: references/tactics-reference.md pattern matching
+
+**All commands below use $SCRIPTS_DIR. If not available, use fallback methods.**
+
+## Workflow
 
 ### 1. Locate Sorry
 

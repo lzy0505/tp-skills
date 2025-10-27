@@ -13,25 +13,30 @@ Quick search for existing lemmas, theorems, and definitions in mathlib before re
 Time saved by finding existing lemma: 5 minutes
 Time wasted reproving something that exists: 30-60 minutes
 
-## Workflow
+## IMPORTANT: Script Location
 
-### 0. Locate Scripts (Optional - Fallbacks Available)
+**BEFORE RUNNING ANY COMMANDS:**
 
-**The lean4-theorem-proving skill bundles search scripts:**
+Search scripts are bundled in the lean4-theorem-proving skill, NOT in the user's project.
 
-Try these locations:
-1. `~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/` (if skill is installed)
-2. Search: `find ~ -name "search_mathlib.sh" 2>/dev/null | grep lean4-theorem-proving | head -1`
+**Check if scripts directory exists:**
+```bash
+ls -la ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/
+```
 
-**Set SCRIPTS_DIR for convenience:**
+**If found, set SCRIPTS_DIR:**
 ```bash
 SCRIPTS_DIR="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts"
 ```
 
-**Fallbacks if scripts not found:**
-- Use WebFetch with leansearch API (https://leansearch.net/)
-- Use WebFetch with loogle API (https://loogle.lean-lang.org/)
-- Search online mathlib docs (https://leanprover-community.github.io/mathlib4_docs/)
+**If NOT found, use WebFetch fallbacks:**
+- leansearch API: https://leansearch.net/
+- loogle API: https://loogle.lean-lang.org/
+- Online mathlib docs: https://leanprover-community.github.io/mathlib4_docs/
+
+**All commands below use $SCRIPTS_DIR. If not available, use WebFetch.**
+
+## Workflow
 
 ### 1. Understand What You Need
 

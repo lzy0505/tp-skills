@@ -6,6 +6,28 @@ description: Analyze and plan work for incomplete Lean 4 proofs (sorries)
 
 Interactive analysis of incomplete proofs to plan systematic sorry-filling work.
 
+## IMPORTANT: Script Location
+
+**BEFORE RUNNING ANY COMMANDS:**
+
+The sorry_analyzer.py script is bundled in the lean4-theorem-proving skill, NOT in the user's project.
+
+**Check if script exists:**
+```bash
+ls -la ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py
+```
+
+**If found, use:**
+```bash
+SCRIPT_PATH="$HOME/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py"
+```
+
+**If NOT found, use grep fallback:**
+```bash
+# Basic sorry analysis without script
+grep -n "sorry" [path] --include="*.lean" -r
+```
+
 ## Workflow
 
 ### 1. Determine Scope
@@ -23,32 +45,21 @@ Which scope? (1/2/3/4)
 
 ### 2. Run Analysis
 
-**Find the script first:**
+**If SCRIPT_PATH is set (script was found):**
 
-Try these locations in order:
-1. `~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py` (if skill is installed)
-2. Use `grep -n "sorry" [path]` as fallback (basic analysis)
-
-**For file or directory (if script found):**
+For file or directory:
 ```bash
-python3 ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py [path] --format=text
+python3 "$SCRIPT_PATH" [path] --format=text
 ```
 
-**For interactive mode (if script found):**
-```
-I'll launch the interactive sorry browser in your terminal.
-You can browse sorries, view context, and open files directly.
-
-Press any key when ready to launch...
-```
-
+For interactive mode:
 ```bash
-python3 ~/.claude/skills/lean4-theorem-proving/skills/lean4-theorem-proving/scripts/sorry_analyzer.py [path] --interactive
+python3 "$SCRIPT_PATH" [path] --interactive
 ```
 
-**Fallback if script not found:**
+**If script NOT found (use grep fallback):**
 ```bash
-# Basic sorry count and location
+# Basic sorry analysis
 grep -n "sorry" [path] --include="*.lean" -r
 ```
 

@@ -1,6 +1,6 @@
 ---
-description: Analyze and plan work for incomplete Lean 4 proofs (sorries)
-allowed-tools: Bash(${LEAN4_PYTHON_BIN}:*), Bash(grep:*), Bash(find:*), Bash(xargs:*), Bash(cat:*), Bash(sed:*), Bash(awk:*)
+description: Analyze Lean 4 sorries in the current repo and summarize hotspots
+allowed-tools: Bash(python3:*), Bash(find:*), Bash(grep:*), Bash(xargs:*), Bash(sed:*), Bash(awk:*), Bash(cat:*)
 ---
 
 # Sorry Analysis and Planning
@@ -26,20 +26,23 @@ Which scope? (1/2/3/4)
 
 Verify the analyzer is available (SessionStart hook should have set this):
 
-!`if [ -z "${LEAN4_SORRY_ANALYZER:-}" ] || [ ! -f "${LEAN4_SORRY_ANALYZER:-/dev/null}" ]; then \
-    echo ":: lean4-sorry-analyzer not found. Try restarting the session or re-enabling the plugin."; \
-    exit 1; fi`
+!`if [ -z "${LEAN4_SORRY_ANALYZER:-}" ] || [ ! -f "${LEAN4_SORRY_ANALYZER}" ]; then \
+  echo ":: lean4-sorry-analyzer not found. Try restarting the session or re-enabling the plugin."; \
+  echo ":: Expected one of:"; \
+  echo "   \$LEAN4_PLUGIN_ROOT/scripts/sorry_analyzer.py"; \
+  echo "   \$LEAN4_PLUGIN_ROOT/skills/lean4-theorem-proving/scripts/sorry_analyzer.py"; \
+  exit 1; fi`
 
 Then run the analyzer based on user's scope choice:
 
 **For entire project:**
-!`${LEAN4_PYTHON_BIN:-python3} "${LEAN4_SORRY_ANALYZER}" . --format=text`
+!`python3 "$LEAN4_SORRY_ANALYZER" . --format=text`
 
 **For specific file or directory:**
-!`${LEAN4_PYTHON_BIN:-python3} "${LEAN4_SORRY_ANALYZER}" <path> --format=text`
+!`python3 "$LEAN4_SORRY_ANALYZER" <path> --format=text`
 
 **For interactive TUI mode:**
-!`${LEAN4_PYTHON_BIN:-python3} "${LEAN4_SORRY_ANALYZER}" <path> --interactive`
+!`python3 "$LEAN4_SORRY_ANALYZER" <path> --interactive`
 
 Replace `<path>` with the actual file or directory path from step 1.
 

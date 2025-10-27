@@ -626,15 +626,6 @@ rintro hX | hY
 rintro ⟨hX, hY⟩
 ```
 
-### Extensionality
-
-**"To prove S = T, show x ∈ S ↔ x ∈ T for all x"**
-```lean
-ext x
-```
-
----
-
 ## Extensionality
 
 Proving equality by extensionality.

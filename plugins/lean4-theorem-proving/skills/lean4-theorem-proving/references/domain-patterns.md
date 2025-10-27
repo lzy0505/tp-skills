@@ -1,14 +1,78 @@
 # Domain-Specific Patterns for Lean 4
 
-This reference provides detailed patterns, tactics, and common approaches for different mathematical domains in Lean 4 formalization.
+## TLDR
+
+**Purpose:** Quick reference for common proof patterns and tactics across mathematical domains.
+
+**When to use:** When working in a specific domain (measure theory, analysis, algebra, etc.) and need proven patterns for common tasks.
+
+**Coverage:** Measure theory (12 patterns), analysis (3 patterns), algebra (3 patterns), number theory (2 patterns), plus cross-domain tactics.
+
+**For deep measure theory patterns (sub-σ-algebras, conditional expectation, type class errors):** See `references/measure-theory.md`
+
+## Quick Reference by Domain
+
+### Measure Theory & Probability (12 Patterns)
+
+| Pattern | Task | Key Tactic/Approach |
+|---------|------|---------------------|
+| 1. Proving Integrability | Show function integrable | `bounded + measurable + finite measure` |
+| 2. Conditional Expectation | Prove μ[f\|m] = g | Uniqueness theorem (3 conditions) |
+| 3. Sub-σ-Algebras | Type class management | See measure-theory.md |
+| 4. Almost Everywhere | Convert universal to ae | `ae_of_all`, `filter_upwards` |
+| 5. Filtrations | Martingales, adapted processes | Monotone σ-algebras |
+| 6. Product Measures | Independence via products | Ionescu-Tulcea |
+| 7. Section Variables | Exclude from lemmas | `omit [...] in` |
+| 8. Measurability | Automate boilerplate | `measurability`, `@[measurability]` |
+| 9. Implicit Parameters | Follow mathlib conventions | Inferrable → implicit |
+| 10. Structure Matching | const_mul with sums | Match goal parenthesization |
+| 11. Type Matching | Integrable.of_bound | Use canonical forms `(m:ℝ)⁻¹` |
+| 12. Pointwise Inequalities | intro vs filter_upwards | `intro ω` for simple cases |
+
+**Common tactics:** `measurability`, `positivity`, `ae_of_all`, `filter_upwards`
+
+### Analysis & Topology (3 Patterns)
+
+| Pattern | Task | Key Tactic/Approach |
+|---------|------|---------------------|
+| 1. Continuity | Prove continuous | `continuity`, `continuous_def` |
+| 2. Compactness | Finite subcover, min/max | `IsCompact.exists_isMinOn` |
+| 3. Limits | ε-δ via filters | `Metric.tendsto_atTop` |
+
+**Common tactics:** `continuity`, `fun_prop`
+
+### Algebra (3 Patterns)
+
+| Pattern | Task | Key Tactic/Approach |
+|---------|------|---------------------|
+| 1. Algebraic Instances | Build Ring/CommRing | `inferInstance` or manual |
+| 2. Quotients | Define quotient homs | Universal property |
+| 3. Universal Properties | Unique morphisms | Existence + uniqueness |
+
+**Common tactics:** `ring`, `field_simp`, `group`
+
+### Number Theory (2 Patterns)
+
+| Pattern | Task | Key Tactic/Approach |
+|---------|------|---------------------|
+| 1. Induction | Lists/Nats | `induction` with cases |
+| 2. Divisibility | Prove n ∣ m | `cases' even_or_odd`, `use` |
+
+**Common tactics:** `linarith`, `norm_num`, `omega`
+
+### Cross-Domain
+
+**Essential tactics:** `simp only`, `by_cases`, `rcases`, `rw`, `ext`, `apply`, `exact`, `refine`
+
+**Equality via uniqueness:** Works across all domains (measures, functions, homs)
+
+---
 
 ## Measure Theory & Probability
 
-### Core Patterns
+### Pattern 1: Proving Integrability
 
-#### Pattern 1: Proving Integrability
-
-**The golden rule:** `bounded + measurable + finite measure = integrable`
+**Golden rule:** `bounded + measurable + finite measure = integrable`
 
 ```lean
 lemma integrable_of_bounded_measurable
@@ -20,36 +84,18 @@ lemma integrable_of_bounded_measurable
   exact Integrable.of_bound h_meas.aestronglyMeasurable C (ae_of_all _ hC)
 ```
 
-**Variations:**
+**Key variations:**
+- AE bound: Use `AEMeasurable` and `∀ᵐ x ∂μ, ‖f x‖ ≤ C`
+- Indicator: `hf.indicator hA` when `hf : Integrable f μ`
+
+### Pattern 2: Conditional Expectation Equality
+
+**Uniqueness theorem:** To show μ[f | m] = g, prove all three:
+1. g is m-measurable
+2. g is integrable
+3. ∀ B (m-measurable set): ∫ x in B, g x ∂μ = ∫ x in B, f x ∂μ
 
 ```lean
--- When bound is ae (almost everywhere)
-lemma integrable_of_ae_bounded
-    [IsFiniteMeasure μ] {f : X → ℝ}
-    (h_meas : AEMeasurable f μ)
-    (h_bound : ∃ C, ∀ᵐ x ∂μ, ‖f x‖ ≤ C) :
-    Integrable f μ := by
-  obtain ⟨C, hC⟩ := h_bound
-  exact Integrable.of_bound h_meas C hC
-
--- When using indicator functions
-lemma integrable_indicator
-    {A : Set X} (hA : MeasurableSet A) {f : X → ℝ}
-    (hf : Integrable f μ) :
-    Integrable (A.indicator f) μ :=
-  hf.indicator hA
-```
-
-#### Pattern 2: Conditional Expectation Equality
-
-**Use the uniqueness theorem:**
-
-```lean
--- To show μ[f | m] = g, prove:
--- 1. g is m-measurable
--- 2. g is integrable
--- 3. For all m-measurable sets B: ∫ x in B, g x ∂μ = ∫ x in B, f x ∂μ
-
 lemma condExp_eq_of_integral_eq
     {f g : Ω → ℝ} (hf : Integrable f μ)
     (hg_meas : Measurable[m] g)
@@ -61,761 +107,311 @@ lemma condExp_eq_of_integral_eq
     hf hg_meas hg_int h_eq
 ```
 
-**Common applications:**
+### Pattern 3: Sub-σ-Algebras and Type Class Management
 
-```lean
--- Conditional expectation of indicator
-lemma condExp_indicator_eq (hA : MeasurableSet[m₀] A) :
-    μ[A.indicator (fun _ => (1 : ℝ)) | m] =ᵐ[μ] condProb μ m A := by
-  -- Prove via uniqueness: both are m-measurable, integrable,
-  -- and have same integral on all m-measurable sets
-  sorry
-```
+**Critical issues:**
+- Binder order: instance parameters before plain parameters
+- Never use `‹_›` for ambient space (resolves incorrectly)
+- Provide trimmed measure instances with `haveI`
 
-#### Pattern 3: Sub-σ-Algebras and Type Class Management
-
-**Critical issues when working with sub-σ-algebras:**
-- Binder order matters: instance parameters must come before plain parameters
-- Never use `‹_›` for the ambient space (resolves incorrectly)
-- Provide trimmed measure instances explicitly with `haveI`
-- Follow the condExpWith pattern for conditional expectation
-
-**Quick example:**
 ```lean
 -- ✅ Correct pattern
 lemma my_condexp_lemma {Ω : Type*} {m₀ : MeasurableSpace Ω}
     {μ : Measure Ω} [IsFiniteMeasure μ]
-    {m : MeasurableSpace Ω} (hm : m ≤ m₀)  -- Explicit ambient space
-    : Result := by
+    {m : MeasurableSpace Ω} (hm : m ≤ m₀) : Result := by
   haveI : IsFiniteMeasure (μ.trim hm) := isFiniteMeasure_trim μ hm
   haveI : SigmaFinite (μ.trim hm) := sigmaFinite_trim μ hm
   -- Now call mathlib lemmas
 ```
 
-**For complete coverage of sub-σ-algebra patterns, conditional expectation, and debugging type class synthesis errors, see:** `references/measure-theory.md`
+**For complete coverage:** See `references/measure-theory.md` for sub-σ-algebra patterns, condExpWith, debugging type class errors, and binder order requirements.
 
-#### Pattern 4: Almost Everywhere Properties
+### Pattern 4: Almost Everywhere Properties
 
 **From universal to ae:**
-
 ```lean
--- Use ae_of_all
 have h : ∀ x, P x := ...
 have h_ae : ∀ᵐ x ∂μ, P x := ae_of_all _ h
 ```
 
 **Combining ae properties:**
-
 ```lean
--- Use filter_upwards
-have h1 : ∀ᵐ x ∂μ, P x := ...
-have h2 : ∀ᵐ x ∂μ, Q x := ...
 filter_upwards [h1, h2] with x hP hQ
 -- Now have: ∀ᵐ x ∂μ, P x ∧ Q x
 ```
 
 **ae equality reasoning:**
-
 ```lean
 -- Transitivity
-have h1 : f =ᵐ[μ] g := ...
-have h2 : g =ᵐ[μ] h := ...
-have : f =ᵐ[μ] h := h1.trans h2
+h1.trans h2  -- f =ᵐ[μ] g → g =ᵐ[μ] h → f =ᵐ[μ] h
 
 -- Substitution
-have h : f =ᵐ[μ] g := ...
-have hf : Integrable f μ := ...
-have hg : Integrable g μ := hf.congr h
+hf.congr h  -- Integrable f μ → f =ᵐ[μ] g → Integrable g μ
 ```
 
-#### Pattern 5: Filtrations and Increasing σ-Algebras
+### Pattern 5: Filtrations and Martingales
 
 ```lean
--- Define filtration
 def Filtration (f : ℕ → MeasurableSpace Ω) : Prop :=
   Monotone f ∧ ∀ n, f n ≤ m₀
 
--- Use in adapted processes
 def Adapted (X : ℕ → Ω → ℝ) (f : ℕ → MeasurableSpace Ω) : Prop :=
   ∀ n, Measurable[f n] (X n)
 
--- Martingale property with conditional expectation
 def IsMartingale (X : ℕ → Ω → ℝ) (f : ℕ → MeasurableSpace Ω) : Prop :=
-  Adapted X f ∧
-  (∀ n, Integrable (X n) μ) ∧
+  Adapted X f ∧ (∀ n, Integrable (X n) μ) ∧
   ∀ m n, m ≤ n → μ[X n | f m] =ᵐ[μ] X m
 ```
 
-#### Pattern 6: Product Measures and Independence
+### Pattern 6: Product Measures and Independence
 
 ```lean
--- Product measure on ℕ → α
-variable (ν : Measure α) [IsProbabilityMeasure ν]
-
--- Infinite product exists via Ionescu-Tulcea
-noncomputable def productMeasure : Measure (ℕ → α) :=
+-- Infinite product via Ionescu-Tulcea
+noncomputable def productMeasure (ν : Measure α) : Measure (ℕ → α) :=
   Measure.pi (fun _ => ν)
 
--- Independence via product structure
 lemma independent_of_product :
     ∀ n m, n ≠ m →
     IndepFun (fun ω => ω n) (fun ω => ω m) (productMeasure ν) := by
   sorry
 ```
 
-#### Pattern 7: Managing Section Variables with `omit`
+### Pattern 7: Managing Section Variables with `omit`
 
-When organizing files with `section` and `variable`, you may need to exclude certain section variables from specific lemmas:
+Exclude section variables from specific lemmas:
 
 ```lean
 section IntegrationHelpers
-
 variable [MeasurableSpace Ω] {μ : Measure Ω}
 
--- Most lemmas use the section variables
-lemma uses_measure [IsFiniteMeasure μ] : ... := by
-  -- Uses μ and MeasurableSpace Ω from section
-  sorry
-
--- This lemma doesn't need MeasurableSpace Ω at all
+-- This lemma doesn't need MeasurableSpace Ω
 omit [MeasurableSpace Ω] in
-/-- **Cauchy-Schwarz inequality for L² real-valued functions.**
-
-    For integrable functions f, g in L²(μ): |∫ f·g| ≤ (∫ f²)^(1/2) · (∫ g²)^(1/2) -/
 lemma abs_integral_mul_le_L2 [IsFiniteMeasure μ] {f g : Ω → ℝ}
     (hf : MemLp f 2 μ) (hg : MemLp g 2 μ) :
-    |∫ x, f x * g x ∂μ| ≤ (∫ x, f x ^ 2 ∂μ) ^ (1 / 2 : ℝ) * (∫ x, g x ^ 2 ∂μ) ^ (1 / 2 : ℝ) := by
-  sorry
+    |∫ x, f x * g x ∂μ| ≤ ... := by sorry
 
 end IntegrationHelpers
 ```
 
-**Critical ordering:**
-- `omit [...] in` must appear **before** the docstring
-- Placing it after the docstring will cause a compilation error
+**Critical:** `omit [...] in` must appear **before** docstring, not after.
 
-**When to use:**
-- Lemma doesn't actually use a section variable but Lean includes it anyway
-- Section variable causes unwanted type class instance requirements
-- Want to make lemma signature cleaner and more general
-
-**Common pattern in probability theory:**
-```lean
-section ProbabilityResults
-variable [MeasurableSpace Ω] [MeasurableSpace Ω'] {μ : Measure Ω}
-
--- Some lemmas need both spaces
-lemma needs_both_spaces : ... := sorry
-
--- Some lemmas only need one
-omit [MeasurableSpace Ω'] in
-lemma needs_only_Omega : ... := sorry
-
-end ProbabilityResults
-```
-
-### Common Tactics for Measure Theory
-
-```lean
--- Prove measurability automatically
-measurability
-
--- Prove positivity of measures/integrals
-positivity
-
--- Prove ae statements from universal
-ae_of_all
-
--- Work with integrability
--- Step 1: Show measurability
-have h_meas : Measurable f := by measurability
--- Step 2: Show boundedness
-have h_bound : ∃ C, ∀ x, ‖f x‖ ≤ C := ⟨1, fun x => ...⟩
--- Step 3: Combine
-exact integrable_of_bounded_measurable h_meas h_bound
-```
+**When to use:** Lemma doesn't use section variable, or variable causes unwanted instance requirements.
 
 ### Pattern 8: Automating Measurability Proofs
 
-The `measurability` tactic can replace manual proofs involving `measurable_pi_lambda`, `measurable_pi_apply`, and similar boilerplate patterns. This is especially useful for product spaces and complex compositions.
-
-**Manual vs Automated:**
+**Manual vs automated:**
 
 ```lean
--- ❌ Manual: verbose and repetitive
+-- ❌ Manual: verbose
 lemma measurable_projection {n : ℕ} :
     Measurable (fun (x : ℕ → α) => fun (i : Fin n) => x i.val) := by
   refine measurable_pi_lambda _ (fun i => ?_)
   exact measurable_pi_apply i.val
 
--- ✅ Automated: clean and maintainable
+-- ✅ Automated: clean
 lemma measurable_projection {n : ℕ} :
     Measurable (fun (x : ℕ → α) => fun (i : Fin n) => x i.val) := by
   measurability
 ```
 
-**Using `fun_prop` with `measurability` discharger:**
-
-For goals involving function properties where measurability appears as a subgoal:
+**Make lemmas discoverable:**
 
 ```lean
--- When proving Measurable for complex function compositions
-have h_meas : Measurable (fun ω => fun i : Fin k => X (m + 1 + i.val) ω) := by
+@[measurability]
+lemma measurable_shiftSeq {d : ℕ} : Measurable (shiftSeq (β:=β) d) := by
+  measurability
+```
+
+**For function compositions:**
+
+```lean
+-- Use fun_prop with measurability discharger
+have h : Measurable (fun ω => fun i => X (k i) ω) := by
   fun_prop (disch := measurability)
 ```
 
-**Making lemmas discoverable with `@[measurability]` attribute:**
-
-Add the attribute to make your measurability lemmas available to the `measurability` tactic:
+**Combine attributes for maximum automation:**
 
 ```lean
-@[measurability]
-lemma measurable_shiftSeq {d : ℕ} :
-    Measurable (shiftSeq (β:=β) d) := by
-  measurability
-
-@[measurability]
-lemma measurable_firstRMap (X : ℕ → Ω → α) (r : ℕ) (hX : ∀ i, Measurable (X i)) :
-    Measurable (firstRMap X r) := by
-  measurability
-```
-
-Now when you call `measurability` elsewhere, it can automatically use these lemmas.
-
-**Combining with `@[fun_prop]` for compositional proofs:**
-
-For custom measurability lemmas, use both attributes to enable both `measurability` and `fun_prop` tactics:
-
-```lean
--- Best practice: make lemma discoverable by both tactics
 @[measurability, fun_prop]
-lemma measurable_shiftℤ : Measurable (shiftℤ (α := α)) := by
-  measurability
-
--- Now both tactics can find it automatically
-example : Measurable (fun ω => shiftℤ (α := α) ω) := by
-  measurability  -- Works!
-
-example : Measurable (fun ω => shiftℤ (α := α) (ω 0)) := by
-  fun_prop (disch := measurability)  -- Also works!
+lemma measurable_myFunc : Measurable myFunc := by measurability
 ```
-
-**When to add `@[fun_prop]`:**
-- Custom function measurability lemmas (like `measurable_shiftℤ`)
-- Enables `fun_prop (disch := measurability)` to use them in compositional proofs
-- Allows cleaner automation for complex function compositions
-
-**Common patterns that `measurability` handles:**
-
-```lean
--- Product space projections
-measurable_pi_lambda _ (fun i => measurable_pi_apply (f i))  -- ✗ Manual
-measurability                                                 -- ✓ Auto
-
--- Coordinate permutations
-refine measurable_pi_lambda _ (fun i => measurable_pi_apply (σ i))  -- ✗ Manual
-measurability                                                        -- ✓ Auto
-
--- Function restrictions/extensions
-refine measurable_pi_lambda _ (fun i => measurable_pi_apply (Fin.castLE hmn i))  -- ✗ Manual
-measurability                                                                     -- ✓ Auto
-
--- Composed maps with measurable components
-have h_proj_meas : Measurable (fun g => fun i => g (Fin.castLE hkℓ i)) := by
-  measurability  -- Much cleaner than manual proof
-```
-
-**Real-world automation results:**
-
-From the exchangeability project, automation with `measurability` and `@[measurability]` attributes:
-- Simplified 33 proofs across 9 files
-- Eliminated ~90 lines of boilerplate
-- Made proofs more maintainable and easier to understand
 
 **When automation works well:**
+- ✅ Product types and compositions
+- ✅ Pi-type projections
+- ✅ Coordinate permutations
+- ✅ After adding `@[measurability]` attributes
 
-✅ **Direct measurability goals:** Simple product types and compositions
-```lean
-lemma measurable_proj : Measurable (fun x : ℕ → α => fun i : Fin n => x i) := by
-  measurability  -- Works great
-```
+**When automation doesn't work:**
+- ⚠️ Complex set operations (can timeout)
+- ⚠️ Custom definitions unknown to fun_prop
+- **Solution:** Break into smaller steps or use direct proof
 
-✅ **Function property goals with measurability subgoals:**
-```lean
-have h : Measurable (fun ω => fun i => X (k i) ω) := by
-  fun_prop (disch := measurability)  -- Handles composition + measurability
-```
-
-✅ **After adding attributes:** Making custom lemmas discoverable boosts power
-```lean
-@[measurability]
-lemma measurable_myCustomMap : Measurable myCustomMap := by ...
--- Now measurability can use this automatically
-```
-
-**When automation doesn't work (pitfalls to avoid):**
-
-⚠️ **Complex set operations can timeout:**
-```lean
--- ❌ Can hang or timeout
-lemma complicated_set : MeasurableSet ((f ⁻¹' A) ∩ (g ⁻¹' B) ∪ (h ⁻¹' C)) := by
-  measurability  -- May timeout on complex set algebra
-
--- ✅ Use direct proof instead
-lemma complicated_set : MeasurableSet ((f ⁻¹' A) ∩ (g ⁻¹' B) ∪ (h ⁻¹' C)) := by
-  apply MeasurableSet.union
-  · apply MeasurableSet.inter <;> exact Measurable.measurableSet_preimage ‹_› ‹_›
-  · exact Measurable.measurableSet_preimage ‹_› ‹_›
-```
-
-⚠️ **Custom definitions unknown to `fun_prop`:**
-```lean
--- If you have: def path (X : ℕ → Ω → α) : Ω → (ℕ → α) := fun ω n => X n ω
-
--- ❌ fun_prop doesn't know about path
-lemma measurable_path_composed : Measurable (path X) := by
-  fun_prop  -- Fails: doesn't recognize 'path'
-
--- ✅ Use measurability directly or add intermediate steps
-lemma measurable_path_composed : Measurable (path X) := by
-  measurability  -- Works if path unfolds to measurable_pi_lambda pattern
-  -- OR unfold manually:
-  -- unfold path; measurability
-```
-
-**General troubleshooting:**
-
-If tactics fail, try:
-1. Add `@[measurability]` to a key helper lemma
-2. Break into smaller intermediate steps
-3. Use `fun_prop (disch := measurability)` for function compositions
-4. Unfold custom definitions first, then automate
-5. For complex set operations, write direct structured proofs
-
-### Pattern 10: Measurable Structure Must Match Goal
-
-When using `Measurable.const_mul` with sums, the structure must match the goal's parenthesization.
-
-**The Problem:** Applying `const_mul` to each term of a sum when the goal has the constant wrapping the entire sum causes variable binding mismatches.
-
-**Error symptom:** `type mismatch, term has type Measurable (fun k => ...) but is expected to have type Measurable (fun ω => ...)`
-
-```lean
--- ❌ WRONG: constant inside each term of the sum
-have hA_meas : Measurable (fun ω => (1/(m:ℝ)) * ∑ k : Fin m, indIic t (X (k.val + 1) ω)) :=
-  Finset.measurable_sum _ (fun k _ =>
-    Measurable.const_mul ((indIic_measurable t).comp (hX_meas _)) _)
---  ^^^ This tries to apply const_mul to EACH TERM, giving wrong variable binding
-
--- ✅ CORRECT: constant wraps the entire sum
-have hA_meas : Measurable (fun ω => (1/(m:ℝ)) * ∑ k : Fin m, indIic t (X (k.val + 1) ω)) :=
-  Measurable.const_mul (Finset.measurable_sum _ (fun k _ =>
-    ((indIic_measurable t).comp (hX_meas _)))) _
---  ^^^ const_mul wraps the whole sum, matching the structure of the goal
-```
-
-**Key insight:** The structure must match the goal's parenthesization: `c * (∑ ...)` not `∑ (c * ...)`
-
-**General pattern:**
-```lean
--- Goal: Measurable (fun ω => c * ∑ i, f i ω)
-
--- CORRECT structure
-Measurable.const_mul (Finset.measurable_sum _ (fun i _ => measurable_f i)) c
-
--- NOT: Finset.measurable_sum _ (fun i _ => Measurable.const_mul (measurable_f i) c)
-```
-
-### Pattern 11: Integrable.of_bound Type Matching
-
-When using `Integrable.of_bound` after simplification, the bound expression in the measurability hypothesis must match the canonical form that `simp` produces.
-
-**The Problem:** Defining measurability with `1/(m:ℝ)` but the goal (after simp) has `(m:ℝ)⁻¹` causes type mismatches.
-
-**Error symptom:** `type mismatch in application of Integrable.of_bound`
-
-```lean
--- ❌ WRONG: Definition uses 1/(m:ℝ) but goal has (m:ℝ)⁻¹ after simp
-have hB_meas : Measurable (fun ω => 1/(m:ℝ) * ∑ i : Fin m, indIic t (X i ω)) := ...
-apply Integrable.of_bound hB_meas.aestronglyMeasurable 1
-filter_upwards with ω; simp [Real.norm_eq_abs]
--- After simp, goal is: ⊢ (m:ℝ)⁻¹ * |∑ ...| ≤ 1
--- But hB_meas has: 1/(m:ℝ) * ∑ ...
--- Type mismatch!
-
--- ✅ CORRECT: Use (m:ℝ)⁻¹ consistently from the start
-have hB_meas : Measurable (fun ω => (m:ℝ)⁻¹ * ∑ i : Fin m, indIic t (X i ω)) := ...
-apply Integrable.of_bound hB_meas.aestronglyMeasurable 1
-filter_upwards with ω; simp [Real.norm_eq_abs]
--- After simp, goal is: ⊢ (m:ℝ)⁻¹ * |∑ ...| ≤ 1
--- hB_meas matches exactly!
-```
-
-**Why this matters:**
-- `simp [Real.norm_eq_abs]` automatically converts `1/(m:ℝ)` to `(m:ℝ)⁻¹`
-- `Integrable.of_bound` expects the measurability hypothesis to match the simplified goal
-- Using canonical form `(m:ℝ)⁻¹` from the start avoids the mismatch
-
-**General rule:** When using `Integrable.of_bound` with calc chains or simp:
-1. Use canonical forms in the measurability hypothesis: `(m:ℝ)⁻¹` not `1/(m:ℝ)`
-2. See `references/calc-patterns.md` for canonical form conventions
-
-### Pattern 12: Pointwise Inequalities - intro vs filter_upwards
-
-For simple pointwise inequality proofs, `intro ω` often works better than `filter_upwards` when you just need to apply a lemma.
-
-**When to use `intro ω`:**
-- Proving simple pointwise inequalities (e.g., triangle inequality)
-- No measure theory structure needed in the proof
-- Just applying a mathematical lemma at each point
-
-**When to use `filter_upwards`:**
-- Need to combine multiple ae conditions
-- Reasoning about measurability or ae equality
-- Working with filter/measure-theory structure
-
-**Example:**
-
-```lean
--- ❌ WRONG: filter_upwards doesn't unfold enough for simple inequalities
-· -- Pointwise bound: |a - c| ≤ |a - b| + |b - c|
-  filter_upwards with ω
-  exact abs_sub_le _ _ _
--- Error: "tactic 'apply' failed, failed to unify"
--- The filter_upwards leaves goal in implicit EventuallyEq form
-
--- ✅ CORRECT: intro explicitly for simple pointwise proofs
-· -- Pointwise bound: |a - c| ≤ |a - b| + |b - c|
-  intro ω
-  exact abs_sub_le _ _ _
--- Success: intro gives us the ω and explicit inequality
-```
-
-**General rule:**
-- Use `intro ω` when proving simple pointwise inequalities where you just need the point
-- Use `filter_upwards` when you need filter/measure-theory structure (measurability, ae conditions)
-
-**Automation Philosophy - Balancing Power with Readability:**
-
-Automation tactics are powerful but should serve clarity, not obscure it:
-
-✅ **Good automation:** Eliminates tedious boilerplate while keeping proof structure clear
-```lean
--- Pi-type measurability: automation is perfect here
-lemma measurable_proj : Measurable (fun x : ℕ → α => fun i : Fin n => x i) := by
-  measurability  -- Clear intent, no important reasoning hidden
-
--- Arithmetic side conditions: automation prevents distraction
-lemma main_result (n : ℕ) (h : n > 0) : n + 1 < 2 * n := by
-  omega  -- Trivial arithmetic, would distract from real proof
-```
-
-⚠️ **Overly aggressive automation:** Hides important mathematical reasoning
-```lean
--- ❌ BAD: Key proof step hidden by automation
-lemma important_theorem : complicated_property := by
-  mega_tactic_that_does_everything
-  -- What's the actual argument? Unclear!
-
--- ✅ GOOD: Important reasoning explicit, automation for steps
-lemma important_theorem : complicated_property := by
-  -- Key insight: reduce to simpler property via this lemma
-  suffices simpler_property by exact key_lemma this
-  -- Now use automation for routine verification
-  constructor
-  · measurability
-  · omega
-```
-
-**Guidelines:**
-- Use automation for: boilerplate (measurability), trivial arithmetic (omega/linarith), type class inference
-- Keep explicit: key mathematical insights, proof architecture, non-obvious lemma applications
-- Document with comments when automation does something non-trivial
-- If a tactic call raises "how does this work?", consider making it more explicit
+**Real-world results:** Simplified 33 proofs, eliminated ~90 lines of boilerplate.
 
 ### Pattern 9: Implicit vs Explicit Parameters
 
-Following mathlib conventions for when to use `{param}` (implicit) vs `(param)` (explicit).
+**Core principle:** `{param}` when inferrable, `(param)` when primary data or not inferrable.
 
-**Core principle from mathlib:**
-- `{param}` when Lean can infer the value from other parameters
-- `(param)` when it's primary data or can't be inferred
-
-#### Use Implicit `{param : Type}` When:
-
-**1. Type inferrable from other parameters:**
+**Use implicit `{param}` when:**
 ```lean
--- ✅ GOOD: n inferrable from S
+-- ✅ n inferrable from S
 def prefixCylinder {n : ℕ} (S : Set (Fin n → α)) : Set (ℕ → α)
 
--- ✅ GOOD: n inferrable from c, p, q
-lemma l2_bound_from_steps {n : ℕ} {c p q : Fin n → ℝ} (σSq ρ : ℝ) : ...
+-- ✅ n inferrable from c
+lemma l2_bound {n : ℕ} {c : Fin n → ℝ} (σSq ρ : ℝ) : ...
 ```
 
-**2. Parameter appears in types but not needed at call site:**
+**Keep explicit `(param)` when:**
 ```lean
--- ✅ GOOD: m inferrable from fs
-def productCylinder {m : ℕ} (fs : Fin m → α → ℝ) : Ω[α] → ℝ
+-- ✅ Primary data
+theorem deFinetti (μ : Measure Ω) (X : ℕ → Ω → α) : ...
 
--- ✅ GOOD: n inferrable from ξ
-theorem l2_contractability_bound {n : ℕ} (ξ : Fin n → Ω → ℝ) : ...
-```
-
-**3. Multiple parameters depend on same type variable:**
-```lean
--- ✅ GOOD: Both c and covariance matrices depend on n
-lemma double_sum_covariance_formula {n : ℕ} {c : Fin n → ℝ} (σSq ρ : ℝ) : ...
-```
-
-#### Keep Explicit `(param : Type)` When:
-
-**1. Primary data arguments:**
-```lean
--- ✅ CORRECT: μ and X are the main subjects
-theorem deFinetti {μ : Measure Ω} (X : ℕ → Ω → α) : ...
-
--- ✅ CORRECT: s is what we're testing
-def isShiftInvariant (s : Set (Ω[α])) : Prop
-```
-
-**2. Parameter used in function body, not in types:**
-```lean
--- ✅ CORRECT: n used in shift^[n], not inferrable
+-- ✅ Used in body, not types
 def shiftedCylinder (n : ℕ) (F : Ω[α] → ℝ) : Ω[α] → ℝ :=
   fun ω => F ((shift^[n]) ω)
+
+-- ✅ In return type
+lemma foo (n : ℕ) : Fin n → α := ...
 ```
 
-**3. Application lemmas:**
-```lean
--- ✅ CORRECT: n is the explicit argument being applied
-lemma shift_apply {α : Type*} (ξ : ℕ → α) (n : ℕ) :
-  shift ξ n = ξ (n + 1)
-```
+**When in doubt, keep explicit.** See [mathlib-style.md](mathlib-style.md) for conventions.
 
-**4. Named hypotheses/proofs:**
-```lean
--- ✅ CORRECT: These are explicit assumptions
-(hX : Measurable X) (hcov : ∀ i j, ...)
-```
+### Pattern 10: Measurable Structure Must Match Goal
 
-**5. Parameters in return types:**
-```lean
--- ✅ CORRECT: n appears in Fin n in return type
-lemma Exchangeable.refl {μ : Measure Ω} {X : ℕ → Ω → α} (n : ℕ) :
-  ... → (Fin n → α) = ...
-```
-
-#### Conversion Workflow
-
-When converting explicit parameters to implicit:
-
-**1. Search and identify candidates:**
-```bash
-# Find lemmas with explicit nat parameters
-grep -rn "^lemma .* (n : ℕ)" . --include="*.lean" | grep -v "{n : ℕ}"
-
-# Find definitions with Fin parameters
-grep -rn "^def .* (.*: Fin .* →" . --include="*.lean" | grep -v "{.*: Fin"
-```
-
-**2. Analyze each candidate:**
-- Can it be inferred? (appears in type of another parameter)
-- Is it the main subject? (what the lemma is "about")
-- Is it in the return type?
-- Is it used in the body?
-
-**3. Convert and update call sites:**
-```lean
--- Before
-lemma foo (n : ℕ) (c : Fin n → ℝ) := ...
-foo n c
-
--- After
-lemma foo {n : ℕ} {c : Fin n → ℝ} := ...
-foo  -- Fully inferred
-```
-
-**4. Build and fix errors:**
-```bash
-lake build <file>
-# Fix "function expected" errors by adding named parameters if needed
-```
-
-#### Common Patterns
-
-**Pattern 1: Fin-Indexed Functions**
-```lean
--- Before
-lemma sum_sq_le_sum_abs_mul_sup (n : ℕ) (c : Fin n → ℝ) : ...
-
--- After
-lemma sum_sq_le_sum_abs_mul_sup {n : ℕ} {c : Fin n → ℝ} : ...
-```
-
-**Pattern 2: Cylinder Sets**
-```lean
--- Before
-def prefixCylinder (n : ℕ) (S : Set (Fin n → α)) : Set (ℕ → α)
-
--- After
-def prefixCylinder {n : ℕ} (S : Set (Fin n → α)) : Set (ℕ → α)
-```
-
-**Pattern 3: Permutations**
-```lean
--- Before
-def extendFinPerm (n : ℕ) (σ : Equiv.Perm (Fin n)) : Equiv.Perm ℕ
-
--- After
-def extendFinPerm {n : ℕ} (σ : Equiv.Perm (Fin n)) : Equiv.Perm ℕ
-```
-
-#### Common Errors and Fixes
-
-**Error 1: "Function expected"**
-```lean
--- Symptom: After making n implicit, call site still passes it explicitly
--- Fix: Use named parameters or remove the argument
-foo c                -- Option 1: Remove argument (if fully inferrable)
-foo (n:=n) c         -- Option 2: Named parameter (if needed)
-@foo n c             -- Option 3: Make explicit with @ (rarely needed)
-```
-
-**Error 2: "Cannot infer implicit parameter"**
-```lean
--- Cause: Made parameter implicit when it's NOT inferrable
--- Fix: Keep it explicit - it was correct before!
-```
-
-#### Best Practices
-
-**1. When in doubt, keep explicit:**
-It's better to have one explicit parameter that could be implicit than to have an implicit parameter causing inference issues. Main theorems especially benefit from clarity.
-
-**2. Work file-by-file:**
-Don't convert the whole codebase at once. Pick logical units and build after each change.
-
-**3. Document rationale in commits:**
-```
-Make n parameter implicit in <function>
-
-Converted the explicit `n : ℕ` parameter to implicit since it can be
-inferred from the type `x : Fin n → T`.
-
-Following mathlib conventions for inferrable parameters.
-```
-
-See [mathlib-style.md](mathlib-style.md) for more on mathlib's implicit parameter conventions.
-
-### Real-World Example: Finite Marginals Uniqueness
-
-From exchangeability project - shows typical measure theory proof structure:
+When using `Measurable.const_mul` with sums, structure must match goal's parenthesization.
 
 ```lean
--- Goal: Two measures equal if all finite marginals equal
-theorem measure_eq_of_fin_marginals_eq
-    {μ ν : Measure (ℕ → α)} [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
-    (h : ∀ n, Measure.map (fun ω => ω ∘ Fin.val) μ =
-              Measure.map (fun ω => ω ∘ Fin.val) ν) :
-    μ = ν := by
-  -- Strategy:
-  -- 1. Show equality on π-system of cylinder sets
-  -- 2. Use uniqueness of extension to σ-algebra
-  ext s hs
-  -- Key: Reduce to finite-dimensional projections
-  sorry
+-- ❌ WRONG: constant inside each term
+have h : Measurable (fun ω => (1/(m:ℝ)) * ∑ k, f k ω) :=
+  Finset.measurable_sum _ (fun k _ => Measurable.const_mul ...)
+-- Applies const_mul to EACH TERM - wrong variable binding!
+
+-- ✅ CORRECT: constant wraps entire sum
+have h : Measurable (fun ω => (1/(m:ℝ)) * ∑ k, f k ω) :=
+  Measurable.const_mul (Finset.measurable_sum _ (fun k _ => ...)) _
+-- const_mul wraps whole sum, matching goal structure
 ```
+
+**Key:** Match goal parenthesization: `c * (∑ ...)` not `∑ (c * ...)`
+
+### Pattern 11: Integrable.of_bound Type Matching
+
+Bound expression in measurability hypothesis must match canonical form after `simp`.
+
+```lean
+-- ❌ WRONG: Definition uses 1/(m:ℝ) but goal has (m:ℝ)⁻¹ after simp
+have h_meas : Measurable (fun ω => 1/(m:ℝ) * ∑ i, f i ω) := ...
+apply Integrable.of_bound h_meas.aestronglyMeasurable 1
+filter_upwards with ω; simp [Real.norm_eq_abs]
+-- Type mismatch: goal has (m:ℝ)⁻¹ but h_meas has 1/(m:ℝ)
+
+-- ✅ CORRECT: Use canonical form (m:ℝ)⁻¹ from start
+have h_meas : Measurable (fun ω => (m:ℝ)⁻¹ * ∑ i, f i ω) := ...
+apply Integrable.of_bound h_meas.aestronglyMeasurable 1
+filter_upwards with ω; simp [Real.norm_eq_abs]
+-- Matches exactly after simp!
+```
+
+**Rule:** Use canonical forms: `(m:ℝ)⁻¹` not `1/(m:ℝ)`. See [calc-patterns.md](calc-patterns.md).
+
+### Pattern 12: Pointwise Inequalities
+
+**Use `intro ω` for simple pointwise proofs:**
+
+```lean
+-- ❌ WRONG: filter_upwards doesn't unfold for simple inequalities
+filter_upwards with ω
+exact abs_sub_le _ _ _
+-- Error: type mismatch in implicit EventuallyEq form
+
+-- ✅ CORRECT: intro for simple pointwise
+intro ω
+exact abs_sub_le _ _ _
+-- Works: explicit inequality with ω
+```
+
+**When to use:**
+- `intro ω`: Simple pointwise inequalities, just applying lemmas
+- `filter_upwards`: Combining multiple ae conditions, measure theory structure
+
+### Common Measure Theory Tactics
+
+```lean
+measurability    -- Prove measurability automatically
+positivity       -- Prove positivity of measures/integrals
+ae_of_all        -- Universal → ae
+filter_upwards   -- Combine ae properties
+```
+
+**Automation philosophy:**
+- ✅ Use for: boilerplate (measurability), trivial arithmetic (omega/linarith)
+- ❌ Don't hide: key mathematical insights, proof architecture, non-obvious lemma applications
+
+---
 
 ## Analysis & Topology
 
-### Core Patterns
-
-#### Pattern 1: Continuity Proofs
+### Pattern 1: Continuity Proofs
 
 ```lean
 -- From preimage of open sets
 lemma continuous_of_isOpen_preimage
     {f : X → Y} (h : ∀ U, IsOpen U → IsOpen (f ⁻¹' U)) :
     Continuous f := by
-  rw [continuous_def]
-  exact h
+  rw [continuous_def]; exact h
 
--- Using continuity tactic (automatic)
+-- Using automation
 lemma continuous_comp_add :
     Continuous (fun (p : ℝ × ℝ) => p.1 + p.2) := by
   continuity
 ```
 
-#### Pattern 2: Compactness Arguments
+### Pattern 2: Compactness Arguments
 
 ```lean
--- Finite subcover criterion
-lemma compact_of_finite_subcover
-    {K : Set X} (h : ∀ (ι : Type*) (U : ι → Set X),
-      (∀ i, IsOpen (U i)) → K ⊆ ⋃ i, U i →
-      ∃ (s : Finset ι), K ⊆ ⋃ i ∈ s, U i) :
-    IsCompact K := by
-  sorry
-
--- Using compactness
+-- Min/max on compact sets
 example {K : Set ℝ} (hK : IsCompact K) (hne : K.Nonempty) :
-    ∃ x ∈ K, ∀ y ∈ K, f x ≤ f y := by
-  exact IsCompact.exists_isMinOn hK hne (continuous_id.comp continuous_f)
+    ∃ x ∈ K, ∀ y ∈ K, f x ≤ f y :=
+  IsCompact.exists_isMinOn hK hne (continuous_id.comp continuous_f)
 ```
 
-#### Pattern 3: Limits via Filters
+### Pattern 3: Limits via Filters
 
 ```lean
--- ε-δ criterion via filters
+-- ε-δ criterion
 lemma tendsto_of_forall_eventually
     (h : ∀ ε > 0, ∀ᶠ n in atTop, ‖x n - L‖ < ε) :
     Tendsto x atTop (𝓝 L) := by
-  rw [Metric.tendsto_atTop]
-  exact h
+  rw [Metric.tendsto_atTop]; exact h
 ```
 
-### Common Tactics
+**Common tactics:** `continuity`, `fun_prop`
 
-```lean
-continuity  -- Prove continuity automatically
-fun_prop    -- General function property prover (Lean 4.13+)
-```
+---
 
 ## Algebra
 
-### Core Patterns
-
-#### Pattern 1: Building Algebraic Instances
+### Pattern 1: Building Algebraic Instances
 
 ```lean
--- Compositional instance construction
+-- Compositional
 instance : CommRing (Polynomial R) := inferInstance
 
--- Manual instance for custom types
+-- Manual for custom types
 instance : Ring MyType := {
   add := my_add,
   add_assoc := my_add_assoc,
-  zero := my_zero,
-  zero_add := my_zero_add,
-  add_zero := my_add_zero,
-  neg := my_neg,
-  add_left_neg := my_add_left_neg,
-  mul := my_mul,
-  mul_assoc := my_mul_assoc,
-  one := my_one,
-  one_mul := my_one_mul,
-  mul_one := my_mul_one,
-  left_distrib := my_left_distrib,
-  right_distrib := my_right_distrib
+  -- ... all required fields
 }
 ```
 
-#### Pattern 2: Quotient Constructions
+### Pattern 2: Quotient Constructions
 
 ```lean
 -- Ring homomorphism from quotient
-lemma quotient_ring_hom (I : Ideal R) :
-    RingHom R (R ⧸ I) := by
+lemma quotient_ring_hom (I : Ideal R) : RingHom R (R ⧸ I) := by
   refine { toFun := Ideal.Quotient.mk I,
            map_one' := rfl,
            map_mul' := fun x y => rfl,
@@ -823,106 +419,84 @@ lemma quotient_ring_hom (I : Ideal R) :
            map_add' := fun x y => rfl }
 ```
 
-#### Pattern 3: Universal Properties
+### Pattern 3: Universal Properties
 
 ```lean
--- Use universal property to define morphism
-lemma exists_unique_hom (h : ...) :
-    ∃! φ : A →+* B, ... := by
+-- Unique morphism via universal property
+lemma exists_unique_hom (h : ...) : ∃! φ : A →+* B, ... := by
   use my_homomorphism
   constructor
   · -- Prove it satisfies property
   · -- Prove uniqueness
-    intro ψ hψ
-    ext x
-    sorry
+    intro ψ hψ; ext x; sorry
 ```
 
-### Common Tactics
+**Common tactics:** `ring`, `field_simp`, `group`
 
-```lean
-ring       -- Solve ring equations
-field_simp -- Simplify field expressions
-group      -- Solve group equations
-```
+---
 
 ## Number Theory & Combinatorics
 
-### Core Patterns
-
-#### Pattern 1: Induction on Lists/Nats
+### Pattern 1: Induction
 
 ```lean
 lemma property_of_list (l : List α) : P l := by
   induction l with
-  | nil =>
-    -- Base case: l = []
-    sorry
-  | cons head tail ih =>
-    -- Inductive case: l = head :: tail, have ih : P tail
-    sorry
+  | nil => sorry  -- Base case
+  | cons head tail ih => sorry  -- Inductive case with ih : P tail
 ```
 
-#### Pattern 2: Divisibility
+### Pattern 2: Divisibility
 
 ```lean
--- Using dvd
 lemma dvd_example (n : ℕ) : 2 ∣ n * (n + 1) := by
   cases' Nat.even_or_odd n with h h
   · -- n even
     obtain ⟨k, rfl⟩ := h
-    use k * (2 * k + 1)
-    ring
+    use k * (2 * k + 1); ring
   · -- n odd
     obtain ⟨k, rfl⟩ := h
-    use (2 * k + 1) * (k + 1)
-    ring
+    use (2 * k + 1) * (k + 1); ring
 ```
 
-### Common Tactics
+**Common tactics:** `linarith`, `norm_num`, `omega`
 
-```lean
-linarith   -- Linear arithmetic
-norm_num   -- Normalize numerical expressions
-omega      -- Integer linear arithmetic (Lean 4.13+)
-```
+---
 
 ## Cross-Domain Tactics
 
-### Essential for All Domains
+**Essential for all domains:**
 
 ```lean
 -- Simplification
-simp only [lemma1, lemma2]  -- Explicit lemmas (preferred)
-simpa using h               -- Simplify and close with h
+simp only [lem1, lem2]  -- Explicit lemmas (preferred)
+simpa using h           -- simp then exact h
 
 -- Case analysis
-by_cases h : p              -- Split on decidable proposition
-rcases h with ⟨x, y, hx⟩    -- Destructure exists/and/or
+by_cases h : p          -- Split on decidable
+rcases h with ⟨x, hx⟩   -- Destructure exists/and/or
 
 -- Rewriting
-rw [lemma]                  -- Left-to-right
-rw [← lemma]                -- Right-to-left
+rw [lemma]              -- Left-to-right
+rw [← lemma]            -- Right-to-left
 
--- Function extensionality
-ext x                       -- Prove functions equal pointwise
-funext x                    -- Alternative syntax
+-- Extensionality
+ext x                   -- Function equality pointwise
+funext x                -- Alternative
 
--- Apply lemmas
-apply lemma                 -- Apply, leaving subgoals
-exact expr                  -- Close goal exactly
-refine template ?_ ?_       -- Apply with placeholders
+-- Application
+apply lemma             -- Apply, leaving subgoals
+exact expr              -- Close goal exactly
+refine template ?_ ?_   -- Apply with placeholders
 ```
 
 ## Pattern: Equality via Uniqueness
 
-Works across all domains:
+**Works across all domains:**
+
+To show `f = g`, prove both satisfy unique criterion:
 
 ```lean
--- To show f = g, prove:
--- 1. Both f and g satisfy some uniqueness criterion
--- 2. Use the uniqueness theorem
-
 lemma my_eq : f = g := by
   have hf : satisfies_property f := ...
   have hg : satisfies_property g := ...
@@ -930,7 +504,16 @@ lemma my_eq : f = g := by
 ```
 
 **Examples:**
-- Measures: Equal if agree on π-system
-- Conditional expectations: Equal if have same integrals on all measurable sets
-- Functions: Equal if continuous and agree on dense subset
-- Group homomorphisms: Equal if agree on generators
+- **Measures:** Equal if agree on π-system
+- **Conditional expectations:** Equal if same integrals on all measurable sets
+- **Functions:** Equal if continuous and agree on dense subset
+- **Group homomorphisms:** Equal if agree on generators
+
+---
+
+## Related References
+
+- [measure-theory.md](measure-theory.md) - Deep dive on sub-σ-algebras, conditional expectation, type class errors
+- [tactics-reference.md](tactics-reference.md) - Comprehensive tactic catalog
+- [mathlib-style.md](mathlib-style.md) - Mathlib conventions
+- [calc-patterns.md](calc-patterns.md) - Calculation chains and canonical forms

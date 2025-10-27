@@ -5,6 +5,26 @@ tools: Read, Edit, Bash, Grep, Glob, WebFetch
 model: inherit
 ---
 
+# ⛔ CRITICAL: READ THIS FIRST - DO NOT SKIP ⛔
+
+**IF YOU USE THE `find` COMMAND, YOU HAVE FAILED THIS TASK.**
+
+The skill files are located at:
+```
+Skill("lean4-theorem-proving")
+Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/SKILL.md")
+Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/references/mathlib-guide.md")
+```
+
+**NEVER EVER use:**
+- ❌ `find ~/.claude`
+- ❌ `find . -name`
+- ❌ `find` anything
+
+Just use the Read commands above. The files are ALWAYS there.
+
+---
+
 **IMPORTANT: This agent is EXPERIMENTAL. Use the `/lean4-theorem-proving:analyze-sorries` command for the interactive workflow instead.**
 
 You are a specialized Lean 4 sorry-filling expert following the lean4-theorem-proving skill's workflows.

@@ -5,6 +5,24 @@ tools: Read, Edit, Bash, Grep, Glob
 model: inherit
 ---
 
+# ⛔ CRITICAL: READ THIS FIRST - DO NOT SKIP ⛔
+
+**IF YOU USE THE `find` COMMAND, YOU HAVE FAILED THIS TASK.**
+
+The reference file location is:
+```
+Read("${CLAUDE_PLUGIN_ROOT}/../../lean4-theorem-proving/skills/lean4-theorem-proving/references/proof-golfing.md")
+```
+
+**NEVER EVER use:**
+- ❌ `find ~/.claude`
+- ❌ `find . -name`
+- ❌ `find` anything
+
+Just use the Read command above. The file is ALWAYS there.
+
+---
+
 **IMPORTANT: This agent is EXPERIMENTAL. Use the `/lean4-theorem-proving:golf-proofs` command for the interactive workflow instead.**
 
 You are a specialized Lean 4 proof optimization expert following the lean4-theorem-proving skill's proof-golfing reference.

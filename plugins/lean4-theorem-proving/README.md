@@ -224,13 +224,34 @@ This skill was developed from real-world Lean 4 formalization work:
 
 ## FAQ
 
-### How does this work with the lean4-memories skill?
+### How does this work with the lean4-memories plugin?
 
-lean4-memories is optional and adds persistent learning across sessions. This skill (lean4-theorem-proving) works standalone and provides all core functionality.
+The **lean4-memories plugin** (experimental) provides a skill that adds persistent learning across sessions using MCP memory server integration. This skill (lean4-theorem-proving) works standalone and provides all core functionality.
 
-**Use together:** lean4-theorem-proving provides general workflows, lean4-memories adds project-specific context.
+**Use together:**
+- lean4-theorem-proving provides general workflows and patterns
+- lean4-memories adds project-specific context that persists across sessions
+- Example: lean4-memories can remember "in this project, we always use π-system arguments for measure equality"
 
 See [lean4-memories/README.md](../lean4-memories/README.md) for details.
+
+### How does this work with the lean4-subagents plugin?
+
+The **lean4-subagents plugin** (experimental) provides three specialized subagents for automating mechanical Lean 4 tasks:
+
+**Specialized subagents:**
+- `lean4-proof-golfer` - Systematically optimize proofs (works with `/golf-proofs`)
+- `lean4-sorry-filler` - Fill sorries using mathlib search (works with `/fill-sorry`)
+- `lean4-axiom-eliminator` - Eliminate axioms systematically (works with `/check-axioms`)
+
+**Use together:**
+- lean4-theorem-proving provides workflows and slash commands
+- lean4-subagents provides autonomous agents that execute those workflows in batch
+- Example: "Dispatch lean4-sorry-filler to fill all 15 sorries in this file"
+
+This skill works standalone. lean4-subagents is optional for batch automation.
+
+See [subagent-workflows.md](skills/lean4-theorem-proving/references/subagent-workflows.md) for delegation patterns.
 
 ### Do I need all 16 scripts?
 

@@ -1,5 +1,4 @@
 ---
-name: build-lean
 description: Build Lean 4 project and provide formatted error analysis
 ---
 

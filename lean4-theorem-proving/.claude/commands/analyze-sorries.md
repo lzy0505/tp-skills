@@ -1,5 +1,4 @@
 ---
-name: analyze-sorries
 description: Analyze and plan work for incomplete Lean 4 proofs (sorries)
 ---
 

@@ -1,5 +1,4 @@
 ---
-name: check-axioms
 description: Verify that Lean 4 proofs use only standard mathlib axioms
 ---
 

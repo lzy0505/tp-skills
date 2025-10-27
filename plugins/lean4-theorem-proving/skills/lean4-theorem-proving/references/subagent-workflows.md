@@ -459,6 +459,84 @@ mcp__lean-lsp__lean_diagnostic_messages(file)  # Check errors
 
 ❌ **Don't use general-purpose for simple scripts** - Explore agent is faster
 
+## Using Slash Commands from Subagents
+
+### When Subagents Should Use Slash Commands
+
+Subagents can invoke slash commands using the `SlashCommand` tool. This is useful for accessing specialized workflows that combine multiple steps.
+
+**Available slash commands:**
+- `/lean4-theorem-proving:search-mathlib [query]` - Search mathlib with multiple strategies
+- `/lean4-theorem-proving:analyze-sorries` - Analyze and categorize incomplete proofs
+- `/lean4-theorem-proving:fill-sorry [file:line]` - Interactive sorry filling
+- `/lean4-theorem-proving:check-axioms [file]` - Verify axiom hygiene
+- `/lean4-theorem-proving:build-lean` - Build with error analysis
+- `/lean4-theorem-proving:golf-proofs [file]` - Optimize proofs interactively
+- `/lean4-theorem-proving:clean-warnings` - Clean linter warnings by category
+
+**When to use slash commands vs scripts directly:**
+
+✅ **Use slash command when:**
+- Workflow combines multiple steps (search + filter + recommend)
+- Interactive decision-making is needed
+- You want standardized output formatting
+- Example: `/search-mathlib` combines local search, leansearch, and loogle APIs
+
+❌ **Use script directly when:**
+- Single-step operation
+- Just need raw output for further processing
+- Non-standard arguments needed
+- Example: `scripts/search_mathlib.sh "pattern" name`
+
+### Example: Subagent Using Slash Command
+
+**Scenario:** Main conversation asks subagent to find and recommend lemmas
+
+**Subagent task:**
+```
+"Dispatch general-purpose agent to find lemmas about continuous functions on compact spaces.
+Use /search-mathlib, evaluate results, and recommend the best fit for our use case."
+```
+
+**Subagent execution:**
+```python
+# Subagent uses SlashCommand tool
+SlashCommand("/lean4-theorem-proving:search-mathlib continuous compact")
+
+# Slash command runs, returns results
+# Subagent evaluates and reports back:
+
+"I found 8 relevant lemmas. Best fit for your use case:
+
+**Recommended: Continuous.isCompact_image**
+- Type: Continuous f → IsCompact s → IsCompact (f '' s)
+- Import: Mathlib.Topology.Compactness.Compact
+- Why: Directly proves continuous image of compact set is compact
+
+Alternatives:
+- ContinuousOn.isCompact_image (if only continuous on subset)
+- IsCompact.image (more general form)
+"
+```
+
+### Pattern: Script vs Slash Command Decision
+
+**Use script directly (faster, simpler):**
+```
+"Dispatch Explore agent to:
+Run scripts/sorry_analyzer.py . --format=text
+and report total sorry count"
+```
+
+**Use slash command (richer workflow):**
+```
+"Dispatch Explore agent to:
+Use /analyze-sorries to get categorized sorry breakdown
+and report which category has the most sorries"
+```
+
+**Key difference:** Slash commands provide interpretation and next-step suggestions, scripts provide raw data.
+
 ## Troubleshooting
 
 ### "Agent didn't find what I expected"

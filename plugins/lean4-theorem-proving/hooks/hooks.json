@@ -1,12 +1,14 @@
 {
-  "description": "Bootstrap env vars for Lean 4 tooling so slash-commands can find plugin-bundled scripts.",
+  "description": "Lean4 bootstrap: set env vars for sorry analyzer and plugin paths.",
   "hooks": {
     "SessionStart": [
       {
+        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/bootstrap.sh startup"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/bootstrap.sh startup",
+            "timeout": 20
           }
         ]
       }

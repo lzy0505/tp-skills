@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Bootstrap env for the session so commands can reference plugin scripts reliably.
 
 set -euo pipefail

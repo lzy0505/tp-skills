@@ -1,6 +1,6 @@
 ---
 description: Analyze Lean 4 sorries in the current repo and summarize hotspots
-allowed-tools: Bash(python3:*), Bash(find:*), Bash(grep:*), Bash(xargs:*), Bash(sed:*), Bash(awk:*), Bash(cat:*), Bash(echo:*)
+allowed-tools: Bash(python3:*), Bash(find:*), Bash(grep:*), Bash(xargs:*), Bash(sed:*), Bash(awk:*), Bash(cat:*), Bash(echo:*), Bash(python3 "${LEAN4_SORRY_ANALYZER}" * --format=text), Bash(python3 "${LEAN4_SORRY_ANALYZER}" * --interactive), Bash(if [ * ]; then *; fi)
 ---
 
 # Sorry Analysis and Planning

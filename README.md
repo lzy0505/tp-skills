@@ -1,41 +1,51 @@
 # Lean 4 Skills for Claude
 
-Claude Skills for systematic development of formal proofs in Lean 4.
+Claude Skills, commands, and agents for systematic development of formal proofs in Lean 4.
 
-## Skills in This Repository
+## Plugins in This Repository
 
-| Skill | Description | Standalone | Requirements |
-|-------|-------------|------------|--------------|
-| **[lean4-theorem-proving](lean4-theorem-proving/)** | Core workflows, 16 automation tools, best practices | ✅ Yes | None |
-| **[lean4-memories](lean4-memories/)** | Persistent learning across sessions | ❌ No | MCP memory server |
+| Plugin | Provides | Description | Requirements |
+|--------|----------|-------------|--------------|
+| **[lean4-theorem-proving](plugins/lean4-theorem-proving/)** | Skill + 6 Commands | Core workflows, 16 automation tools, best practices | None |
+| **[lean4-memories](plugins/lean4-memories/)** | Skill | Persistent learning across sessions | MCP memory server |
+| **[lean4-subagents](plugins/lean4-subagents/)** | 3 Agents | Specialized agents for proof optimization, sorry filling, axiom checking | None |
 
 ## Quick Start
 
 **Via Marketplace (Recommended):**
 ```bash
 /plugin marketplace add cameronfreer/lean4-skills
-/plugin install lean4-theorem-proving    # Core skill
+/plugin install lean4-theorem-proving    # Core skill + commands
 /plugin install lean4-memories           # Optional memory skill
+/plugin install lean4-subagents          # Optional specialized agents
 ```
 
 **Manual Installation:**
 ```bash
 git clone https://github.com/cameronfreer/lean4-skills.git
 cd lean4-skills
-cp -r lean4-theorem-proving ~/.claude/skills/
-cp -r lean4-memories ~/.claude/skills/  # Optional
+
+# Install core skill + commands (recommended)
+cp -r plugins/lean4-theorem-proving ~/.claude/skills/
+
+# Install memory skill (optional, requires MCP memory server)
+cp -r plugins/lean4-memories ~/.claude/skills/
+
+# Install specialized agents (optional)
+cp -r plugins/lean4-subagents ~/.claude/skills/
 ```
 
 ➡️ **Platform-specific setup (Windows, LSP server, etc.):** [INSTALLATION.md](INSTALLATION.md)
 
 ### Usage
 
-Skills activate automatically when you work on Lean 4 files. No manual invocation needed!
+**Skills** activate automatically when you work on Lean 4 files. **Commands** appear in autocomplete with `/lean4-theorem-proving:` prefix. **Agents** are available via the Task tool.
 
-**Toggle skills on/off:**
+**Toggle plugins on/off:**
 ```bash
 /plugin disable lean4-memories    # Disable memory skill
 /plugin enable lean4-memories     # Re-enable memory skill
+/plugin disable lean4-subagents   # Disable specialized agents
 ```
 
 ## lean4-theorem-proving
@@ -56,7 +66,7 @@ Systematic workflows for Lean 4 proof development.
 - Managing sorries, axioms, and type class issues
 - Contributing to mathlib
 
-➡️ **[Full Documentation](lean4-theorem-proving/README.md)**
+➡️ **[Full Documentation](plugins/lean4-theorem-proving/README.md)**
 
 ## lean4-memories
 
@@ -75,17 +85,36 @@ Optional persistent learning across Lean 4 sessions.
 
 **Requires:** MCP memory server configuration
 
-➡️ **[Full Documentation](lean4-memories/README.md)**
+➡️ **[Full Documentation](plugins/lean4-memories/README.md)**
+
+## lean4-subagents
+
+Specialized agents for targeted Lean 4 development tasks.
+
+**What you get:**
+- **lean4-proof-golfer** - Optimize proofs by reducing length/runtime (30-40% reduction)
+- **lean4-sorry-filler** - Fill in sorry placeholders systematically
+- **lean4-axiom-checker** - Verify axiom hygiene across theorems
+
+**Perfect for:**
+- Polishing proofs before publication
+- Batch-filling sorries in development
+- Ensuring axiom-free theorems
+
+**Usage:** Available via Task tool when lean4-subagents is installed
+
+➡️ **[Full Documentation](plugins/lean4-subagents/README.md)**
 
 ## How They Work Together
 
 **Example: Proving `condExp μ m X =ᵐ[μ] condExp μ m Y`**
 
-**lean4-theorem-proving says:** "Try `condExp_unique` from mathlib"
+1. **lean4-theorem-proving skill** activates, provides workflows and mathlib patterns
+2. Use **/lean4-theorem-proving:build-lean** command for formatted error analysis
+3. **lean4-memories** recalls: "Similar goals in this project used `condExp_unique` + `ae_eq` pattern (success rate: 3/3)"
+4. After proving, use **lean4-proof-golfer agent** to optimize from 15 lines → 6 lines
 
-**lean4-memories adds:** "Similar goals in this project used `condExp_unique` + `ae_eq` pattern (success rate: 3/3)"
-
-Result: Faster proofs with project-specific context!
+Result: Faster development with systematic optimization!
 
 ## Requirements
 
@@ -105,18 +134,20 @@ Result: Faster proofs with project-specific context!
 
 ## Documentation
 
-- **[lean4-theorem-proving/README.md](lean4-theorem-proving/README.md)** - Core skill guide
-- **[lean4-memories/README.md](lean4-memories/README.md)** - Memory skill guide
-- **[lean4-theorem-proving/scripts/](lean4-theorem-proving/scripts/)** - 16 automation tools
-- **[lean4-theorem-proving/references/](lean4-theorem-proving/references/)** - Detailed guides
+- **[lean4-theorem-proving/README.md](plugins/lean4-theorem-proving/README.md)** - Core skill guide
+- **[lean4-memories/README.md](plugins/lean4-memories/README.md)** - Memory skill guide
+- **[lean4-subagents/README.md](plugins/lean4-subagents/README.md)** - Specialized agents guide
+- **[lean4-theorem-proving/scripts/](plugins/lean4-theorem-proving/scripts/)** - 16 automation tools
+- **[lean4-theorem-proving/references/](plugins/lean4-theorem-proving/references/)** - Detailed guides
 
 ## Status
 
-**Version:** 3.0.0
+**Version:** 3.1.0
 **Status:** Production-ready
 **Last Updated:** October 2025
 
 Recent updates:
+- v3.1.0: Restructured as Claude Code marketplace with 3 plugins (skill + commands + agents)
 - v3.0.0: Added lean4-memories skill (optional MCP memory integration)
 - v2.1.0: Added 16 automation scripts (search, analysis, verification)
 - v2.0.0: Progressive disclosure restructuring

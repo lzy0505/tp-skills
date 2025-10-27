@@ -7,20 +7,29 @@ Detailed installation instructions for Lean 4 Skills.
 **Via Marketplace (Recommended):**
 ```bash
 /plugin marketplace add cameronfreer/lean4-skills
-/plugin install lean4-theorem-proving    # Core skill
-/plugin install lean4-memories           # Optional memory skill
+/plugin install lean4-theorem-proving    # Core skill + 6 slash commands
+/plugin install lean4-memories           # Optional: persistent memory skill
+/plugin install lean4-subagents          # Optional: 3 specialized agents
 ```
+
+**What Each Plugin Provides:**
+- **lean4-theorem-proving:** Skill (auto-activates) + 6 slash commands (`/lean4-theorem-proving:build-lean`, etc.)
+- **lean4-memories:** Skill (auto-activates, requires MCP memory server)
+- **lean4-subagents:** 3 agents (lean4-proof-golfer, lean4-sorry-filler, lean4-axiom-checker)
 
 **Manual Installation:**
 ```bash
 git clone https://github.com/cameronfreer/lean4-skills.git
 cd lean4-skills
 
-# Install core skill (required)
-cp -r lean4-theorem-proving ~/.claude/skills/
+# Install core skill + commands (recommended)
+cp -r plugins/lean4-theorem-proving ~/.claude/skills/
 
-# Install memory skill (optional)
-cp -r lean4-memories ~/.claude/skills/
+# Install memory skill (optional, requires MCP memory server)
+cp -r plugins/lean4-memories ~/.claude/skills/
+
+# Install specialized agents (optional)
+cp -r plugins/lean4-subagents ~/.claude/skills/
 ```
 
 ## Platform-Specific Setup
@@ -92,7 +101,7 @@ mcp__lean-lsp__lean_goal(file_path, line)
 mcp__lean-lsp__lean_local_search("add_comm")
 ```
 
-If they work, you're ready! See `lean4-theorem-proving/references/lean-lsp-server.md` for complete workflows.
+If they work, you're ready! See `plugins/lean4-theorem-proving/references/lean-lsp-server.md` for complete workflows.
 
 ## Requirements
 
@@ -102,8 +111,11 @@ If they work, you're ready! See `lean4-theorem-proving/references/lean-lsp-serve
 - Any Claude (CLAUDE.md method)
 
 **For lean4-memories (additional):**
-- MCP memory server (simple config file edit - [setup guide](lean4-memories/README.md#installation))
+- MCP memory server (simple config file edit - [setup guide](plugins/lean4-memories/README.md#installation))
 - Claude Desktop or Claude Code with MCP support
+
+**For lean4-subagents:**
+- Same as lean4-theorem-proving (no additional requirements)
 
 **For Lean LSP server (optional but highly recommended):**
 - Claude Code or Claude Desktop with MCP support

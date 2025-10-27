@@ -275,9 +275,86 @@ exact hX m (fun i => k + i.val) (fun i j hij => Nat.add_lt_add_left hij k)
 - Simple Nat arithmetic (omega can struggle with coercions)
 - Automation overhead > direct application
 
+**Pattern 5: Smart `ext` - Nested extensionality** ⭐ NEW
+
+`ext` is smarter than you think - it automatically handles multiple nested extensionality layers!
+
+```lean
+-- ❌ Before (4 lines - manual nesting)
+apply Subtype.ext
+apply Fin.ext
+simp [ι]
+
+-- ✅ After (2 lines - ext handles it)
+ext; simp [ι]
+```
+
+**Key insight:** Single `ext` automatically applies:
+- `Subtype.ext` (for subtypes)
+- `Fin.ext` (for finite types)
+- `funext` (for function extensionality)
+- Multiple layers in sequence
+
+**When to use single `ext`:**
+- Nested extensionality goals (Subtype of Fin, functions returning subtypes, etc.)
+- Multiple extensionality steps that would otherwise be `apply X.ext; apply Y.ext`
+- Any time you see consecutive `apply *.ext` statements
+
+**Savings:** 50% reduction (4 lines → 2 lines) with no loss of clarity
+
+**Pattern 6: `ext`-`simp` chain combination** (when natural)
+
+Combine `ext` with subsequent `simp` steps using semicolons when the operations are sequential and natural.
+
+```lean
+-- ❌ Before (6 lines)
+ext x
+simp only [Finset.mem_image, Finset.mem_univ, true_and, iff_true]
+use σ.symm x
+simp
+
+-- ✅ After (1 line)
+ext x; simp only [Finset.mem_image, Finset.mem_univ, true_and, iff_true]; use σ.symm x; simp
+```
+
+**When semicolon chaining is worth it:**
+- ✅ Sequential operations (each step depends on previous)
+- ✅ Saves ≥2 lines
+- ✅ No loss of readability (proof flow still clear)
+- ✅ Steps are simple (intro, ext, use, simp, etc.)
+
+**When NOT to use semicolons (from earlier anti-patterns):**
+- ❌ Just combining lines without reducing tokens
+- ❌ Would create unreadable long lines (>100 chars)
+- ❌ Complex intermediate steps that need inspection
+- ❌ Not actually saving tokens (semicolon is a token!)
+
+**Refined rule:** Semicolons are good for *sequential proof steps*, not for *arbitrary line combining*.
+
+**Pattern 7: Remove `have`-`simpa` indirection**
+
+When a `have` just calls a lemma and wraps it with `simpa`, inline it.
+
+```lean
+-- ❌ Before (3 lines - unnecessary indirection)
+have : m' ≤ k ⟨m', Nat.lt_succ_self m'⟩ := by
+  have h := strictMono_Fin_ge_id hk_mono ⟨m', Nat.lt_succ_self m'⟩
+  simpa using h
+
+-- ✅ After (2 lines - direct application)
+have : m' ≤ k ⟨m', Nat.lt_succ_self m'⟩ :=
+  strictMono_Fin_ge_id hk_mono ⟨m', Nat.lt_succ_self m'⟩
+```
+
+**When to remove indirection:**
+- `have h := lemma; simpa using h` → just apply lemma directly
+- `simpa` is only unfolding definitions (no real work)
+- The intermediate `have` adds no value
+
 **Impact from real sessions:**
 - Session 1: 11 proofs, ~22 lines saved
 - Session 2: 3 proofs, ~26 lines saved (76.5% reduction avg)
+- Session 4: 4 proofs, ~8 lines saved (ext-simp chains, have-simpa removal)
 
 ## Systematic Optimization Workflow
 
@@ -440,18 +517,22 @@ cases x with
 - **Compilation:** all optimizations must compile
 - **Time per proof:** aim for <5 minutes per optimization
 
-**Real session benchmarks across 3 sessions:**
-- **Cumulative:** 19 proofs optimized, ~100 lines removed, ~34% token reduction
+**Real session benchmarks across all sessions:**
+- **Cumulative:** 23 proofs optimized, ~108 lines removed, ~34% token reduction
 - **Average reduction:** 68% per optimized proof
-- **Time per proof:** ~2 minutes (with systematic workflow)
+- **Time per proof:** ~2-5 minutes (with systematic workflow)
 - **Success rate:** 100% compilation (with multi-candidate approach)
 - **ROI:** Break-even after ~3 files (patterns become automatic)
+- **Final scan:** Codebase reached saturation (excluding Via* files)
 
 **Technique effectiveness ranking:**
 1. let + have + exact pattern: 50% of all savings, 60-80% reduction per instance
-2. Multi-candidate testing: 80% success rate, ~70% time savings vs manual
-3. Arithmetic simplification: 30-50% reduction per instance
-4. Constructor branch compression: 25-57% reduction per instance
+2. Smart ext (nested extensionality): 50% reduction, no loss of clarity
+3. Multi-candidate testing: 80% success rate, ~70% time savings vs manual
+4. ext-simp chain combinations: Saves ≥2 lines when natural
+5. Arithmetic simplification: 30-50% reduction per instance
+6. have-simpa indirection removal: Simple, safe, always beneficial
+7. Constructor branch compression: 25-57% reduction per instance
 
 ## Simplification Patterns
 
@@ -900,22 +981,26 @@ Good simplifications should:
 
 ## Anti-Patterns to Avoid
 
-### Don't Use Semicolons Without Reducing Tokens
+### Don't Use Semicolons Just to Combine Lines
 
-**Bad:**
+**Bad (no real savings):**
 ```lean
--- Before (3 tokens per line): intro x \n exact proof => ~6 tokens
+-- Before (2 lines, 6 tokens): intro x \n exact proof
 intro x
 exact proof
 
--- After (SAME tokens!): intro x ; exact proof => ~6 tokens
-intro x; exact proof
+-- After (1 line, 6 tokens): intro x ; exact proof
+intro x; exact proof  -- Semicolon is a token! No savings!
 ```
 
-**Why this is wrong:** Semicolons are tokens! Only use them if you're also inlining/eliminating statements.
+**Why this is wrong:** Semicolons are tokens. Only combine with semicolons when:
+1. You're also inlining/eliminating statements (actual token reduction)
+2. The operations are sequential and natural (readability maintained)
+3. You save ≥2 lines
 
-**Good use of semicolons:**
+**Good use of semicolons (sequential operations with savings):**
 ```lean
+-- ✅ Example 1: Inline + semicolon (saves tokens)
 -- Before (multiple statements): ~15 tokens
 constructor
 · intro k hk
@@ -924,7 +1009,27 @@ constructor
 -- After (inline + semicolon): ~10 tokens
 constructor
 · intro k hk; exact hX m k hk
+
+-- ✅ Example 2: Sequential proof steps (natural flow)
+-- Before (6 lines)
+ext x
+simp only [Finset.mem_image, Finset.mem_univ, true_and, iff_true]
+use σ.symm x
+simp
+
+-- After (1 line, natural sequence)
+ext x; simp only [Finset.mem_image, Finset.mem_univ, true_and, iff_true]; use σ.symm x; simp
 ```
+
+**When semicolons ARE worth it:**
+- ✅ Sequential operations (ext → simp → use → simp)
+- ✅ Saves ≥2 lines with maintained readability
+- ✅ Simple steps (intro, ext, use, simp, etc.)
+
+**When semicolons are NOT worth it:**
+- ❌ Just combining 2 lines (no token savings)
+- ❌ Creates unreadable long lines (>100 chars)
+- ❌ Complex steps needing inspection
 
 ### Don't Over-Automate Simple Lemmas
 

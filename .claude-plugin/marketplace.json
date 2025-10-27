@@ -12,11 +12,7 @@
     {
       "name": "lean4-theorem-proving",
       "description": "Systematic approach to developing formal proofs in Lean 4, managing sorries, using mathlib, and building verified mathematics",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./lean4-theorem-proving"
-      ]
+      "source": "./lean4-theorem-proving"
     },
     {
       "name": "lean4-memories",

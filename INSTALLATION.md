@@ -15,7 +15,7 @@ Detailed installation instructions for Lean 4 Skills.
 **What Each Plugin Provides:**
 - **lean4-theorem-proving:** Skill (auto-activates) + 6 slash commands (`/lean4-theorem-proving:build-lean`, etc.)
   - **Foundation for the other plugins** - install this first
-- **lean4-memories:** Skill (auto-activates, requires lean4-theorem-proving + MCP memory server)
+- **lean4-memories:** Skill (auto-activates, requires lean4-theorem-proving + MCP memory server) - **EXPERIMENTAL**
   - Extends lean4-theorem-proving with persistent learning
 - **lean4-subagents:** 3 agents (lean4-proof-golfer, lean4-sorry-filler, lean4-axiom-eliminator) - **EXPERIMENTAL**
   - Extends lean4-theorem-proving with specialized automation

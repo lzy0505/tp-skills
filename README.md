@@ -7,7 +7,7 @@ Claude Skills, commands, and agents for systematic development of formal proofs 
 | Plugin | Provides | Description | Requirements |
 |--------|----------|-------------|--------------|
 | **[lean4-theorem-proving](plugins/lean4-theorem-proving/)** | Skill + 6 Commands | Core workflows, 16 automation tools, best practices | None |
-| **[lean4-memories](plugins/lean4-memories/)** | Skill | Persistent learning across sessions | lean4-theorem-proving + MCP memory server |
+| **[lean4-memories](plugins/lean4-memories/)** | Skill (EXPERIMENTAL) | Persistent learning across sessions | lean4-theorem-proving + MCP memory server |
 | **[lean4-subagents](plugins/lean4-subagents/)** | 3 Agents (EXPERIMENTAL) | Specialized agents for proof optimization, sorry filling, axiom elimination | lean4-theorem-proving |
 
 ## Quick Start
@@ -70,7 +70,7 @@ Systematic workflows for Lean 4 proof development.
 
 ➡️ **[Full Documentation](plugins/lean4-theorem-proving/README.md)**
 
-## lean4-memories
+## lean4-memories (EXPERIMENTAL)
 
 Optional persistent learning across Lean 4 sessions. Extends lean4-theorem-proving with memory.
 

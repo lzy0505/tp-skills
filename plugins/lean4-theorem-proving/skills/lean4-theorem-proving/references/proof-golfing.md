@@ -275,7 +275,58 @@ exact hX m (fun i => k + i.val) (fun i j hij => Nat.add_lt_add_left hij k)
 - Simple Nat arithmetic (omega can struggle with coercions)
 - Automation overhead > direct application
 
-**Pattern 5: Smart `ext` - Nested extensionality** ⭐ NEW
+**Pattern 5: `rw` then `exact` → `rwa`** ⭐ STANDARD IDIOM
+
+`rwa` is short for "rewrite and assumption" - use whenever `rw` is followed by `exact` of the rewritten hypothesis.
+
+```lean
+-- ❌ Before (2 lines)
+rw [hlhs_eq, hrhs_eq] at hproj_eq
+exact hproj_eq
+
+-- ✅ After (1 line)
+rwa [hlhs_eq, hrhs_eq] at hproj_eq
+```
+
+**Why this works:** `rwa` automatically tries `assumption` after rewriting, closing the goal if the rewritten hypothesis matches.
+
+**When to use:**
+- Any `rw [...] at h` followed by `exact h`
+- Standard mathlib convention
+- 50% reduction, instant, completely safe
+
+**Savings:** 50% reduction (2 lines → 1 line), standard mathlib style
+
+**Pattern 6: `ext` + `rfl` → `rfl` (Definitional Equality)** ⭐ HIGH-VALUE
+
+When two terms are definitionally equal (equal by computation), Lean accepts `rfl` directly without needing `ext`.
+
+```lean
+-- ❌ Before (3 lines - unnecessary ceremony)
+have hprojid :
+    proj ∘ (fun ω => fun i : ℕ => X i ω)
+      = fun ω => fun i : Fin n => X i.val ω := by
+  ext ω i
+  rfl
+
+-- ✅ After (1 line - definitional equality)
+have hprojid :
+    proj ∘ (fun ω => fun i : ℕ => X i ω)
+      = fun ω => fun i : Fin n => X i.val ω := rfl
+```
+
+**Why this works:** The two terms compute to the same result. The `ext` was unnecessary ceremony.
+
+**When to try removing `ext`:**
+- Proof is `by ext ...; rfl`
+- No actual computation needed, just unfolding definitions
+- Terms are structurally identical after unfolding
+
+**Warning:** Not all `ext + rfl` can be simplified! Always test with `lake build`. If removing `ext` fails, the terms are propositionally equal but not definitionally equal.
+
+**Savings:** 67% reduction (3 lines → 1 line), completely safe when it works
+
+**Pattern 7: Smart `ext` - Nested extensionality**
 
 `ext` is smarter than you think - it automatically handles multiple nested extensionality layers!
 
@@ -302,7 +353,65 @@ ext; simp [ι]
 
 **Savings:** 50% reduction (4 lines → 2 lines) with no loss of clarity
 
-**Pattern 6: `ext`-`simp` chain combination** (when natural)
+**Pattern 8: `congr; ext; rw` → `simp only`** ⭐ SIMPLIFIER IS SMARTER
+
+`simp` automatically applies congruence and extensionality when needed. Manual `congr` and `ext` are often redundant.
+
+```lean
+-- ❌ Before (3 lines - manual structural reasoning)
+lemma contractable_same_range {μ : Measure Ω} {X : ℕ → Ω → α} {m : ℕ}
+    (k₁ k₂ : Fin m → ℕ) (h_range : ∀ i, k₁ i = k₂ i) :
+    Measure.map (fun ω i => X (k₁ i) ω) μ =
+      Measure.map (fun ω i => X (k₂ i) ω) μ := by
+  congr 1; ext ω i; rw [h_range]
+
+-- ✅ After (1 line - simp handles everything)
+lemma contractable_same_range {μ : Measure Ω} {X : ℕ → Ω → α} {m : ℕ}
+    (k₁ k₂ : Fin m → ℕ) (h_range : ∀ i, k₁ i = k₂ i) :
+    Measure.map (fun ω i => X (k₁ i) ω) μ =
+      Measure.map (fun ω i => X (k₂ i) ω) μ := by
+  simp only [h_range]
+```
+
+**Why this works:** `simp` automatically applies congruence and extensionality when needed. It understands the goal structure.
+
+**When to replace manual structural tactics:**
+- `congr; ext; rw [h]` → `simp only [h]`
+- `congr; ext; simp` → `simp`
+- Any manual setup before `simp` - try `simp` alone first!
+
+**Lesson:** simp is smarter than you think. Try it before manually decomposing goals.
+
+**Savings:** 67% reduction (3 lines → 1 line), cleaner proof
+
+**Pattern 9: `apply Fin.ext; simp` → `simp`** (Redundant Extensionality)
+
+For common types like `Fin`, `Prod`, `Subtype`, `simp` knows how to prove equality without manual `ext`.
+
+```lean
+-- ❌ Before (2 lines - redundant ext)
+have hi_eq : (⟨i.val, Nat.lt_of_lt_of_le i.isLt hmn⟩ : Fin n) = ι i := by
+  apply Fin.ext
+  simp [ι]
+
+-- ✅ After (1 line - simp knows Fin.ext)
+have hi_eq : (⟨i.val, Nat.lt_of_lt_of_le i.isLt hmn⟩ : Fin n) = ι i := by
+  simp [ι]
+```
+
+**Why this works:** `simp` has `Fin.ext`, `Prod.ext`, `Subtype.ext` as simplification lemmas. It automatically applies extensionality for these types.
+
+**Common types where `simp` handles extensionality:**
+- `Fin` - `apply Fin.ext; simp` → `simp`
+- `Prod` - `apply Prod.ext; simp` → `simp`
+- `Subtype` - `apply Subtype.ext; simp` → `simp`
+- Functions - `ext; simp` → often just `simp` (but test!)
+
+**Warning:** Not all `ext` calls are redundant! See "Failed Optimizations" below.
+
+**Savings:** 50% reduction (2 lines → 1 line), standard pattern
+
+**Pattern 10: `ext`-`simp` chain combination** (when natural)
 
 Combine `ext` with subsequent `simp` steps using semicolons when the operations are sequential and natural.
 
@@ -424,6 +533,179 @@ calc Real.sqrt (Cf / m)
 - Session 1: 11 proofs, ~22 lines saved
 - Session 2: 3 proofs, ~26 lines saved (76.5% reduction avg)
 - Session 4: 4 proofs, ~8 lines saved (ext-simp chains, have-simpa removal)
+
+## ⚠️ Failed Optimizations: Learning from What Doesn't Work
+
+Not all patterns that look optimizable actually are! Here are real failures to learn from:
+
+### Failed: Not All `ext` Calls Are Redundant
+
+**Attempted optimization:**
+```lean
+-- Original (works)
+ext x; simp [prefixCylinder]
+
+-- Attempted (FAILS!)
+simp [prefixCylinder]  -- ❌ Compilation failed! simp alone didn't make progress
+```
+
+**Lesson:** Sometimes `simp` needs the goal broken down first. The `ext` isn't redundant - it's necessary setup for `simp` to make progress.
+
+**Rule:** Always test with `lake build`. If removing `ext` fails, put it back. Not all extensionality is simplifiable.
+
+### Failed: `omega` with Fin Coercions
+
+**Attempted optimization:**
+```lean
+-- Attempted (FAILS with counterexample!)
+exact hX m (fun i => k + i.val) (fun i j hij => by omega)
+
+-- Correct (works)
+exact hX m (fun i => k + i.val) (fun i j hij => Nat.add_lt_add_left hij k)
+```
+
+**Lesson:** `omega` can struggle with `Fin` coercions and complex arithmetic contexts. Direct mathlib lemmas are shorter AND more reliable.
+
+### When Optimizations Fail
+
+**If compilation fails after an optimization:**
+1. ✅ Revert the change immediately
+2. ✅ Report: "Pattern at line [N] requires manual investigation"
+3. ✅ Continue with next pattern
+4. ✅ Document the failure so you don't try again
+
+**Common failure modes:**
+- Removing `ext` when `simp` actually needs goal decomposed
+- Using `omega` with complex types/coercions
+- Inlining let bindings that are used >3 times
+- Combining tactics that aren't actually sequential
+
+## Proof Golfing ROI Hierarchy
+
+Based on real-world sessions, ranked by return on investment (time vs. savings):
+
+**1. `rw; exact` → `rwa` (50% reduction, instant, 100% safe) ⭐⭐⭐⭐⭐**
+- Detection: Trivial (look for pattern)
+- Application: Instant (1-line change)
+- Risk: Zero (always works)
+- Verdict: **Do this first, always**
+
+**2. `ext` + `rfl` → `rfl` (67% reduction, instant, safe when works) ⭐⭐⭐⭐⭐**
+- Detection: Easy (look for `by ext ...; rfl`)
+- Application: Instant (remove `by ext`)
+- Risk: Low (test with `lake build`, revert if fails)
+- Verdict: **High-value, quick wins**
+
+**3. Redundant `ext` before `simp` (50% reduction, must test) ⭐⭐⭐⭐**
+- Detection: Moderate (look for `ext; simp` or `apply X.ext; simp`)
+- Application: 1-2 minutes (test required)
+- Risk: Medium (not all ext is redundant - see Failed Optimizations)
+- Verdict: **Good ROI but verify each case**
+
+**4. Multi-line → one-line with semicolons (33% reduction, readability cost) ⭐⭐⭐**
+- Detection: Easy (multi-line constructor branches, calc steps)
+- Application: 2-3 minutes
+- Risk: Low for compilation, medium for readability
+- Verdict: **Worthwhile when saves ≥2 lines and stays readable**
+
+**5. `congr; ext; rw` → `simp only` (60% reduction, must test) ⭐⭐⭐⭐**
+- Detection: Moderate (look for manual structural reasoning)
+- Application: 2-3 minutes
+- Risk: Medium (simp might not handle all cases)
+- Verdict: **High value when it works**
+
+**6. Inlining let bindings (DANGEROUS without analysis!) ⭐**
+- Detection: Hard (need usage count analysis)
+- Application: 10-15 minutes (check all uses, test)
+- Risk: HIGH (93% false positive rate without proper analysis!)
+- Verdict: **Skip unless you have analyze_let_usage.py**
+
+**Summary:**
+- **Do first:** rwa, ext+rfl → rfl (instant wins, zero risk)
+- **Do second:** Redundant ext removal, simp simplifications (quick, test each)
+- **Do carefully:** let binding inlining (high risk, need tools)
+- **Stop when:** Spending >15 min per optimization (diminishing returns)
+
+## When to Golf vs. When Not to Golf
+
+### ✅ Golf When:
+
+**1. Codebase maturity:**
+- Files marked as "stable" (not actively developed)
+- Haven't changed in >1 week
+- All proofs compile, no sorries
+- Testing is fast (`lake build` <30 seconds)
+
+**2. You have the tools:**
+- Automated scripts (`find_golfable.py`, `analyze_let_usage.py`)
+- Fast feedback loop (LSP server or quick builds)
+- Can invest 15+ minutes per file
+
+**3. Clear value:**
+- File has >5 long proofs (>10 lines each)
+- Obvious patterns (`rwa`, `ext+rfl`, redundant `ext`)
+- User explicitly requests optimization
+
+### ❌ Don't Golf When:
+
+**1. Code is already optimized:**
+- Codebase follows mathlib conventions
+- Most proofs are 1-3 lines already
+- Recent refactoring/cleanup pass
+- **Expected result:** <5% reduction (not worth time)
+
+**Real example:** Well-maintained codebase achieved only ~1% reduction after 8 optimizations because it was already well-written.
+
+**2. Code is in flux:**
+- Active development with sorries
+- Uncommitted changes
+- Recent refactoring (may conflict)
+- Build is slow (>2 minutes makes testing painful)
+
+**3. Tools are missing:**
+- No usage analysis for let bindings → 93% false positive rate!
+- No automated pattern detection → manual search is slow
+- No fast testing → each attempt takes minutes
+
+**4. Readability would suffer:**
+- Optimizations would harm clarity
+- Semantic naming provides value
+- Complex proofs need intermediate steps
+- **Principle:** Token savings < readability → Keep current version
+
+### Codebase Maturity Assessment
+
+**Before starting, ask yourself:**
+
+1. **Is this mathlib-quality code?**
+   - ✅ Yes → Expect <5% improvement, may not be worth time
+   - ❌ No → Good golfing target
+
+2. **When was last refactoring?**
+   - < 1 week ago → Skip (likely already clean)
+   - > 1 month ago → Good target
+
+3. **What's the current average proof length?**
+   - 1-3 lines → Already optimized
+   - 5-10 lines → Medium opportunity
+   - 10+ lines → High opportunity
+
+4. **Build speed?**
+   - <30s → Good (fast feedback)
+   - 30s-2min → Medium (workable)
+   - >2min → Poor (testing too slow)
+
+**Example assessment:**
+```
+Codebase: probability theory formalization
+Last refactor: 3 weeks ago
+Avg proof length: 8 lines
+Build speed: 45 seconds
+Maturity: Mathlib conventions, well-structured
+
+Assessment: Medium opportunity, ~10-15% reduction expected
+Decision: Worth 1-2 hours if have automated tools
+```
 
 ## Systematic Optimization Workflow
 

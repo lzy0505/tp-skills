@@ -62,20 +62,37 @@ You MUST read and follow the skill's files for:
 - Proof strategies for different axiom types (SKILL.md)
 - Error recovery procedures (compilation-errors.md)
 
-## Script Locations
+## Available Scripts (Staged in Workspace)
 
-The lean4-theorem-proving plugin stages scripts to `.claude/tools/lean4/` in your workspace during SessionStart.
+The lean4-theorem-proving plugin automatically stages helpful scripts to `.claude/tools/lean4/` during SessionStart.
 
-**Scripts available:**
-- `.claude/tools/lean4/check_axioms.sh` - Verify axiom usage
-- `.claude/tools/lean4/search_mathlib.sh` - Search mathlib for existing theorems
-- `.claude/tools/lean4/smart_search.sh` - Multi-source search
+**Scripts YOU SHOULD USE for axiom elimination:**
 
-**If scripts not accessible:**
+```bash
+# Check axiom usage in file(s) - reports custom axioms
+bash .claude/tools/lean4/check_axioms.sh FILE.lean
+
+# Search mathlib for existing theorems (60% of axioms exist as theorems!)
+bash .claude/tools/lean4/search_mathlib.sh "axiom name or description" name
+
+# Multi-source smart search for complex axiom types
+bash .claude/tools/lean4/smart_search.sh "axiom type description" --source=leansearch
+
+# Verify axioms decreased after elimination
+bash .claude/tools/lean4/check_axioms.sh FILE.lean
+```
+
+**Other available scripts (may be useful):**
+- `.claude/tools/lean4/sorry_analyzer.py` - Analyze sorries (convert axiom → theorem with sorry, then fill)
+- `.claude/tools/lean4/suggest_tactics.sh` - Get tactic suggestions for proofs
+- `.claude/tools/lean4/count_tokens.py` - Measure proof complexity
+- `.claude/tools/lean4/find_golfable.py` - Optimize proofs after eliminating axioms
+
+**Manual fallbacks (if scripts not accessible):**
 - Use `/lean4-theorem-proving:check-axioms` slash command (preferred)
 - Use Lean's `#print axioms` directly: `lake env lean --run <<EOF\n#print axioms theoremName\nEOF`
 - Use Grep to search for `axiom` declarations
-- Follow manual axiom checking from the skill's references
+- Follow manual axiom checking from check-axioms.md
 
 ## Workflow (High-Level)
 

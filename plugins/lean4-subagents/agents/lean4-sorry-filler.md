@@ -60,21 +60,40 @@ You MUST read and follow the skill's reference files for:
 - Compilation testing workflows (SKILL.md)
 - Error recovery procedures (compilation-errors.md)
 
-## Script Locations
+## Available Scripts (Staged in Workspace)
 
-The lean4-theorem-proving plugin stages scripts to `.claude/tools/lean4/` in your workspace during SessionStart.
+The lean4-theorem-proving plugin automatically stages helpful scripts to `.claude/tools/lean4/` during SessionStart.
 
-**Scripts available:**
-- `.claude/tools/lean4/search_mathlib.sh` - Search mathlib by name/content
-- `.claude/tools/lean4/smart_search.sh` - Multi-source search
-- `.claude/tools/lean4/sorry_analyzer.py` - Analyze sorries
-- `.claude/tools/lean4/suggest_tactics.sh` - Get tactic suggestions
+**Scripts YOU SHOULD USE for sorry filling:**
+
+```bash
+# Search mathlib by name pattern
+bash .claude/tools/lean4/search_mathlib.sh "pattern" name
+
+# Search mathlib by content (doc strings, proof techniques)
+bash .claude/tools/lean4/search_mathlib.sh "pattern" content
+
+# Multi-source smart search (tries local + leansearch + loogle)
+bash .claude/tools/lean4/smart_search.sh "query" --source=leansearch
+
+# Analyze sorries in project (get context, categorize by difficulty)
+python3 .claude/tools/lean4/sorry_analyzer.py . --format=text
+
+# Get tactic suggestions for a goal
+bash .claude/tools/lean4/suggest_tactics.sh --goal "∀ x : ℕ, x + 0 = x"
+```
+
+**Other available scripts (may be useful):**
+- `.claude/tools/lean4/check_axioms.sh` - Verify axioms (ensure no axioms introduced)
+- `.claude/tools/lean4/count_tokens.py` - Count proof tokens
+- `.claude/tools/lean4/analyze_let_usage.py` - Analyze let binding usage
+- `.claude/tools/lean4/find_golfable.py` - Find proof optimization patterns
 
 **If scripts not accessible:**
 - Use `/lean4-theorem-proving:search-mathlib` slash command (preferred)
-- Use WebFetch for leansearch and loogle APIs
+- Use `/lean4-theorem-proving:fill-sorry` slash command (full interactive workflow)
+- Use WebFetch for leansearch and loogle APIs directly
 - Use Grep to search local mathlib if available
-- Follow manual search strategies from the skill's references
 
 ## Workflow (High-Level)
 

@@ -58,14 +58,27 @@ You MUST read and follow proof-golfing.md for:
 - Error recovery procedures
 - Saturation detection
 
-## Script Locations
+## Available Scripts (Staged in Workspace)
 
-The lean4-theorem-proving plugin stages scripts to `.claude/tools/lean4/` in your workspace during SessionStart.
+The lean4-theorem-proving plugin automatically stages helpful scripts to `.claude/tools/lean4/` during SessionStart.
 
-**Scripts available:**
-- `.claude/tools/lean4/find_golfable.py` - Find optimization patterns with filtering
-- `.claude/tools/lean4/analyze_let_usage.py` - Verify let binding safety
-- `.claude/tools/lean4/count_tokens.py` - Count proof tokens
+**Scripts YOU SHOULD USE for proof golfing:**
+
+```bash
+# Find optimization patterns with false-positive filtering
+python3 .claude/tools/lean4/find_golfable.py FILE.lean --filter-false-positives
+
+# CRITICAL: Verify let binding usage before inlining (prevents making code worse!)
+python3 .claude/tools/lean4/analyze_let_usage.py FILE.lean --line LINE_NUMBER
+
+# Count tokens to verify optimization savings
+python3 .claude/tools/lean4/count_tokens.py --before-file FILE.lean:START-END --after "optimized code"
+```
+
+**Other available scripts (may be useful):**
+- `.claude/tools/lean4/search_mathlib.sh` - Search mathlib
+- `.claude/tools/lean4/check_axioms.sh` - Verify axioms
+- `.claude/tools/lean4/suggest_tactics.sh` - Get tactic suggestions
 
 **If scripts not accessible:**
 - Use `/lean4-theorem-proving:golf-proofs` slash command (preferred)

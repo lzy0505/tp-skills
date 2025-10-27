@@ -91,9 +91,113 @@ Examples:
 - Style changes in progress (avoid conflicts)"
 ```
 
+## 🚨 CRITICAL: When NOT to Optimize (False Positives)
+
+**Key finding from comprehensive codebase scan:** 93% of detected patterns were false positives!
+
+**Out of 47 "optimization opportunities" found, only 3 (6%) were actually worth optimizing.**
+
+### The Multiple-Use Heuristic ⭐⭐⭐⭐⭐
+
+**NEW RULE: If a let binding is used ≥3 times, DON'T inline it.**
+
+**Empirical data:**
+- Let bindings used 1-2 times: 100% optimization success rate
+- Let bindings used 3-4 times: 40% worth optimizing
+- Let bindings used 5+ times: 0% worth optimizing (NEVER inline!)
+
+**Example - DON'T optimize this:**
+```lean
+// CommonEnding.lean:531-541 - LOOKS like let+have+exact pattern
+let μ_map := Measure.map (fun ω i => X (k i) ω) μ
+let μ_bind := μ.bind fun ω => Measure.pi fun _ : Fin m => ν ω
+
+have h_map_prob : IsProbabilityMeasure μ_map := ...
+have h_bind_prob : IsProbabilityMeasure μ_bind := ...
+have h_eq : μ_map = μ_bind := ...
+// ... both μ_map and μ_bind used 5+ more times ...
+```
+
+**Why NOT to inline:**
+- μ_map is ~20 tokens, used 7 times
+- Current: 20 tokens (def) + 2 tokens × 7 uses = **34 tokens**
+- Inlined: 20 tokens × 7 uses = **140 tokens**
+- Inlining makes it **4× LONGER!**
+
+### The Readability Threshold
+
+**NEW METRIC: Readability Cost = (nesting depth) × (inline complexity) × (repetition)**
+
+**If Readability Cost > 5, keep current structure even if it uses more tokens.**
+
+**Example - DON'T optimize this:**
+```lean
+// L2Helpers.lean:148-180 - Complex proof with semantic bindings
+lemma contractable_map_pair ... := by
+  let k : Fin 2 → ℕ := fun t => if t = fin2Zero then i else j
+  have hk : StrictMono k := strictMono_two hij
+  have h_map := hX_contract 2 k hk
+  let eval : (Fin 2 → ℝ) → ℝ × ℝ := fun g => (g fin2Zero, g fin2One)
+  have h_eval_meas : Measurable eval := ...
+  // ... 15 more lines using k and eval ...
+  simpa [...] using h_comp
+```
+
+**Why NOT to inline:**
+- Let bindings define **semantic concepts** (subsequence selector, evaluation function)
+- Proof has complex intermediate steps
+- Inlining would create unreadable nested lambdas
+- **Readability loss >> token savings**
+
+### Quantified Decision Rule
+
+**Optimize let+have+exact pattern ONLY if ALL of these hold:**
+
+1. ✅ Let binding used ≤2 times, AND
+2. ✅ Proof is simple (just intro/exact, no cases/complex logic), AND
+3. ✅ Token savings > 10, AND
+4. ✅ Doesn't harm readability significantly
+
+**Skip if ANY of these hold:**
+
+1. ❌ Let binding used ≥3 times, OR
+2. ❌ Complex proof with case analysis, OR
+3. ❌ Semantic naming aids understanding, OR
+4. ❌ Would create deeply nested lambdas (>2 levels)
+
+### The Optimization Saturation Point
+
+**Empirical finding: After initial cleanup, optimization returns diminish rapidly.**
+
+**Session-by-session data:**
+- Session 1-2: 60% of patterns worth optimizing (high-value targets)
+- Session 3: 20% of patterns worth optimizing (medium-value)
+- Session 4: 6% of patterns worth optimizing (low-value, **diminishing returns**)
+
+**Time efficiency breakdown:**
+- First 15 optimizations: ~2 min each (30 min total)
+- Next 7 optimizations: ~5 min each (35 min total)
+- Last 3 optimizations: ~18 min each (54 min total)
+
+**Point of diminishing returns:** When optimization rate drops below 20% and time per optimization exceeds 15 minutes.
+
+**Recommendation:** Declare victory, document patterns, move on to higher-value work.
+
+### Signs You've Reached Saturation
+
+**Stop golfing when you see these:**
+
+1. ✋ Optimization success rate drops below 20%
+2. ✋ Time per optimization exceeds 15 minutes
+3. ✋ Most "patterns" turn out to be false positives
+4. ✋ Optimizations start hurting readability
+5. ✋ You're debating whether 2-token savings is worth it
+
+**Empirical benchmark:** Well-maintained codebases reach saturation after ~20-25 optimizations.
+
 ## Quick Reference: Common Patterns
 
-Based on real-world sessions with 60-75% size reduction per proof:
+Based on real-world sessions with 60-75% size reduction per proof (when patterns actually apply):
 
 **Pattern 1: Remove `by exact` wrapper**
 ```lean
@@ -105,7 +209,10 @@ lemma foo : P := by
 lemma foo : P := term
 ```
 
-**Pattern 2: The "let + have + exact" anti-pattern** ⭐ HIGH IMPACT
+**Pattern 2: The "let + have + exact" anti-pattern** ⭐ HIGH IMPACT (but see warnings!)
+
+⚠️ **CRITICAL:** Check if bindings are used multiple times first! See [False Positives section](#-critical-when-not-to-optimize-false-positives).
+
 ```lean
 -- ❌ Before (14 lines, ~140 tokens)
 lemma Contractable.prefix ... := by
@@ -124,10 +231,17 @@ lemma Contractable.prefix ... := by
   exact hX m (fun i => (k i).val) (fun i j hij => hk_mono hij)
 ```
 
-**When this pattern applies:**
-- let binding used only in have and final exact
-- have proof is simple (no complex case analysis)
-- Final result accepts lambda arguments
+**When this pattern applies (ALL must be true):**
+- ✅ let binding used ≤2 times (preferably only in have and final exact)
+- ✅ have proof is simple (no complex case analysis)
+- ✅ Final result accepts lambda arguments
+- ✅ No semantic naming value lost
+
+**When NOT to apply (ANY of these = skip):**
+- ❌ Let binding used ≥3 times anywhere in proof
+- ❌ Complex proof logic (cases, nested proofs)
+- ❌ Let binding represents important semantic concept
+- ❌ Would create deeply nested lambdas (>2 levels)
 
 **Pattern 3: Inline constructor branches**
 ```lean

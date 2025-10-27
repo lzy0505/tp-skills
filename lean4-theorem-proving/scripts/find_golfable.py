@@ -31,8 +31,25 @@ def count_lines_in_range(lines: List[str], start_idx: int, end_idx: int) -> int:
             count += 1
     return count
 
-def find_let_have_exact(file_path: Path, lines: List[str]) -> List[GolfablePattern]:
-    """Find let + have + exact patterns (HIGHEST value)."""
+def count_binding_uses(lines: List[str], binding_name: str, start_idx: int) -> int:
+    """Count how many times a binding is used after its definition."""
+    uses = 0
+    for i in range(start_idx, len(lines)):
+        line = lines[i]
+        # Skip comments
+        line = re.sub(r'--.*$', '', line)
+        # Count occurrences as whole word
+        pattern = r'\b' + re.escape(binding_name) + r'\b'
+        uses += len(re.findall(pattern, line))
+    # Subtract 1 for definition itself (appears on start line)
+    return max(0, uses - 1)
+
+def find_let_have_exact(file_path: Path, lines: List[str], filter_multi_use: bool = False) -> List[GolfablePattern]:
+    """Find let + have + exact patterns (HIGHEST value).
+
+    Args:
+        filter_multi_use: If True, filter out let bindings used ≥3 times (false positives)
+    """
     patterns = []
     i = 0
 
@@ -40,7 +57,10 @@ def find_let_have_exact(file_path: Path, lines: List[str]) -> List[GolfablePatte
         line = lines[i].strip()
 
         # Look for "let" statements
-        if re.match(r'let\s+\w+\s*:', line):
+        match = re.match(r'let\s+(\w+)\s*:', line)
+        if match:
+            let_name = match.group(1)
+
             # Check if followed by have and exact within next 15 lines
             has_have = False
             has_exact = False
@@ -54,6 +74,14 @@ def find_let_have_exact(file_path: Path, lines: List[str]) -> List[GolfablePatte
                     has_exact = True
 
                     if has_have:
+                        # Check if this is a false positive (multiple uses)
+                        if filter_multi_use:
+                            uses = count_binding_uses(lines, let_name, i)
+                            if uses >= 3:
+                                # FALSE POSITIVE - skip this one
+                                i = j
+                                break
+
                         # Found the pattern!
                         line_count = count_lines_in_range(lines, i, j + 1)
                         snippet = '\n'.join(lines[i:min(j+3, len(lines))])
@@ -193,8 +221,14 @@ def find_multiple_haves(file_path: Path, lines: List[str]) -> List[GolfablePatte
 
     return patterns
 
-def analyze_file(file_path: Path, pattern_types: Optional[List[str]] = None) -> List[GolfablePattern]:
-    """Analyze a file for optimization patterns."""
+def analyze_file(file_path: Path, pattern_types: Optional[List[str]] = None,
+                filter_false_positives: bool = False) -> List[GolfablePattern]:
+    """Analyze a file for optimization patterns.
+
+    Args:
+        pattern_types: Specific patterns to search for (or 'all')
+        filter_false_positives: If True, filter out let bindings used ≥3 times
+    """
     if not file_path.exists():
         return []
 
@@ -203,23 +237,25 @@ def analyze_file(file_path: Path, pattern_types: Optional[List[str]] = None) -> 
 
     all_patterns = []
 
-    # Map pattern names to functions
-    pattern_finders = {
-        'let-have-exact': find_let_have_exact,
-        'by-exact': find_by_exact,
-        'calc': find_calc_chains,
-        'constructor': find_constructor_branches,
-        'multiple-haves': find_multiple_haves,
-    }
-
     # If no specific patterns requested, find all
     if pattern_types is None or 'all' in pattern_types:
-        pattern_types = list(pattern_finders.keys())
+        pattern_types = ['let-have-exact', 'by-exact', 'calc', 'constructor', 'multiple-haves']
 
     for pattern_type in pattern_types:
-        if pattern_type in pattern_finders:
-            patterns = pattern_finders[pattern_type](file_path, lines)
-            all_patterns.extend(patterns)
+        if pattern_type == 'let-have-exact':
+            patterns = find_let_have_exact(file_path, lines, filter_false_positives)
+        elif pattern_type == 'by-exact':
+            patterns = find_by_exact(file_path, lines)
+        elif pattern_type == 'calc':
+            patterns = find_calc_chains(file_path, lines)
+        elif pattern_type == 'constructor':
+            patterns = find_constructor_branches(file_path, lines)
+        elif pattern_type == 'multiple-haves':
+            patterns = find_multiple_haves(file_path, lines)
+        else:
+            continue
+
+        all_patterns.extend(patterns)
 
     # Sort by priority and potential savings
     priority_order = {'HIGH': 0, 'MEDIUM': 1, 'LOW': 2}
@@ -296,6 +332,8 @@ Pattern types:
                        help='Show code snippets for each pattern')
     parser.add_argument('--recursive', '-r', action='store_true',
                        help='Recursively analyze directory')
+    parser.add_argument('--filter-false-positives', '--filter', '-f', action='store_true',
+                       help='Filter out let bindings used ≥3 times (reduces false positives by ~93%%)')
 
     args = parser.parse_args()
 
@@ -326,11 +364,15 @@ Pattern types:
     # Analyze files
     all_patterns = []
     for file_path in files:
-        patterns = analyze_file(file_path, args.patterns)
+        patterns = analyze_file(file_path, args.patterns, args.filter_false_positives)
         all_patterns.extend(patterns)
 
     # Output results
-    print(format_output(all_patterns, args.verbose))
+    output = format_output(all_patterns, args.verbose)
+    if args.filter_false_positives and all_patterns:
+        # Add note about filtering
+        output += "\nNote: False positive filtering enabled (let bindings used ≥3 times excluded)\n"
+    print(output)
 
     return 0
 

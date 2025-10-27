@@ -28,18 +28,22 @@ Verify bootstrap staged the analyzer:
 
 !`test -f .claude/tools/lean4/sorry_analyzer.py || { echo ":: analyzer missing; restart session or reinstall plugin."; exit 1; }`
 
-Run the analyzer based on user's scope choice:
+Run the analyzer based on user's scope choice.
 
 **For entire project:**
-!`python3 .claude/tools/lean4/sorry_analyzer.py . --format=text`
+```bash
+python3 .claude/tools/lean4/sorry_analyzer.py . --format=text
+```
 
-**For specific file or directory:**
-!`python3 .claude/tools/lean4/sorry_analyzer.py PATH --format=text`
+**For specific file or directory (replace PATH with actual path):**
+```bash
+python3 .claude/tools/lean4/sorry_analyzer.py PATH --format=text
+```
 
-**For interactive TUI mode:**
-!`python3 .claude/tools/lean4/sorry_analyzer.py PATH --interactive`
-
-Replace `PATH` with the actual file or directory path from step 1.
+**For interactive TUI mode (replace PATH with actual path):**
+```bash
+python3 .claude/tools/lean4/sorry_analyzer.py PATH --interactive
+```
 
 **If the script is not available or fails, use grep fallback:**
 ```bash

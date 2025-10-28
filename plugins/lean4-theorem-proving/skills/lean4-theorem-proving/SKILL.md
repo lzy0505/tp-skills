@@ -18,14 +18,14 @@ description: Use when developing Lean 4 proofs, facing type class synthesis erro
 | **Interactive Commands** | 7 slash commands for search, analysis, optimization | Type `/lean` in Claude Code ([full guide](../../COMMANDS.md)) |
 | **Automation Scripts** | 16 tools for search, verification, refactoring | Plugin `scripts/` directory ([scripts/README.md](../../scripts/README.md)) |
 | **Subagents** | 3 specialized agents for batch tasks (optional) | [subagent-workflows.md](references/subagent-workflows.md) |
-| **LSP Server** | 30x faster feedback with instant proof state (optional) | [lean-lsp-server.md](references/lean-lsp-server.md) |
+| **LSP Server** | 30x faster feedback with instant proof state | [lean-lsp-server.md](references/lean-lsp-server.md) |
 | **Reference Files** | 11 detailed guides (phrasebook, tactics, patterns, errors) | [List below](#reference-files) |
 
 ## When to Use
 
-Use for ANY Lean 4 development: pure/applied math, program verification, mathlib contributions.
+Use for ANY Lean 4 development: pure/applied math, program verification.
 
-**Critical for:** Type class synthesis errors, sorry/axiom management, mathlib search, measure theory/probability work.
+**Critical for:** Type class synthesis errors, sorry/axiom management.
 
 ## Tools & Workflows
 
@@ -48,11 +48,6 @@ Use for ANY Lean 4 development: pure/applied math, program verification, mathlib
 3. **Incremental Filling** - Fill ONE sorry at a time, compile after each, commit working code
 4. **Type Class Management** - Add explicit instances with `haveI`/`letI` when synthesis fails, respect binder order for sub-structures
 
-## Finding and Using Mathlib Lemmas
-
-**Philosophy:** Search before prove. Mathlib has 100,000+ theorems.
-
-Use `/search-mathlib` slash command, LSP server search tools, or automation scripts. See [mathlib-guide.md](references/mathlib-guide.md) for detailed search techniques, naming conventions, and import organization.
 
 ## Essential Tactics
 
@@ -60,19 +55,13 @@ Use `/search-mathlib` slash command, LSP server search tools, or automation scri
 
 ## Domain-Specific Patterns
 
-**Analysis & Topology:** Integrability, continuity, compactness patterns. Tactics: `continuity`, `fun_prop`.
-
 **Algebra:** Instance building, quotient constructions. Tactics: `ring`, `field_simp`, `group`.
-
-**Measure Theory & Probability** (emphasis in this skill): Conditional expectation, sub-σ-algebras, a.e. properties. Tactics: `measurability`, `positivity`. See [measure-theory.md](references/measure-theory.md) for detailed patterns.
 
 **Complete domain guide:** [domain-patterns.md](references/domain-patterns.md)
 
 ## Managing Incomplete Proofs
 
-**Standard mathlib axioms (acceptable):** `Classical.choice`, `propext`, `quot.sound`. Check with `#print axioms theorem_name` or `/check-axioms`.
-
-**CRITICAL: Sorries/axioms are NOT complete work.** A theorem that compiles with sorries is scaffolding, not a result. Document every sorry with concrete strategy and dependencies. Search mathlib exhaustively before adding custom axioms.
+**CRITICAL: Sorries/axioms are NOT complete work.** A theorem that compiles with sorries is scaffolding, not a result. Document every sorry with concrete strategy and dependencies. Never add custom axioms.
 
 **When sorries are acceptable:** (1) Active work in progress with documented plan, (2) User explicitly approves temporary axioms with elimination strategy.
 
@@ -105,7 +94,7 @@ See [compilation-errors.md](references/compilation-errors.md) for detailed debug
 - [ ] No new axioms without elimination plan
 - [ ] Imports minimal
 
-**Doing it right:** Sorries/axioms decrease over time, each commit completes one lemma, proofs build on mathlib.
+**Doing it right:** Sorries/axioms decrease over time, each commit completes one lemma.
 
 **Red flags:** Sorries multiply, claiming "complete" with sorries/axioms, fighting type checker for hours, monolithic proofs (>100 lines).
 
@@ -113,8 +102,8 @@ See [compilation-errors.md](references/compilation-errors.md) for detailed debug
 
 **Core references:** [lean-phrasebook.md](references/lean-phrasebook.md), [mathlib-guide.md](references/mathlib-guide.md), [tactics-reference.md](references/tactics-reference.md), [compilation-errors.md](references/compilation-errors.md)
 
-**Domain-specific:** [domain-patterns.md](references/domain-patterns.md), [measure-theory.md](references/measure-theory.md), [calc-patterns.md](references/calc-patterns.md)
+**Domain-specific:** [domain-patterns.md](references/domain-patterns.md), [calc-patterns.md](references/calc-patterns.md)
 
-**Optimization:** [proof-golfing.md](references/proof-golfing.md), [mathlib-style.md](references/mathlib-style.md)
+**Optimization:** [proof-golfing.md](references/proof-golfing.md)
 
 **Tools:** [lean-lsp-server.md](references/lean-lsp-server.md), [subagent-workflows.md](references/subagent-workflows.md)

@@ -346,92 +346,8 @@ filter_upwards   -- Combine ae properties
 ```
 
 **Automation philosophy:**
-- ✅ Use for: boilerplate (measurability), trivial arithmetic (omega/linarith)
+- ✅ Use for: trivial arithmetic (omega/linarith)
 - ❌ Don't hide: key mathematical insights, proof architecture, non-obvious lemma applications
-
----
-
-## Analysis & Topology
-
-### Pattern 1: Continuity Proofs
-
-```lean
--- From preimage of open sets
-lemma continuous_of_isOpen_preimage
-    {f : X → Y} (h : ∀ U, IsOpen U → IsOpen (f ⁻¹' U)) :
-    Continuous f := by
-  rw [continuous_def]; exact h
-
--- Using automation
-lemma continuous_comp_add :
-    Continuous (fun (p : ℝ × ℝ) => p.1 + p.2) := by
-  continuity
-```
-
-### Pattern 2: Compactness Arguments
-
-```lean
--- Min/max on compact sets
-example {K : Set ℝ} (hK : IsCompact K) (hne : K.Nonempty) :
-    ∃ x ∈ K, ∀ y ∈ K, f x ≤ f y :=
-  IsCompact.exists_isMinOn hK hne (continuous_id.comp continuous_f)
-```
-
-### Pattern 3: Limits via Filters
-
-```lean
--- ε-δ criterion
-lemma tendsto_of_forall_eventually
-    (h : ∀ ε > 0, ∀ᶠ n in atTop, ‖x n - L‖ < ε) :
-    Tendsto x atTop (𝓝 L) := by
-  rw [Metric.tendsto_atTop]; exact h
-```
-
-**Common tactics:** `continuity`, `fun_prop`
-
----
-
-## Algebra
-
-### Pattern 1: Building Algebraic Instances
-
-```lean
--- Compositional
-instance : CommRing (Polynomial R) := inferInstance
-
--- Manual for custom types
-instance : Ring MyType := {
-  add := my_add,
-  add_assoc := my_add_assoc,
-  -- ... all required fields
-}
-```
-
-### Pattern 2: Quotient Constructions
-
-```lean
--- Ring homomorphism from quotient
-lemma quotient_ring_hom (I : Ideal R) : RingHom R (R ⧸ I) := by
-  refine { toFun := Ideal.Quotient.mk I,
-           map_one' := rfl,
-           map_mul' := fun x y => rfl,
-           map_zero' := rfl,
-           map_add' := fun x y => rfl }
-```
-
-### Pattern 3: Universal Properties
-
-```lean
--- Unique morphism via universal property
-lemma exists_unique_hom (h : ...) : ∃! φ : A →+* B, ... := by
-  use my_homomorphism
-  constructor
-  · -- Prove it satisfies property
-  · -- Prove uniqueness
-    intro ψ hψ; ext x; sorry
-```
-
-**Common tactics:** `ring`, `field_simp`, `group`
 
 ---
 
@@ -444,19 +360,6 @@ lemma property_of_list (l : List α) : P l := by
   induction l with
   | nil => sorry  -- Base case
   | cons head tail ih => sorry  -- Inductive case with ih : P tail
-```
-
-### Pattern 2: Divisibility
-
-```lean
-lemma dvd_example (n : ℕ) : 2 ∣ n * (n + 1) := by
-  cases' Nat.even_or_odd n with h h
-  · -- n even
-    obtain ⟨k, rfl⟩ := h
-    use k * (2 * k + 1); ring
-  · -- n odd
-    obtain ⟨k, rfl⟩ := h
-    use (2 * k + 1) * (k + 1); ring
 ```
 
 **Common tactics:** `linarith`, `norm_num`, `omega`
@@ -490,30 +393,9 @@ exact expr              -- Close goal exactly
 refine template ?_ ?_   -- Apply with placeholders
 ```
 
-## Pattern: Equality via Uniqueness
-
-**Works across all domains:**
-
-To show `f = g`, prove both satisfy unique criterion:
-
-```lean
-lemma my_eq : f = g := by
-  have hf : satisfies_property f := ...
-  have hg : satisfies_property g := ...
-  exact unique_satisfier hf hg
-```
-
-**Examples:**
-- **Measures:** Equal if agree on π-system
-- **Conditional expectations:** Equal if same integrals on all measurable sets
-- **Functions:** Equal if continuous and agree on dense subset
-- **Group homomorphisms:** Equal if agree on generators
-
 ---
 
 ## Related References
 
-- [measure-theory.md](measure-theory.md) - Deep dive on sub-σ-algebras, conditional expectation, type class errors
 - [tactics-reference.md](tactics-reference.md) - Comprehensive tactic catalog
-- [mathlib-style.md](mathlib-style.md) - Mathlib conventions
 - [calc-patterns.md](calc-patterns.md) - Calculation chains and canonical forms

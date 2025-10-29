@@ -7,7 +7,6 @@ This document summarizes the testing results for all 16 automation scripts, vali
 | Script | Status | Test Details |
 |--------|--------|--------------|
 | **search_mathlib.sh** | ✅ Production Ready | Tested with ripgrep on 100k+ mathlib files |
-| **smart_search.sh** | ✅ Production Ready | Multi-source search (mathlib + APIs) |
 | **find_instances.sh** | ✅ Production Ready | Found 50+ MeasurableSpace instances |
 | **find_usages.sh** | ✅ Production Ready | Tracks theorem usage across project |
 | **suggest_tactics.sh** | ✅ Production Ready | Pattern detection for 20+ goal types |
@@ -17,11 +16,9 @@ This document summarizes the testing results for all 16 automation scripts, vali
 | **minimize_imports.py** | ✅ Production Ready | Removes unused imports safely |
 | **proof_complexity.sh** | ✅ Production Ready | Analyzes proof metrics |
 | **dependency_graph.sh** | ✅ Production Ready | Visualizes dependencies (Bash 3.2 compatible) |
-| **build_profile.sh** | ✅ Production Ready | Profiles build performance |
 | **proof_templates.sh** | ✅ Production Ready | Generates 5 proof patterns |
 | **unused_declarations.sh** | ✅ Production Ready | Finds dead code |
 | **simp_lemma_tester.sh** | ✅ Production Ready | Tests simp hygiene |
-| **pre_commit_hook.sh** | ✅ Production Ready | 5-check quality gates |
 
 ## Real-World Test Cases
 
@@ -41,34 +38,6 @@ $ ./search_mathlib.sh "condExp.*eq" name
 - With grep: ~15 seconds
 - Graceful fallback if ripgrep not available
 
-#### smart_search.sh
-
-**Test:** Multi-source search for conditional expectation
-```bash
-$ ./smart_search.sh "conditional expectation" --source=mathlib
-```
-
-**Result:** Combines mathlib search with optional API searches (LeanSearch, Loogle)
-
-**Features validated:**
-- ✅ Auto-detects search source
-- ✅ Rate limit handling for API sources
-- ✅ Fallback to mathlib when APIs unavailable
-
-#### find_instances.sh
-
-**Test:** Find MeasurableSpace instances
-```bash
-$ ./find_instances.sh MeasurableSpace
-```
-
-**Result:** Found 50+ instances across mathlib with file locations
-
-**Features validated:**
-- ✅ Instance declarations
-- ✅ Deriving instances
-- ✅ Ripgrep optimization
-
 #### find_usages.sh
 
 **Test:** Find usages of exchangeable_iff_fullyExchangeable
@@ -83,7 +52,7 @@ $ ./find_usages.sh exchangeable_iff_fullyExchangeable
 - ✅ Shows context (3 lines before/after)
 - ✅ Summary statistics
 
-### Batch 2: Analysis & Profiling (3 scripts)
+### Batch 2: Analysis (1 scripts)
 
 #### proof_complexity.sh
 
@@ -109,43 +78,6 @@ Summary:
 - ✅ Size categorization
 - ✅ Sorry detection
 
-#### dependency_graph.sh
-
-**Test:** Visualize Core.lean dependencies
-```bash
-$ ./dependency_graph.sh Exchangeability/Core.lean
-```
-
-**Result:**
-```
-Total theorems: 30
-Leaf theorems (no dependencies): 30
-Internal theorems: 0
-```
-
-**Features validated:**
-- ✅ Dependency counting
-- ✅ Leaf theorem identification
-- ✅ **Bash 3.2 compatibility** (no associative arrays)
-
-#### build_profile.sh
-
-**Test:** Profile build performance
-```bash
-$ ./build_profile.sh
-```
-
-**Result:**
-```
-Total build time: 3s
-No files compiled (build up-to-date)
-Hint: Run with --clean to profile full rebuild
-```
-
-**Features validated:**
-- ✅ Build time tracking
-- ✅ Detects up-to-date builds
-- ✅ Suggests clean rebuild when needed
 
 ### Batch 3: Verification & Quality (4 scripts)
 
@@ -368,45 +300,21 @@ $ ./check_axioms.sh Exchangeability/Core.lean
 
 **Recommendation:** Use `check_axioms_inline.sh` for regular development files. Reserve `check_axioms.sh` for library files with flat (non-namespaced) structure.
 
-## Bug Fixes Applied
-
-During testing, we fixed 5 bugs across 2 scripts:
-
-### check_axioms.sh (4 bugs - from previous batch)
-
-1. **mktemp pattern** - macOS compatibility issue
-2. **Bash 3.2 arrays** - Removed associative arrays (macOS uses old Bash)
-3. **Empty array handling** - Fixed `set -u` issues
-4. **Regex portability** - Changed grep -P to grep -E + sed
-
-### dependency_graph.sh (1 bug - NEW)
-
-1. **Bash 3.2 compatibility** - Removed `declare -A` associative arrays
-   - **Problem:** `declare -A` not available in Bash 3.2 (macOS default)
-   - **Solution:** Use temporary file with `count:theorem` format instead
-   - **Lines changed:** 98-134
-   - **Impact:** Script now works on macOS without requiring Bash 4+
-
-All fixes tested and validated.
-
 ## Recommendations
 
 ### For Daily Use
 
 **Highly Recommended:**
-- ✅ `search_mathlib.sh` / `smart_search.sh` - Fast lemma discovery
+- ✅ `search_mathlib.sh` - Fast lemma discovery
 - ✅ `sorry_analyzer.py` - Track proof completion
 - ✅ `check_axioms_inline.sh` - Verify axiom usage
 - ✅ `proof_templates.sh` - Start proofs with structure
 - ✅ `suggest_tactics.sh` - Learn tactics for goals
-- ✅ `pre_commit_hook.sh` - Automated quality gates
 
 **Useful for Specific Tasks:**
 - ✅ `find_instances.sh` - Type class patterns
 - ✅ `find_usages.sh` - Before refactoring
 - ✅ `proof_complexity.sh` - Identify complex proofs
-- ✅ `dependency_graph.sh` - Understand proof structure
-- ✅ `build_profile.sh` - Optimize slow builds
 - ✅ `unused_declarations.sh` - Code cleanup
 - ✅ `simp_lemma_tester.sh` - Simp hygiene
 - ✅ `minimize_imports.py` - Reduce dependencies
@@ -414,40 +322,9 @@ All fixes tested and validated.
 **Avoid:**
 - ⚠️ `check_axioms.sh` - Use only for flat-structure library files
 
-### For CI/CD Integration
-
-**sorry_analyzer.py** is CI-friendly:
-```bash
-# In CI script
-./sorry_analyzer.py src/ --format=json > sorries.json
-if [ $? -eq 1 ]; then
-  echo "❌ Sorries found, proof incomplete"
-  exit 1
-fi
-```
-
-**pre_commit_hook.sh** can be used in CI:
-```bash
-# In CI script
-./pre_commit_hook.sh --strict  # Warnings = errors
-```
-
-Exit codes:
-- `0` = All checks passed
-- `1` = Issues found
-
-### Git Hook Installation
-
-Install pre-commit hook for automatic checks:
-```bash
-ln -s ../../scripts/pre_commit_hook.sh .git/hooks/pre-commit
-```
-
-Now runs automatically on every commit.
-
 ## Performance Notes
 
-**search_mathlib.sh / smart_search.sh:**
+**search_mathlib.sh:**
 - Detects ripgrep automatically
 - 10-100x faster with ripgrep
 - Falls back gracefully to grep
@@ -463,39 +340,6 @@ Now runs automatically on every commit.
 - May take several minutes for files with many imports
 - Tests each import individually
 - Creates `.minimize_backup` for safety
-
-**build_profile.sh:**
-- Use `--clean` for full rebuild profiling
-- Tracks per-file compilation times
-- Identifies import bottlenecks
-
-## Test Environment
-
-- **Project:** exchangeability-cursor (de Finetti formalization)
-- **Scale:** 22 Lean files, 1000+ commits, ~10k lines
-- **Lean Version:** 4.24.0-rc1
-- **mathlib:** Latest (2025-10-19)
-- **OS:** macOS (Darwin 24.6.0)
-- **Bash:** 3.2 (macOS default) - all scripts compatible
-
-## Validation Methodology
-
-1. **Real-world testing** - Used actual formalization project, not toy examples
-2. **Edge cases** - Tested namespaces, sections, private declarations
-3. **Error handling** - Verified graceful failures and cleanup
-4. **Performance** - Measured with and without ripgrep
-5. **Cross-platform** - Bash 3.2 compatibility (macOS)
-6. **Batch operations** - Tested multi-file workflows
-
-## Comprehensive Script Coverage
-
-**All 16 scripts validated on real project:**
-- ✅ 15 scripts production-ready
-- ⚠️ 1 script with documented limitations (check_axioms.sh)
-- 🐛 1 bug found and fixed (dependency_graph.sh Bash 3.2)
-- 📝 All scripts documented with examples
-- ⚡ All scripts optimized for performance (ripgrep where applicable)
-- 🛡️ All scripts include error handling and cleanup
 
 ## Conclusion
 

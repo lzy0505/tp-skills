@@ -4,13 +4,17 @@ This document tracks the migration of the Lean 4 theorem proving plugin to Rocq/
 
 ## Summary
 
-**Completed:** 15 files (~11,000 lines)
+**Completed:** 17 files (~11,000 lines)
 - ✅ Core skill (SKILL.md)
 - ✅ 10 reference guides
 - ✅ 3 commands (build, fill-admit, golf-proofs)
 - ✅ README.md, plugin.json
+- ✅ Hooks (bootstrap.sh, hooks.json)
 
-**Missing:** 16 files (automation infrastructure)
+**Missing:** 14 files (automation scripts + documentation)
+- 🔴 2 commands (check-axioms, clean-warnings)
+- 🔴 16 automation scripts
+- 🔴 5 documentation files
 
 ---
 
@@ -139,29 +143,39 @@ The Lean 4 plugin has 16 automation scripts in `scripts/`. **None have been port
 
 ## 3. Hooks
 
-### All Hooks Missing 🔴
+### Completed ✅
 
-| Hook | Priority | Purpose | Rocq Adaptation |
-|------|----------|---------|-----------------|
-| `bootstrap.sh` | **HIGH** | Setup script for plugin initialization | Adapt for Rocq environment, check `coqc`/`dune` |
-| `hooks.json` | **HIGH** | Hook configuration | Define Rocq-specific hooks |
+| Hook | Status | Notes |
+|------|--------|-------|
+| `bootstrap.sh` | ✅ Complete | Detects coqc, dune, coq-lsp, stages docs/scripts |
+| `hooks.json` | ✅ Complete | Runs bootstrap on SessionStart |
 
-**TODO: bootstrap.sh**
-- **Purpose:** Verify Rocq installation, setup environment
-- **Checks needed:**
-  - `coqc --version` (Rocq/Coq available?)
-  - `dune --version` (Build system available?)
-  - `opam list | grep coq-lsp` (LSP available?)
-  - Python dependencies for scripts
-- **Priority:** HIGH (required for plugin to function)
+**bootstrap.sh features:**
+- ✅ Detects Rocq/Coq installation (`coqc`)
+- ✅ Detects build system (dune > coq_makefile > coqc)
+- ✅ Checks for coq-lsp (warns if missing)
+- ✅ Finds Python interpreter
+- ✅ Stages reference docs to `.claude/docs/rocq/`
+- ✅ Stages scripts to `.claude/tools/rocq/` (when they exist)
+- ✅ Exports environment variables for session:
+  - `ROCQ_PLUGIN_ROOT`
+  - `ROCQ_COQC_BIN`
+  - `ROCQ_VERSION`
+  - `ROCQ_BUILD_SYSTEM`
+  - `ROCQ_DUNE_BIN`
+  - `ROCQ_LSP_BIN` (if available)
+  - `ROCQ_PYTHON_BIN`
+  - `ROCQ_TOOLS_DIR` (if scripts exist)
 
-**TODO: hooks.json**
-- **Purpose:** Define when commands run automatically
-- **Examples:**
-  - Run `check-axioms` before commit
-  - Run `build-rocq` on save
-  - Suggest `fill-admit` when cursor on admit
-- **Priority:** HIGH (improves UX significantly)
+**hooks.json configuration:**
+- ✅ Runs bootstrap.sh on SessionStart
+- ✅ 20s timeout for initialization
+
+**Future hook opportunities:**
+- Run `check-axioms` before git commit
+- Run `build-rocq` on file save
+- Suggest `fill-admit` when cursor on admit
+- Auto-format proof on save
 
 ---
 
@@ -494,26 +508,28 @@ If Rocq/Coq ecosystem evolves:
 
 ## Summary
 
-**Completed:** Core documentation (15 files, ~11,000 lines)
-- All essential reference guides
+**Completed:** Core infrastructure (17 files, ~11,000 lines)
+- All essential reference guides (10 files)
 - 3 core commands
-- Plugin infrastructure
+- Plugin infrastructure (plugin.json, README.md)
+- Hooks system (bootstrap.sh, hooks.json) ✅ NEW
 
-**Missing:** Automation layer (16 scripts + hooks)
-- HIGH priority: 5 scripts + check-axioms command + hooks
-- MEDIUM priority: 6 scripts + 3 docs
+**Missing:** Automation layer (16 scripts + 2 commands + 5 docs)
+- HIGH priority: 5 scripts + check-axioms command
+- MEDIUM priority: 6 scripts + clean-warnings command + 3 docs
 - LOW priority: 5 scripts + 2 docs
 
 **Estimated effort to complete:**
+- ~~Phase 0 (hooks): ~2 hours~~ ✅ COMPLETE
 - Phase 1 (core automation): ~10 hours
 - Phase 2 (search & fill): ~10 hours
 - Phase 3 (optimization): ~10 hours
 - Phase 4 (polish): ~5 hours
-- **Total:** ~35 hours to full parity with Lean 4 plugin
+- **Total:** ~33 hours remaining to full parity with Lean 4 plugin
 
 **Recommendation:** Prioritize Phase 1 (core automation) for maximum impact with minimal effort.
 
 ---
 
-**Last updated:** 2025-01-XX
-**Status:** Documentation complete, automation pending
+**Last updated:** 2025-10-29
+**Status:** Documentation + hooks complete, automation pending

@@ -1,0 +1,17 @@
+{
+  "description": "Rocq/Coq bootstrap: set env vars for admit analyzer, build system detection, and plugin paths.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/bootstrap.sh startup",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

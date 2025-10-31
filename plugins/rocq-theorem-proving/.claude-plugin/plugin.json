@@ -4,7 +4,7 @@
   "description": "Systematic workflows for Rocq/Coq proofs: admits management, stdlib/MathComp usage, verified math",
   "author": {
     "name": "Zongyuan Liu",
-    "email": "zongyuan@example.com"
+    "email": "liuzongyuan0505@gmail.com"
   },
   "hooks": "./hooks/hooks.json"
 }

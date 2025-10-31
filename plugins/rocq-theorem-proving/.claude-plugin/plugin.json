@@ -1,0 +1,10 @@
+{
+  "name": "rocq-theorem-proving",
+  "version": "1.0.0",
+  "description": "Systematic workflows for Rocq/Coq proofs: admits management, stdlib/MathComp usage, verified math",
+  "author": {
+    "name": "Zongyuan Liu",
+    "email": "zongyuan@example.com"
+  },
+  "hooks": "./hooks/hooks.json"
+}

@@ -66,8 +66,6 @@ STAGED_COUNT=0
 if [[ -n "${TOOLS_DIR}" && -d "${TOOLS_DIR}" ]]; then
   for script in \
     search_mathlib.sh \
-    smart_search.sh \
-    check_axioms.sh \
     find_golfable.py \
     analyze_let_usage.py \
     count_tokens.py \

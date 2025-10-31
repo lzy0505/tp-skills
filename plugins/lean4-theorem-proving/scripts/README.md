@@ -2,28 +2,21 @@
 
 Automated tools for common Lean 4 workflows. These scripts implement the workflows described in SKILL.md with deterministic reliability.
 
-**All scripts validated on real Lean 4 formalization project (1000+ commits).** See `TESTING.md` for complete test results.
-
 ## Scripts Overview
 
 | Script | Purpose | When to Use | Status |
 |--------|---------|-------------|--------|
 | `search_mathlib.sh` | Find lemmas in mathlib | Before proving something that might exist | ✅ Production |
-| `smart_search.sh` | Multi-source search (APIs + local) | Advanced searches, natural language queries | ✅ Production |
 | `find_instances.sh` | Find type class instances | Need instance patterns or examples | ✅ Production |
 | `find_usages.sh` | Find uses of theorem/lemma | Before refactoring or removing declarations | ✅ Production |
 | `suggest_tactics.sh` | Suggest tactics for goal | Stuck on a proof, learning tactics | ✅ Production |
 | `minimize_imports.py` | Remove unused imports | Cleanup imports, reduce dependencies | ✅ Production |
 | `proof_templates.sh` | Generate proof skeletons | Starting new proofs, learning patterns | ✅ Production |
 | `unused_declarations.sh` | Find unused theorems/defs | Code cleanup, identifying dead code | ✅ Production |
-| `build_profile.sh` | Profile build performance | Slow builds, optimization needed | ✅ Production |
-| `simp_lemma_tester.sh` | Test simp lemma hygiene | Before adding @[simp], debugging loops | ✅ Production |
-| `pre_commit_hook.sh` | Pre-commit quality gates | Before every commit, CI/CD integration | ✅ Production |
 | `check_axioms_inline.sh` | Verify axiom usage (all declarations) | Before committing, during PR review | ✅ Production |
 | `check_axioms.sh` | Verify axiom usage (public API only) | Library files with flat structure | ⚠️ Limited |
 | `sorry_analyzer.py` | Extract and report sorries | Planning work, tracking progress | ✅ Production |
 | `proof_complexity.sh` | Analyze proof metrics | Refactoring, identifying complex proofs | ✅ Production |
-| `dependency_graph.sh` | Visualize theorem dependencies | Understanding proof structure | ✅ Production |
 | `find_golfable.py` | Find proof-golfing opportunities | After proofs compile, before final commit | ✅ Production |
 | `analyze_let_usage.py` | Detect false-positive optimizations | Before inlining let bindings | ✅ Production |
 | `count_tokens.py` | Count tokens in code | Comparing optimization candidates | ✅ Production |
@@ -69,81 +62,6 @@ Set `MATHLIB_PATH` environment variable to override default `.lake/packages/math
 4. Save hours by not reproving standard results
 
 ---
-
-## check_axioms_inline.sh ✅ **Recommended**
-
-**Purpose:** Verify that theorems use only standard mathlib axioms, identifying any custom axioms that need elimination plans. Works for ALL declarations including namespaces, sections, and private declarations. **Now supports batch mode for multiple files!**
-
-**Usage:**
-```bash
-./check_axioms_inline.sh <file-or-pattern> [--verbose]
-```
-
-**How it works:**
-1. Detects namespace from file(s)
-2. Temporarily appends `#print axioms` commands
-3. Runs Lean and captures output
-4. Restores file automatically (safe even if interrupted)
-5. Filters out standard axioms
-6. Generates summary across all files
-
-**Standard Axioms (Acceptable):**
-- `propext` - Propositional extensionality
-- `quot.sound` / `Quot.sound` - Quotient soundness
-- `Classical.choice` - Axiom of choice
-
-**Examples:**
-```bash
-# Check single file
-./check_axioms_inline.sh MyFile.lean
-
-# Check multiple files (batch mode)
-./check_axioms_inline.sh File1.lean File2.lean
-
-# Check all files in directory with glob pattern
-./check_axioms_inline.sh "src/**/*.lean"
-
-# Verbose mode (shows all axioms, including standard ones)
-./check_axioms_inline.sh MyFile.lean --verbose
-```
-
-**Batch Mode Features:**
-- Process multiple files in one command
-- Summary statistics (total files, declarations, custom axioms)
-- Continues on errors, reports all issues at end
-- Exit code 1 if any custom axioms or errors found
-
-**Output:**
-```
-✓ All declarations use only standard axioms
-
-# Or if non-standard axioms found:
-⚠ my_theorem uses non-standard axiom: my_custom_axiom
-```
-
-**Workflow:**
-1. Run before committing new theorems
-2. Add elimination plans for any custom axioms
-3. Use during PR review to verify axiom hygiene
-
-**Note:** Requires project to build successfully (`lake build`).
-
----
-
-## check_axioms.sh ⚠️ **Limited - Public API Only**
-
-**⚠️ LIMITATION:** This script only works for declarations that are part of the module's public API. Declarations in namespaces, sections, or marked `private` cannot be checked via external import.
-
-**Recommendation:** Use `check_axioms_inline.sh` instead for regular development files.
-
-**Usage:**
-```bash
-./check_axioms.sh <file-or-directory> [--verbose]
-```
-
-**When to use:**
-- Library files with flat (non-namespaced) structure
-- Checking public API of published libraries
 
 ## sorry_analyzer.py
 
@@ -1319,14 +1237,6 @@ These scripts implement the systematic approaches from SKILL.md:
 → Use `find_instances.sh` to find instance patterns
 → Use `search_mathlib.sh` to find relevant lemmas
 
-**Before Commit:**
-→ Use `pre_commit_hook.sh` for comprehensive quality checks (recommended)
-→ Or run individual checks:
-  - `check_axioms_inline.sh` to verify axiom hygiene
-  - `minimize_imports.py` to clean up unused imports
-  - `simp_lemma_tester.sh` to verify simp lemmas
-  - `sorry_analyzer.py` to check for undocumented sorries
-
 **After Proofs Compile (Proof Golfing):**
 → Use `find_golfable.py --filter-false-positives` to identify real opportunities (not false positives!)
 → Use `analyze_let_usage.py` to verify let bindings are safe to inline
@@ -1345,13 +1255,6 @@ These scripts implement the systematic approaches from SKILL.md:
 **Performance Optimization:**
 → Use `build_profile.sh` to identify build bottlenecks
 → Use `minimize_imports.py` to reduce dependencies
-
-## Contributing
-
-Found a bug or have an enhancement idea?
-- Report issues: https://github.com/cameronfreer/lean4-theorem-proving-skill/issues
-- Submit improvements via PR
-- Share your own automation scripts
 
 ## License
 

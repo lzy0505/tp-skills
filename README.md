@@ -1,3 +1,7 @@
+Translating Lean 4 Skills to Rocq Skills, using Claude
+
+--------------
+
 # Lean 4 Skills for Claude
 
 Claude Skills, commands, and agents for systematic development of formal proofs in Lean 4.

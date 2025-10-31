@@ -19,13 +19,15 @@ description: Use when developing Rocq/Coq proofs, facing typeclass resolution er
 | **Automation Scripts** | 16 tools for search, verification, refactoring | Plugin `scripts/` directory ([scripts/README.md](../../scripts/README.md)) |
 | **Subagents** | 3 specialized agents for batch tasks (optional) | [subagent-workflows.md](references/subagent-workflows.md) |
 | **LSP Server** | Fast feedback with instant proof state via coq-lsp | [rocq-lsp-server.md](references/rocq-lsp-server.md) |
-| **Reference Files** | 11 detailed guides (phrasebook, tactics, patterns, errors) | [List below](#reference-files) |
+| **Reference Files** | 11 detailed guides (phrasebook, tactics, patterns, errors, Iris) | [List below](#reference-files) |
 
 ## When to Use
 
 Use for ANY Rocq/Coq development: pure/applied math, program verification, software foundations.
 
-**Critical for:** Typeclass resolution errors, admit/axiom management, SSReflect/MathComp proofs.
+**Critical for:** Typeclass resolution errors, admit/axiom management, SSReflect/MathComp proofs, **Iris separation logic proofs**.
+
+**Iris proofs?** Read [iris-proofs.md](references/iris-proofs.md) immediately - it covers proof mode tactics, resource algebras, ghost state, invariants, and HeapLang verification.
 
 ## Tools & Workflows
 
@@ -61,6 +63,15 @@ See [tactics-reference.md](references/tactics-reference.md) for comprehensive gu
 **Algebra (MathComp):** Canonical structures, hierarchy builder patterns. Tactics: `ring`, `field`, `lra`, `lia`, `nia`.
 
 **Software Foundations:** Inductive definitions, fixpoint functions, structural induction.
+
+**Iris Separation Logic:** Concurrent program verification with proof mode tactics, resource algebras (RAs), ghost state management, invariants. Use for: concurrent algorithm verification, heap reasoning, program logic. **Read [iris-proofs.md](references/iris-proofs.md) for:**
+- Proof mode tactics (`iIntros`, `iDestruct`, `iFrame`, `iApply`, `iMod`, `iLöb`)
+- Resource algebras (`exclR`, `authR`, `agreeR`, `fracR`, `one_shotR`)
+- Ghost state allocation and updates
+- Invariant management (opening/closing)
+- HeapLang weakest precondition verification
+- Handling modalities (`|==>`, `|={E1,E2}=>`, `▷`, `□`)
+- Understanding equalities and entailments
 
 **Complete domain guide:** [domain-patterns.md](references/domain-patterns.md)
 
@@ -99,7 +110,7 @@ See [compilation-errors.md](references/compilation-errors.md) for detailed debug
 ## Quality Checklist
 
 **Before commit:**
-- [ ] `dune build` (or `coqc`) succeeds on full project
+- [ ] `dune build` (or `make`) succeeds on full project
 - [ ] All admits documented with concrete strategy
 - [ ] No new axioms without elimination plan
 - [ ] Imports minimal and organized
@@ -112,8 +123,30 @@ See [compilation-errors.md](references/compilation-errors.md) for detailed debug
 
 **Core references:** [rocq-phrasebook.md](references/rocq-phrasebook.md), [stdlib-guide.md](references/stdlib-guide.md), [tactics-reference.md](references/tactics-reference.md), [compilation-errors.md](references/compilation-errors.md)
 
-**Domain-specific:** [domain-patterns.md](references/domain-patterns.md), [ssreflect-patterns.md](references/ssreflect-patterns.md)
+**Domain-specific:** [domain-patterns.md](references/domain-patterns.md), [ssreflect-patterns.md](references/ssreflect-patterns.md), **[iris-proofs.md](references/iris-proofs.md)** ⭐
 
 **Optimization:** [proof-golfing.md](references/proof-golfing.md)
 
-**Tools:** [rocq-lsp-server.md](references/rocq-lsp-server.md), [subagent-workflows.md](references/subagent-workflows.md)
+**Tools:** [rocq-lsp-server.md](references/rocq-lsp-server.md)
+
+### When to Read iris-proofs.md
+
+**Read immediately if:**
+- Working with Iris separation logic
+- Verifying concurrent programs with HeapLang
+- Using proof mode tactics (`iIntros`, `iFrame`, `iApply`, etc.)
+- Managing ghost state or invariants
+- Seeing errors about resource algebras (RAs)
+- Proofs involve `|==>`, `|={E}=>`, `▷`, `□`, or `∗` operators
+- Using weakest precondition reasoning (`WP e {{ Φ }}`)
+
+**What you'll learn:**
+- **12 sections** covering everything from basics to complete examples
+- **Resource algebras:** 5 common RAs with patterns and use cases
+- **Equalities:** 6 types of equality/entailment and when to use each
+- **Proof mode:** All essential tactics with introduction patterns
+- **HeapLang:** WP tactics for memory operations and concurrent code
+- **Modalities:** Handling update, fancy update, later, and persistence
+- **Invariants:** Opening, closing, and managing invariants correctly
+- **Common pitfalls:** 6 mistakes and how to avoid them
+- **Complete examples:** 3 worked proofs (counter, list sum, parallel code)

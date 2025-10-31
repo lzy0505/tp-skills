@@ -1,6 +1,6 @@
 # SSReflect Patterns and Idioms
 
-This guide covers SSReflect (Small Scale Reflection), the proof language used by MathComp. SSReflect provides a more explicit, composable, and predictable style for proof development.
+This guide covers SSReflect, the proof language used by MathComp. SSReflect provides a more explicit, composable, and predictable style for proof development.
 
 **Philosophy:** Explicit bookkeeping, stack-based reasoning, boolean reflection, compositional tactics.
 
@@ -695,12 +695,4 @@ rewrite {}H.
 - [rocq-phrasebook.md](rocq-phrasebook.md) - General proof patterns
 - [tactics-reference.md](tactics-reference.md) - All tactics including SSReflect
 - [stdlib-guide.md](stdlib-guide.md) - Finding lemmas
-- [Mathematical Components Book](https://math-comp.github.io/mcb/)
 - [SSReflect Manual](https://coq.inria.fr/refman/proof-engine/ssreflect-proof-language.html)
-
----
-
-**Learning Resources:**
-- [MathComp Book](https://math-comp.github.io/mcb/) - Comprehensive SSReflect guide
-- [SSReflect Tutorial](https://hal.inria.fr/inria-00258384v11/document) - Original SSReflect paper
-- [MathComp Documentation](https://math-comp.github.io/) - Library documentation

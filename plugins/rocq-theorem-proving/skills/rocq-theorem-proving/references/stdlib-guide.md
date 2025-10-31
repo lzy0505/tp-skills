@@ -2,7 +2,9 @@
 
 This guide helps you find and use lemmas from the Coq standard library and common third-party libraries. Knowing where to look saves hours of reproof.
 
-**Key principle:** Always search before proving. Most standard results already exist.
+**Key principle:** Always search before proving. Most standard results already exist. Use stdpp when ever possible, prefer it over standard library.
+
+
 
 ## Quick Search Reference
 
@@ -417,20 +419,6 @@ Require Import Coquelicot.Coquelicot.
 
 **Documentation:** http://coquelicot.saclay.inria.fr/
 
-### ExtLib (Extended Library)
-
-**What:** Modern Coq library with monads, functors, etc.
-
-**Import:**
-```coq
-From ExtLib Require Import *
-```
-
-**Features:**
-- Monad type classes
-- Functor, Applicative
-- Data structures (maps, tries)
-
 ### Equations (Dependent Pattern Matching)
 
 **What:** Improved definition mechanism
@@ -623,7 +611,8 @@ End AlgebraicLemmas.
 ```
 What do you need?
 ├─ About standard type (nat, list, bool)
-│  └─ Search in Coq.Init, Coq.Arith, Coq.Lists, Coq.Bool
+│  ├─ Search in stdpp
+│  └─ Search in standard library
 │     ├─ SearchAbout nat
 │     ├─ SearchPattern (_ + _)
 │     └─ Search "lemma_name_part"
@@ -633,6 +622,7 @@ What do you need?
 │     └─ Open appropriate scope first
 │
 ├─ About relations/orders
+│  ├─ Search in stdpp
 │  └─ Search in Coq.Relations, Coq.Setoids
 │     └─ SearchPattern (reflexive _)
 │
@@ -689,10 +679,3 @@ Lemma my_custom_property : (* ... *).
 - [ssreflect-patterns.md](ssreflect-patterns.md) - MathComp/SSReflect guide
 - [Coq Standard Library Documentation](https://coq.inria.fr/distrib/current/stdlib/)
 - [MathComp Book](https://math-comp.github.io/mcb/)
-
----
-
-**Further Reading:**
-- [Coq'Art](https://www.labri.fr/perso/casteran/CoqArt/) - Comprehensive Coq book
-- [Software Foundations](https://softwarefoundations.cis.upenn.edu/) - Learning Coq from scratch
-- [CPDT](http://adam.chlipala.net/cpdt/) - Certified Programming with Dependent Types

@@ -1,415 +1,576 @@
-# Rocq LSP Server: Fast Interactive Development
+# Rocq LSP Server Reference
 
-## Overview
+**The Rocq LSP server provides instant feedback for interactive theorem development.**
 
-This guide covers setting up and using **coq-lsp**, the Language Server Protocol implementation for Rocq/Coq, which provides:
+This reference documents the workflow and tools for Rocq/Coq proof development using the Rocq LSP MCP server.
 
-- **Instant feedback** on proof state (< 1s vs 30s+ for full rebuild)
-- **Real-time diagnostics** as you type
-- **Go-to-definition** and hover information
-- **Interactive proof development** with immediate goal display
+**Key insight:** LSP tools provide instant feedback (< 1 second) versus build cycles (10-30+ seconds). This **30x speedup** transforms proof development from frustrating trial-and-error into smooth, interactive problem-solving.
 
-**Speed improvement:** 30-100x faster feedback compared to manual compilation.
+## Prerequisites
 
----
+**Before using LSP tools:**
 
-## Table of Contents
+1. **Build your project first** - The LSP server needs compiled dependencies. Run `coqc` or your build system (dune, make) before starting intensive LSP work to ensure fast startup and avoid timeouts.
 
-1. [Basic Usage](#basic-usage)
-2. [Interactive Proof Development](#interactive-proof-development)
-3. [Performance Tips](#performance-tips)
-4. [Advanced Features](#advanced-features)
-5. [Troubleshooting](#troubleshooting)
-6. [Best Practice](#best-practice)
+2. **Install coq-lsp** - The LSP server implementation:
+   - Via opam: `opam install coq-lsp`
+   - From source: https://github.com/ejgallego/coq-lsp
+   - Verify: `coq-lsp --version` should work
 
----
+**Without these:** You may experience server timeouts or missing functionality.
 
-## Basic Usage
+## Why Use LSP Tools?
 
-### Real-Time Feedback
+**Versus build-only workflow:**
+- **Instant feedback:** < 1 second vs 10-30+ seconds
+- **Goal visibility:** See exactly what to prove at each step
+- **Integrated search:** Find lemmas without leaving your workflow
+- **Real-time diagnostics:** Catch errors as you type
+- **No guessing:** Verify before editing, not after building
 
-As you type, coq-lsp:
-- **Checks syntax** immediately
-- **Type-checks** incrementally
-- **Shows errors** inline
-- **Displays goals** at cursor
+**General advantages:**
+- **Structured data:** Returns typed data structures, not text to parse
+- **Integrated:** Single server for all Rocq interactions
+- **Reliable:** Consistent error handling, no shell/network failures
+- **Fast:** Direct API calls, no subprocess overhead
+- **Context-aware:** Maintains file state and proof sessions
 
-**Example workflow:**
+**Priority:** Always use LSP tools → Fall back to compilation only for final verification
+
+## Critical Rules
+
+1. **NEVER edit without checking goal state first** (`rocq_get_goals`)
+2. **ALWAYS start a proof session before tactics** (`rocq_start_proof`)
+3. **Search before guessing** - use `rocq_search` to find lemmas
+4. **Check goals between tactics** - see intermediate progress
+5. **Test tactics before committing** - verify with `rocq_run_tactic`
+
+## Quick Reference
+
+**Every proof follows this pattern:**
+
+```
+1. rocq_start_proof(file, theorem)           # Initialize session
+2. rocq_get_goals(session)                   # What to prove?
+3. rocq_search(session, "keyword")           # Find relevant lemmas
+4. rocq_run_tactic(session, "tactic.")       # Test tactic
+5. rocq_get_goals(session)                   # Check progress
+6. [Edit file with working tactics]
+7. rocq_get_goals(session)                   # Confirm "no goals"
+```
+
+**Total time:** < 10 seconds (LSP) vs 30+ seconds per iteration (build-only)
+
+**Measured improvements:**
+- Feedback: **30x faster** (< 1s vs 30s)
+- Tactic exploration: **Fewer iterations** (test before committing)
+- Lemma discovery: **Integrated search** in proof context
+
+**When stuck:**
+```
+1. rocq_get_goals(session)                   # See exact state
+2. rocq_get_premises(session)                # What's available?
+3. rocq_search(session, "pattern")           # Find lemmas
+```
+
+**Emergency debugging:**
+```
+1. rocq_get_goals(session)                   # What are goals?
+2. rocq_get_file_toc(file)                   # File structure
+3. rocq_get_state_at_position(file, line, char) # State at position
+```
+
+## Essential Tools
+
+### Tool Summary
+
+| Tool | Purpose | Use For |
+|------|---------|---------|
+| `rocq_start_proof` | **Start session** | Initialize proof session for a theorem |
+| `rocq_get_goals` | **Check goals** | See what remains to prove (use constantly!) |
+| `rocq_run_tactic` | **Test tactics** | Execute tactics and see results |
+| `rocq_get_premises` | **Find lemmas** | See available premises in context |
+| `rocq_search` | **Search** | Find theorems/definitions by pattern |
+| `rocq_get_file_toc` | **File structure** | Get all definitions/theorems in file |
+| `rocq_get_state_at_position` | **Position query** | Get proof state at specific location |
+
+### 1. `rocq_start_proof` - Initialize Proof Session
+
+**When to use:**
+- Before working on ANY theorem
+- To begin interactive proof development
+- When testing proof strategies
+
+**Parameters:**
+- `file_path` (required): Path to `.v` file
+- `theorem_name` (required): Name of theorem/lemma to prove
+
+**Example:**
+```coq
+Lemma add_comm : forall n m : nat, n + m = m + n.
+Proof.
+  (* Start session for this theorem *)
+```
+
+**Call:** `rocq_start_proof("file.v", "add_comm")`
+
+**Returns:** Session ID for subsequent operations
+
+**Important:** You must start a proof session before using other session-based tools.
+
+### 2. `rocq_get_goals` - Check Proof State (USE CONSTANTLY!)
+
+**When to use:**
+- Before writing ANY tactic
+- After each tactic to see progress
+- To understand what remains to be proved
+- To confirm proof completion
+
+**Parameters:**
+- `session_id` (required): Session from `rocq_start_proof`
+
+**Example:**
+```coq
+Lemma add_comm : forall n m : nat, n + m = m + n.
+Proof.
+  intros n m.  (* <- Check goals after this *)
+```
+
+**Call:** `rocq_get_goals(session)`
+
+**Output:**
+```
+n : nat
+m : nat
+============================
+n + m = m + n
+```
+
+**What this tells you:**
+- Context: `n : nat, m : nat` (variables in scope)
+- Goal: `n + m = m + n` (what you need to prove)
+- Now you know exactly what tactic to use!
+
+**Success signal:**
+```
+No more goals.
+```
+← Proof complete!
+
+### 3. `rocq_run_tactic` - Execute Tactics
+
+**When to use:**
+- To test if a tactic works
+- Step-by-step proof development
+- Before editing the actual file
+
+**Parameters:**
+- `session_id` (required): Session ID
+- `tactic` (required): Tactic string to execute (e.g., "intros n m.")
+
+**Example:**
+```python
+# Test a tactic
+result = rocq_run_tactic(session, "intros n m.")
+
+# Check if it worked
+goals = rocq_get_goals(session)
+```
+
+**Advantages:**
+- Test tactics without editing file
+- See exact error messages
+- Understand why tactics fail
+- Build proof incrementally
+
+**Pro tip:** Test multiple tactics in sequence to find the right proof path before editing the file.
+
+### 4. `rocq_get_premises` - Find Available Lemmas
+
+**When to use:**
+- Looking for lemmas to apply
+- Understanding what's available in context
+- Premise selection for automation
+- Discovering relevant theorems
+
+**Parameters:**
+- `session_id` (required): Session ID
+
+**Example:**
+```python
+premises = rocq_get_premises(session)
+
+# Find lemmas about addition
+for p in premises:
+    if "add" in p.name:
+        print(f"{p.name}: {p.type}")
+```
+
+**Returns:** List of available:
+- Hypotheses from context
+- Imported lemmas and theorems
+- Definitions in scope
+
+**Use case:** Find lemmas to apply, then test with `rocq_run_tactic`.
+
+### 5. `rocq_search` - Search for Declarations
+
+**When to use:**
+- Looking for specific lemmas/theorems
+- Checking if something exists
+- Discovering library functions
+- Finding definitions by pattern
+
+**Parameters:**
+- `session_id` (required): Session ID
+- `query` (required): Search term or pattern
+
+**Example:**
+```python
+# Search for commutativity lemmas
+results = rocq_search(session, "comm")
+
+for r in results:
+    print(f"{r.name}: {r.type}")
+```
+
+**Pro tip:** Start with broad searches ("add"), then narrow down ("add_comm").
+
+### 6. `rocq_get_file_toc` - Get File Structure
+
+**When to use:**
+- Understanding file organization
+- Finding all theorems in a file
+- Batch processing theorems
+- Navigating large files
+
+**Parameters:**
+- `file_path` (required): Path to `.v` file
+
+**Example:**
+```python
+toc = rocq_get_file_toc("MyTheorems.v")
+
+# Find all lemmas
+for item in toc:
+    if item.kind in ["Lemma", "Theorem"]:
+        print(f"{item.name} at line {item.line}")
+```
+
+**Returns:**
+- All definitions, lemmas, theorems
+- Section and module structure
+- Line numbers for each item
+
+### 7. `rocq_get_state_at_position` - Position-Based Query
+
+**When to use:**
+- IDE integrations (hover, completion)
+- Understanding proof state at specific location
+- Debugging particular proof steps
+- Context-aware assistance
+
+**Parameters:**
+- `file_path` (required): Path to `.v` file
+- `line` (required): Line number (0-indexed)
+- `character` (required): Character offset (0-indexed)
+
+**Example:**
+```python
+# Get state at line 42
+state = rocq_get_state_at_position("file.v", 42, 0)
+
+# What goals exist at this point?
+print(state.goals)
+```
+
+**Use case:** Position-based proof assistance and IDE features.
+
+## Complete Example: End-to-End Proof
+
+**Task:** Prove `n + m = m + n`
+
+```coq
+Lemma add_comm : forall n m : nat, n + m = m + n.
+Proof.
+  (* We'll develop this proof interactively *)
+Admitted.
+```
+
+### Step 1: Start proof session
+```python
+session = rocq_start_proof("file.v", "add_comm")
+```
+
+### Step 2: Check initial goal
+```python
+goals = rocq_get_goals(session)
+# Output: forall n m : nat, n + m = m + n
+```
+**Now you know what to prove!**
+
+### Step 3: Search for relevant lemmas
+```python
+results = rocq_search(session, "add_comm")
+# Finds: Nat.add_comm, plus_comm, etc.
+```
+
+### Step 4: Test tactics
+```python
+# Try introducing variables
+result = rocq_run_tactic(session, "intros n m.")
+goals = rocq_get_goals(session)
+# Output: n : nat, m : nat ⊢ n + m = m + n
+
+# Check if we can apply a lemma
+result = rocq_run_tactic(session, "apply Nat.add_comm.")
+goals = rocq_get_goals(session)
+# Output: No more goals. ✅
+```
+
+### Step 5: Edit file with working proof
 ```coq
 Lemma add_comm : forall n m : nat, n + m = m + n.
 Proof.
   intros n m.
-  (* Place cursor here - see goal in hover/panel *)
-  (* Goal: n + m = m + n *)
-```
-
-### Proof State Inspection
-
-**Hover over any line** to see:
-- Current proof state
-- Goal to prove
-- Available hypotheses
-- Type information
-
-**Panel view** (if supported):
-- Live goal display
-- Updates as cursor moves
-- Shows all subgoals
-
-### Incremental Checking
-
-coq-lsp checks **up to cursor position**:
-- Only processes visible proofs
-- Skips unchecked parts
-- Updates on save or request
-
-**Configuration:**
-```json
-{
-  "coq-lsp.check_only_on_request": true  // Manual check
-  // or
-  "coq-lsp.check_only_on_request": false  // Auto check
-}
-```
-
----
-
-## Interactive Proof Development
-
-### Workflow with LSP
-
-**1. Write theorem statement**
-```coq
-Lemma example : forall n, n + 0 = n.
-Proof.
-  (* LSP shows: Need to prove forall n, n + 0 = n *)
-```
-
-**2. Step through tactics**
-```coq
-Proof.
-  intro n.
-  (* Hover here: Context: n : nat ⊢ n + 0 = n *)
-```
-
-**3. Try tactics and see results immediately**
-```coq
-  simpl.
-  (* Goal unchanged because n + 0 doesn't reduce *)
-
-  induction n.
-  (* Two subgoals appear immediately *)
-  - (* Goal: 0 + 0 = 0 *)
-  - (* Goal: S n + 0 = S n, IHn : n + 0 = n *)
-```
-
-**4. Complete proof with instant feedback**
-```coq
-  - reflexivity.  (* First goal closes ✓ *)
-  - simpl. rewrite IHn. reflexivity.  (* Second closes ✓ *)
-Qed.  (* All goals solved ✓ *)
-```
-
-### Exploratory Proving
-
-**Try tactics without committing:**
-```coq
-Proof.
-  intro n.
-  (* Try: *)  destruct n.  (* See what subgoals *)
-  (* Don't like it? Undo (Ctrl+Z) and try: *)
-  induction n.  (* Different subgoals *)
-  (* Instant feedback on both approaches *)
-```
-
-### Parallel Development
-
-**Multiple files:**
-- Each file checked independently
-- Changes propagate through imports
-- No need to rebuild entire project
-
-**Example:**
-- Edit `Helper.v`
-- Save
-- `Main.v` using `Helper` updates automatically
-- See errors in `Main.v` immediately
-
----
-
-## Performance Tips
-
-### Optimize for LSP
-
-**1. Modular development**
-```coq
-(* Split large files into modules *)
-(* helper.v *)
-Lemma helper : P.
-Proof. (* ... *) Qed.
-
-(* main.v *)
-Require Import helper.
-Lemma main : Q.
-Proof. apply helper. (* ... *) Qed.
-```
-
-**2. Use Sections**
-```coq
-Section FastChecking.
-  (* Local context *)
-  Variable A : Type.
-
-  Lemma local1 : P1.
-  Lemma local2 : P2.
-  (* LSP only rechecks this section on changes *)
-End FastChecking.
-```
-
-**3. Incremental mode**
-```json
-{
-  "coq-lsp.check_only_on_request": true
-}
-```
-- Check only when requested (Ctrl+Shift+Enter or save)
-- Faster for large files
-- Good for working on specific lemmas
-
-### Reduce Recomputation
-
-**1. Cache-friendly structure**
-- Put stable lemmas first
-- Experimental code at end
-- LSP caches earlier results
-
-**2. Minimize global state**
-```coq
-(* ❌ BAD - global state changes *)
-Notation "x + y" := (my_add x y) (at level 50).
-(* Forces recheck of entire file *)
-
-(* ✅ GOOD - local scope *)
-Section MyNotation.
-  Notation "x + y" := (my_add x y) (at level 50).
-  (* ... *)
-End MyNotation.
-```
-
-**3. Avoid expensive tactics early**
-```coq
-(* If a proof is slow, mark it for later *)
-Lemma expensive : P.
-Proof using.  (* 'using' clause helps caching *)
-  (* ... expensive proof ... *)
+  apply Nat.add_comm.
 Qed.
 ```
 
----
+### Step 6: Verify completion
+```python
+goals = rocq_get_goals(session)
+# Output: No more goals.
+```
+**SUCCESS!**
 
-## Advanced Features
+**Total time:** < 10 seconds with absolute certainty
 
-### Go-to-Definition
+**Build-only would take:** 30+ seconds per try-and-rebuild cycle
 
-**Click (or F12) on identifier** to jump to definition:
-- Works for lemmas, tactics, notations
-- Across files (if in project)
-- Shows definition in hover
+## Workflow Patterns
 
-**Example:**
-```coq
-apply Nat.add_comm.
-(* F12 on 'add_comm' → jumps to stdlib definition *)
+### Pattern 1: Interactive Proof Development
+```python
+# 1. Start session
+session = rocq_start_proof("file.v", "my_theorem")
+
+# 2. Check what to prove
+goals = rocq_get_goals(session)
+
+# 3. Search for lemmas
+lemmas = rocq_search(session, "relevant_keyword")
+
+# 4. Test tactics one by one
+rocq_run_tactic(session, "intros.")
+rocq_get_goals(session)  # Check progress
+
+rocq_run_tactic(session, "apply some_lemma.")
+rocq_get_goals(session)  # Check again
+
+# 5. When done, edit file with working tactics
 ```
 
-### Find References
+### Pattern 2: Premise-Driven Proof Search
+```python
+def find_applicable_lemmas(session):
+    """Find lemmas that might help with current goal."""
+    premises = rocq_get_premises(session)
+    goals = rocq_get_goals(session)
 
-**Find all uses of definition:**
-- Right-click → "Find References"
-- Shows all locations using identifier
-- Good for refactoring
+    if not goals:
+        return []
 
-### Hover Information
+    # Try applying each premise
+    applicable = []
+    for p in premises:
+        result = rocq_run_tactic(session, f"apply {p.name}.")
+        new_goals = rocq_get_goals(session)
 
-**Hover over:**
-- **Lemma name**: See type and statement
-- **Tactic**: See current goal state
-- **Identifier**: See type
-- **Notation**: See expansion
+        if len(new_goals) < len(goals):
+            applicable.append(p)
 
-### Auto-completion
-
-**Type prefix and get suggestions:**
-```coq
-apply Nat.ad
-(* Autocomplete suggests:
-   - Nat.add
-   - Nat.add_comm
-   - Nat.add_assoc
-   - ... *)
+    return applicable
 ```
 
-**Context-aware:**
-- Suggests tactics in proof mode
-- Suggests lemmas matching goal type
-- Filters by imports
+### Pattern 3: Batch Theorem Analysis
+```python
+def analyze_file(file_path):
+    """Analyze all theorems in a file."""
+    toc = rocq_get_file_toc(file_path)
 
----
+    for item in toc:
+        if item.kind in ["Theorem", "Lemma"]:
+            print(f"\n{item.name}:")
+
+            # Start session
+            session = rocq_start_proof(file_path, item.name)
+
+            # Check initial goal
+            goals = rocq_get_goals(session)
+            print(f"  Goals: {len(goals)}")
+
+            # Try standard tactics
+            for tactic in ["reflexivity.", "auto.", "trivial."]:
+                result = rocq_run_tactic(session, tactic)
+                if not result.error:
+                    goals = rocq_get_goals(session)
+                    if not goals:
+                        print(f"  ✓ Solved with: {tactic}")
+                        break
+```
+
+## Common Mistakes to Avoid
+
+❌ **DON'T:**
+- Edit → build → see error (too slow!)
+- Guess lemma names without searching
+- Apply tactics without checking goals first
+- Skip intermediate goal checks
+- Forget to start proof session
+
+✅ **DO:**
+- Start session → check goals → search → test → apply
+- Use `rocq_get_goals` constantly
+- Test tactics with `rocq_run_tactic` before editing
+- Search with `rocq_search` before hallucinating
+- Verify intermediate progress
 
 ## Troubleshooting
 
-### LSP Not Starting
-
-**Check:**
-1. Is `coq-lsp` installed?
-   ```bash
-   which coq-lsp
-   ```
-
-2. Is extension enabled in editor?
-   ```bash
-   code --list-extensions | grep coq
-   ```
-
-3. Check LSP logs:
-   - VSCode: Output panel → "Coq LSP"
-   - Emacs: `*lsp-log*` buffer
-
-4. Verify project structure:
-   - Need `_CoqProject` file?
-   - Correct paths in project file?
-
-### Slow Performance
+### "No such theorem" errors
+**Problem:** `rocq_start_proof` can't find theorem
 
 **Solutions:**
+1. Check theorem name is exact (case-sensitive)
+2. Use `rocq_get_file_toc` to see available theorems
+3. Verify file path is correct
 
-1. **Enable incremental mode:**
-   ```json
-   {"coq-lsp.check_only_on_request": true}
-   ```
+### Session errors
+**Problem:** Session ID not valid
 
-2. **Split large files:**
-   - LSP faster on smaller files
-   - < 1000 lines ideal
+**Solutions:**
+1. Ensure you called `rocq_start_proof` first
+2. Don't reuse session IDs across different theorems
+3. Start new session if previous one failed
 
-3. **Check expensive tactics:**
-   - `auto` with large databases
-   - Deeply nested `intuition`
-   - Complex `simpl`
+### Search returns nothing
+**Problem:** `rocq_search` returns empty
 
-4. **Clear cache:**
-   ```bash
-   rm -rf .coq-lsp-cache
-   ```
+**Solutions:**
+1. Try partial matches: "add" instead of "add_zero"
+2. Check if imports are correct
+3. Use `rocq_get_premises` to see what's actually available
 
-### Incorrect Diagnostics
+### Goals not updating
+**Problem:** Goals don't change after tactic
 
-**If LSP shows wrong errors:**
+**Solutions:**
+1. Check tactic syntax (need period at end: "intros.")
+2. Verify tactic succeeded (check for errors in result)
+3. Tactic might not affect this particular goal
 
-1. **Restart LSP:**
-   - VSCode: Reload window (Ctrl+R)
-   - Emacs: `M-x lsp-workspace-restart`
+## Advanced: Position-Based Features
 
-2. **Check file saved:**
-   - Unsaved changes not always reflected
+### IDE Hover Integration
+```python
+def get_hover_info(file_path, line, char):
+    """Get proof state for IDE hover."""
+    state = rocq_get_state_at_position(file_path, line, char)
 
-3. **Verify imports:**
-   - Missing `Require Import`?
-   - Wrong module path?
+    if state.goals:
+        return f"Goals: {len(state.goals)}\n{state.goals[0]}"
+    else:
+        return "No goals"
+```
 
-4. **Rebuild project:**
-   ```bash
-   dune clean && dune build
-   ```
+### Context-Aware Suggestions
+```python
+def suggest_tactics(session):
+    """Suggest tactics based on current goal."""
+    goals = rocq_get_goals(session)
+    if not goals:
+        return []
 
-### LSP vs Compilation Mismatch
+    goal = goals[0]
+    suggestions = []
 
-**LSP says OK but compilation fails:**
+    # Pattern-based suggestions
+    if "=" in goal:
+        suggestions.append("reflexivity.")
+    if "forall" in goal or "∀" in goal:
+        suggestions.append("intros.")
+    if "/\\" in goal:
+        suggestions.append("split.")
 
-1. **Version mismatch:**
-   ```bash
-   coqc --version
-   coq-lsp --version
-   # Should match!
-   ```
+    return suggestions
+```
 
-2. **Different flags:**
-   - LSP may use different options
-   - Check `_CoqProject` file
-   - Ensure LSP reads it
+## Why This Matters
 
-3. **Opaque definitions:**
-   - LSP may not see through `Opaque`
-   - Compilation does
+**Without LSP:** You're coding blind, relying on slow build cycles for feedback.
 
-**Compilation OK but LSP shows errors:**
+**With LSP:** You have interactive feedback at every step of proof development.
 
-1. **Stale cache:**
-   - Clear LSP cache
-   - Restart editor
+**The transformation:** From "guess and wait" to "see and verify" instantly.
 
-2. **Import order:**
-   - LSP processes differently
-   - May need explicit imports
+**Measured results:**
+- **30x faster feedback** (< 1s vs 30s)
+- **Fewer iterations** (test before committing)
+- **Better understanding** (see proof state evolution)
 
----
+**Bottom line:** LSP tools fundamentally change how you develop proofs. Once you experience instant feedback, you'll never want to wait for builds again.
 
 ## Best Practices
 
 ### Development Workflow
 
-**1. Use LSP for development:**
-```coq
-(* Write proof with LSP feedback *)
-Lemma foo : P.
-Proof.
-  (* Interactive development with instant feedback *)
-Qed.
-```
+**1. Always use LSP for development:**
+- Start session for each theorem
+- Check goals constantly
+- Test tactics before editing
+- Verify with LSP, then compile
 
 **2. Compile before committing:**
 ```bash
-# LSP OK, but still compile to verify
+# LSP says OK, but still compile to verify
 dune build
 
 # Commit only after compilation succeeds
-git commit -m "proof: complete lemma foo"
+git commit -m "proof: complete add_comm"
 ```
 
 **3. Use both LSP and compilation:**
 - LSP: fast feedback during development
-- Compilation: verification before commit
+- Compilation: final verification before commit
 
-### Project Structure
+### Search Strategy
 
-**Enable LSP project-wide:**
+**1. Start local, go specific:**
+```python
+# Broad search first
+rocq_search(session, "add")
 
-**Create `_CoqProject`:**
-```
--R src MyProject
--arg -w -arg -notation-overridden
-
-src/Helper.v
-src/Main.v
+# Narrow down
+rocq_search(session, "add_comm")
 ```
 
-**LSP will:**
-- Use these settings
-- Understand module structure
-- Provide cross-file features
+**2. Use premises for context:**
+```python
+# See what's available right now
+premises = rocq_get_premises(session)
+```
 
----
+**3. Test before applying:**
+```python
+# Don't just edit the file - test first!
+result = rocq_run_tactic(session, "apply lemma.")
+if not result.error:
+    # Now edit file
+```
 
 ## See Also
 
-- [tactics-reference.md](tactics-reference.md) - Use LSP to try tactics
-- [admit-filling.md](admit-filling.md) - Fill admits with LSP feedback
+- [tactics-reference.md](tactics-reference.md) - Rocq tactics guide
 - [compilation-errors.md](compilation-errors.md) - Debug with LSP hints
-- [coq-lsp GitHub](https://github.com/ejgallego/coq-lsp)
-- [VsCoq Documentation](https://github.com/coq-community/vscoq)
-
----
-
-**Philosophy:** LSP transforms Coq development from "compile and pray" to "see what you're doing". The instant feedback loop accelerates learning, reduces errors, and makes proof development feel interactive rather than batch-oriented.
-
-**Recommendation:** Always use LSP for development. It's 30x faster and catches errors immediately. The days of waiting for full project compilation are over.
+- [coq-lsp GitHub](https://github.com/ejgallego/coq-lsp) - LSP server repository

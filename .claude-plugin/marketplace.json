@@ -1,11 +1,11 @@
 {
-  "name": "lean4-skills",
+  "name": "tp-skills",
   "owner": {
-    "name": "Cameron Freer",
-    "email": "cameronfreer@gmail.com"
+    "name": "Zongyuan Liu",
+    "email": "liuzongyuan0505@gmail.com"
   },
   "metadata": {
-    "description": "Claude Skills and agents for systematic Lean 4 proof development",
+    "description": "Claude Skills and agents for systematic Lean/Rocq proof development",
     "version": "3.1.0"
   },
   "plugins": [
@@ -23,6 +23,11 @@
       "name": "lean4-subagents",
       "description": "Specialized subagents for Lean 4 development",
       "source": "./plugins/lean4-subagents"
+    },
+    {
+      "name": "rocq-theorem-proving",
+      "description": "Rocq workflows (skills + commands)",
+      "source": "./plugins/rocq-theorem-proving"
     }
   ]
 }

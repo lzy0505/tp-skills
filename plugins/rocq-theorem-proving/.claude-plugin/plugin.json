@@ -1,7 +1,7 @@
 {
   "name": "rocq-theorem-proving",
   "version": "1.0.0",
-  "description": "Systematic workflows for Rocq/Coq proofs: admits management, stdlib/MathComp usage, verified math",
+  "description": "Systematic workflows for Rocq/Coq proofs: admits management, stdlib usage, Iris in Rocq",
   "author": {
     "name": "Zongyuan Liu",
     "email": "liuzongyuan0505@gmail.com"

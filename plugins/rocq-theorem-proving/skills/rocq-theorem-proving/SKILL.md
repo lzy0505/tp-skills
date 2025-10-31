@@ -1,6 +1,6 @@
 ---
 name: rocq-theorem-proving
-description: Use when developing Rocq/Coq proofs, facing typeclass resolution errors, managing admits/axioms, or searching standard library/MathComp - provides build-first workflow, instance management patterns, and domain-specific tactics
+description: Use when developing Rocq/Coq proofs (including Iris proofs in Rocq/Coq), facing typeclass resolution errors, managing admits/axioms, or searching standard library - provides build-first workflow, instance management patterns, and domain-specific tactics
 ---
 
 # Rocq Theorem Proving
